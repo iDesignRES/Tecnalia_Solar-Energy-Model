@@ -1,5 +1,6 @@
-# iDesignRES Building Stock Energy Model - Examples
+# iDesignRES Models: Examples
 
+&nbsp;
 
 ## Authentication
 All the functions that the REST API exposes are JWT secured, so before executing a process, invoke the authentication function to obtain the security token.
@@ -31,7 +32,7 @@ The function returns the following response (if login is successful):
 The "value" field contains the security token required to invoke any process-related function.
 
 
-## Solar process example
+## iDesignRES Solar Energy Model example
 To execute this process, it is only necessary to call the REST API function that the application exposes. Any REST client can be used:
 ```
 URL: https://idesignres.digital.tecnalia.dev/api/qgis/solar-process
@@ -45,7 +46,7 @@ Use the JWT token as a "Bearer" token.
 ```
 
 
-## Building process example
+## iDesignRES Building Stock Energy Model example
 To execute the process, follow the procedure described for the previous process with the following data:
 ```
 URL: https://idesignres.digital.tecnalia.dev/api/qgis/building-process
@@ -59,7 +60,7 @@ Use the JWT token as a "Bearer" token.
 ```
 
 
-## Building Stock Energy Simulation process example
+## iDesignRES Building Stock Energy Simulation process example
 To execute the process, follow the procedure described for the previous process with the following data:
 ```
 URL: https://idesignres.digital.tecnalia.dev/api/qgis/building-energy-simulation-process
@@ -150,7 +151,7 @@ Clarifications:
 ```
 
 
-## PV Power Plants process
+## iDesignRES PV Power Plants Model example
 To execute the process, follow the procedure described for the previous process with the following data:
 ```
 URL: https://idesignres.digital.tecnalia.dev/api/qgis/pv-power-plants-process
