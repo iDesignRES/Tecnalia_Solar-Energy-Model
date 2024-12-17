@@ -19,18 +19,23 @@ The developed model aims to help break this barrier by treating and preprocessin
 
 ## Input to and output from the model
 
-Input data: 
-(a) For initial diagnosis: energy demand (base year assessment).
+Input data:
+
+(a) For initial diagnosis: energy demand (base year assessment):
 - Data to be filled in by the user: NUTS Level 2 Code or NUTS Level 3 Code.
-- Main data used by the model as input (provided by the model with the option to be modified by the user in case more accurate data are available): Meteorological data (Outdoor dry bulb temperature (hourly), Radiation, Solar gains, heating, and cooling periods); geometry, surface area, age, use of each building. Other building parameters (U-values, H/C base temperature, Window-to-wall ratio, adjacent buildings), 
-(b) For initial diagnosis: energy consumption calculation (base year assessment).
+- Main data used by the model as input (provided by the model with the option to be modified by the user in case more accurate data are available): Meteorological data (Outdoor dry bulb temperature (hourly), Radiation, Solar gains, heating, and cooling periods); geometry, surface area, age, use of each building. Other building parameters (U-values, H/C base temperature, Window-to-wall ratio, adjacent buildings).
+
+(b) For initial diagnosis: energy consumption calculation (base year assessment):
 - Main data used by the model as input (provided by the model with the option to be modified by the user in case more accurate data are available): Shares of fuels/technologies by building type (From statistical data or model results of a higher scale, used for the adjustment), Hourly profiles (for Heating, Cooling, DHW, Occupancy, Lighting, Equipment, kitchen), Installed power (Lighting, Equipment), Equipment performance, Fuel cost, Environmental impact factors.
-(c) For the scenarios
-- Main data used by the model as input (provided by the model with the option to be modified by the user in case more accurate data are available): Shares of fuels/technologies of the scenario to be simulated (if available from model results of a higher scale, used for the adjustment). Investments/measurement of amount of technology deployed in each sector/type of buildings. For example (for refurbishment total m2 refurbished or associated investment, for solar PV total MW installed or associated investment, etc.). 
-Output data: 
--Energy results: Energy demand and energy consumption by building typology: use of buildings/age/archetype/end use of energy/fuel (On an annual basis and on an hourly basis). 
--Energy generation results for building integrated solar technology. 
--Costs and CO2 emissions associated.
+
+(c) For the scenarios:
+- Main data used by the model as input (provided by the model with the option to be modified by the user in case more accurate data are available): Shares of fuels/technologies of the scenario to be simulated (if available from model results of a higher scale, used for the adjustment). Investments/measurement of amount of technology deployed in each sector/type of buildings. For example (for refurbishment total m2 refurbished or associated investment, for solar PV total MW installed or associated investment, etc.).
+
+Output data:
+
+- Energy results: Energy demand and energy consumption by building typology: use of buildings/age/archetype/end use of energy/fuel (On an annual basis and on an hourly basis). 
+- Energy generation results for building integrated solar technology. 
+- Costs and CO2 emissions associated.
 
 
 ## Implemented features
