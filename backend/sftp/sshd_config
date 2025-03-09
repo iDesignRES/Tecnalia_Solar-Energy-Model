@@ -1,0 +1,15 @@
+Port 2238
+
+UseDNS no
+
+PermitRootLogin no
+X11Forwarding no
+AllowTcpForwarding no
+AllowAgentForwarding no
+PermitTunnel no
+PasswordAuthentication yes
+
+# Force sftp and chroot jail
+Subsystem sftp internal-sftp
+ForceCommand internal-sftp
+ChrootDirectory %h

@@ -1,0 +1,61 @@
+<!-- Include the navbar -->
+<nav class="top-nav" ng-include="'/app/includes/navbar.html'"></nav>
+
+<div id="waiting-container" ng-if="!ready">
+	<img class="icon-wait margin-top-200" src="../../../assets/img/wait.gif" />
+	<br ng-if="notReadyText != null" /><div class="chip" ng-if="notReadyText != null">{{notReadyText}}</div>
+</div>
+<div id="table-container" ng-if="ready">
+	<div class="row">
+		<h5 class="left" data-translate="roles.title">Roles</h5><br />
+	</div>
+	<table class="responsive-table striped highlight">
+		<thead>
+			<tr>
+				<th class="blue-grey lighten-5 cyan-text text-darken-3"><span data-translate="roles.table.role">Role</span></th>
+				<th class="blue-grey lighten-5 cyan-text text-darken-3"><span data-translate="roles.table.description">Description</span></th>
+				<th class="blue-grey lighten-5 cyan-text text-darken-3"><span data-translate="roles.table.registeredUsers">Registered users</span></th>
+				<th class="blue-grey lighten-5"></th>
+			</tr>
+		</thead>
+		<tbody>
+			<tr ng-repeat="role in filteredRoles">
+				<td class="grey-text italic">{{role.name}}</td>
+				<td class="grey-text italic">{{role.description}}</td>
+				<td>
+					<span class="italic red-text text-darken-3" ng-if="role.users == 0">{{role.users}}</span>
+					<span class="italic" ng-if="role.users > 0">{{role.users}}</span>
+					<span class="italic red-text text-darken-3" data-translate="roles.table.users" ng-if="role.users == 0">users</span>
+					<span class="italic" data-translate="roles.table.user" ng-if="role.users == 1">user</span>
+					<span class="italic" data-translate="roles.table.users" ng-if="role.users > 1">users</span>
+				</td>
+				<td>
+					<a class="btn-floating btn-small waves-effect waves-light blue-grey right margin-right-8 tooltipped" data-position="top" data-tooltip="{{'roles.tooltips.summary' | translate}}" ng-init="sessionFactory.renderTooltipComponent()" ng-click="routeFactory.goRolesSummary(role.uuid, currentPage)"><i class="material-icons">remove_red_eye</i></a>
+				</td>
+			</tr>
+		</tbody>
+	</table>
+	
+	<!-- Pagination -->
+	<div class="divider" ng-if="numberOfPages > 1"></div>
+	<div class="row center margin-top-32" ng-if="numberOfPages > 1">
+		<ul class="pagination">
+			<li class="disabled" ng-if="currentPage == 1">
+				<i class="material-icons">chevron_left</i>
+			</li>
+			<li class="waves-effect" ng-if="currentPage > 1">
+				<a ng-click="routeFactory.goRoles(1)"><i class="material-icons">chevron_left</i></a>
+			</li>
+			<li ng-repeat="n in pageRange">
+				<a class="active" ng-if="n == currentPage">{{n}}</a>
+				<a class="waves-effect" ng-if="n != currentPage" ng-click="routeFactory.goRoles(n)">{{n}}</a>
+			</li>
+			<li class="waves-effect" ng-if="currentPage < numberOfPages">
+				<a ng-click="routeFactory.goRoles(numberOfPages)"><i class="material-icons">chevron_right</i></a>
+			</li>
+			<li class="disabled" ng-if="currentPage == numberOfPages">
+				<i class="material-icons">chevron_right</i>
+			</li>
+		</ul>
+	</div>
+</div>

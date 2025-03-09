@@ -1,0 +1,37 @@
+{
+	"scales": {
+		"title": "Scales",
+		"titleSummary": "Summary",
+		"table": {
+			"name": "Name",
+			"description": "Description",
+			"layerHeader": "Layer",
+			"layersHeader": "Layers",
+			"layer": "layer",
+			"layers": "layers",
+			"fullPath": "Full path"
+		},
+		"form": {
+			"generalInformation": "General information:",
+			"layersInformation": "Layers information:",
+			"identifier": "Unique identifier",
+			"name": "Name",
+			"description": "Description",
+			"createdDate": "Created date",
+			"lastModifiedDate": "Last modified date",
+			"deletedDate": "Deleted date",
+			"back": "Back"
+		},
+		"wait": {
+			"loadAll": "Loading the list of Scales...",
+			"load": "Loading the Scale..."
+		},
+		"tooltips": {
+			"summary": "Scale detail"
+		},
+		"error": {
+			"noRoles": "No Scales found in the database",
+			"noRole": "The selected Scale was not found"
+		}
+	}
+}

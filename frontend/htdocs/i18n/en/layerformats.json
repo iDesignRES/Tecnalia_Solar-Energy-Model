@@ -1,0 +1,37 @@
+{
+	"layerFormats": {
+		"title": "Layer Formats",
+		"titleSummary": "Summary",
+		"table": {
+			"name": "Name",
+			"extension": "Extension",
+			"layerHeader": "Layer",
+			"layersHeader": "Layers",
+			"layer": "layer",
+			"layers": "layers",
+			"fullPath": "Full path"
+		},
+		"form": {
+			"generalInformation": "General information:",
+			"layersInformation": "Layers information:",
+			"identifier": "Unique identifier",
+			"name": "Name",
+			"extension": "Extension",
+			"createdDate": "Created date",
+			"lastModifiedDate": "Last modified date",
+			"deletedDate": "Deleted date",
+			"back": "Back"
+		},
+		"wait": {
+			"loadAll": "Loading the list of Layer Formats...",
+			"load": "Loading the Layer Format..."
+		},
+		"tooltips": {
+			"summary": "Layer Format detail"
+		},
+		"error": {
+			"noRoles": "No Layer Formats found in the database",
+			"noRole": "The selected Layer Format was not found"
+		}
+	}
+}

@@ -1,0 +1,69 @@
+<!-- Include the navbar -->
+<nav class="top-nav" ng-include="'/app/includes/navbar.html'"></nav>
+
+<div id="waiting-container" ng-if="!ready">
+	<img class="icon-wait margin-top-200" src="../../../assets/img/wait.gif" />
+	<br ng-if="notReadyText != null" /><div class="chip" ng-if="notReadyText != null">{{notReadyText}}</div>
+</div>
+<div id="table-container" ng-if="ready">
+	<div class="row">
+		<h5 class="left" data-translate="processes.title">Processes</h5><br />
+	</div>
+	<table class="responsive-table striped highlight">
+		<thead>
+			<tr>
+				<th class="blue-grey lighten-5 cyan-text text-darken-3"><span data-translate="processes.table.name">Name</span></th>
+				<th class="blue-grey lighten-5 cyan-text text-darken-3"><span data-translate="processes.table.description">Description</span></th>
+				<th class="blue-grey lighten-5 cyan-text text-darken-3"><span data-translate="processes.table.layersHeader">Layers</span></th>
+				<th class="blue-grey lighten-5 cyan-text text-darken-3"><span data-translate="processes.table.resultsHeader">Results</span></th>
+				<th class="blue-grey lighten-5"></th>
+			</tr>
+		</thead>
+		<tbody>
+			<tr ng-repeat="process in filteredProcesses">
+				<td class="grey-text italic">{{process.name}}</td>
+				<td class="grey-text italic">{{process.description}}</td>
+				<td>
+					<span class="italic red-text text-darken-3" ng-if="process.layers == 0">{{process.layers}}</span>
+					<span class="italic" ng-if="process.layers > 0">{{process.layers}}</span>
+					<span class="italic red-text text-darken-3" data-translate="processes.table.layers" ng-if="process.layers == 0">layers</span>
+					<span class="italic" data-translate="processes.table.layer" ng-if="process.layers == 1">layer</span>
+					<span class="italic" data-translate="processes.table.layers" ng-if="process.layers > 1">layers</span>
+				</td>
+				<td>
+					<span class="italic red-text text-darken-3" ng-if="process.results == 0">{{process.results}}</span>
+					<span class="italic" ng-if="process.results > 0">{{process.results}}</span>
+					<span class="italic red-text text-darken-3" data-translate="processes.table.results" ng-if="process.results == 0">results</span>
+					<span class="italic" data-translate="processes.table.result" ng-if="process.results == 1">result</span>
+					<span class="italic" data-translate="processes.table.results" ng-if="process.results > 1">results</span>
+				</td>
+				<td>
+					<a class="btn-floating btn-small waves-effect waves-light blue-grey right margin-right-8 tooltipped" data-position="top" data-tooltip="{{'processes.tooltips.summary' | translate}}" ng-init="sessionFactory.renderTooltipComponent()" ng-click="routeFactory.goProcessesSummary(process.uuid, currentPage)"><i class="material-icons">remove_red_eye</i></a>
+				</td>
+			</tr>
+		</tbody>
+	</table>
+	
+	<!-- Pagination -->
+	<div class="divider" ng-if="numberOfPages > 1"></div>
+	<div class="row center margin-top-32" ng-if="numberOfPages > 1">
+		<ul class="pagination">
+			<li class="disabled" ng-if="currentPage == 1">
+				<i class="material-icons">chevron_left</i>
+			</li>
+			<li class="waves-effect" ng-if="currentPage > 1">
+				<a ng-click="routeFactory.goProcesses(1)"><i class="material-icons">chevron_left</i></a>
+			</li>
+			<li ng-repeat="n in pageRange">
+				<a class="active" ng-if="n == currentPage">{{n}}</a>
+				<a class="waves-effect" ng-if="n != currentPage" ng-click="routeFactory.goProcesses(n)">{{n}}</a>
+			</li>
+			<li class="waves-effect" ng-if="currentPage < numberOfPages">
+				<a ng-click="routeFactory.goProcesses(numberOfPages)"><i class="material-icons">chevron_right</i></a>
+			</li>
+			<li class="disabled" ng-if="currentPage == numberOfPages">
+				<i class="material-icons">chevron_right</i>
+			</li>
+		</ul>
+	</div>
+</div>

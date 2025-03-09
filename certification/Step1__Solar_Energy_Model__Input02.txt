@@ -1,0 +1,4 @@
+{
+	"nutsid": "ES41",
+	"slope_angle": 80
+}

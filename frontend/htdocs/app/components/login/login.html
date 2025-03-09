@@ -1,0 +1,30 @@
+<!doctype html>
+
+<div id="login-container" ng-keypress="enter($event)">
+	<form name="loginForm" role="form">
+		<div class="card white">
+			<div class="card-content blue-grey-text text-darken-3">
+				<img src="../../../assets/img/logo.png" />
+				<br /><br />
+				<div class="row">
+					<div class="input-field col s12">
+						<i class="material-icons prefix">account_circle</i>
+						<input id="username" type="text" class="validate" maxlength="30" tabindex="1" ng-model="loginObj.username" required />
+						<label for="username" class="active"><span data-translate="login.form.username">Username</span></label>
+					</div>
+					<div class="input-field col s12">
+						<i class="material-icons prefix">fingerprint</i>
+						<input id="password" type="password" class="validate" maxlength="30" tabindex="2" ng-model="loginObj.password" required />
+						<label for="password" class="active"><span data-translate="login.form.password">Password</span></label>
+					</div>
+				</div>
+			</div>
+			<div class="card-action center">
+				<a class="waves-effect waves-light btn-small blue-grey darken-2" tabindex="3" ng-if="ready" ng-click="doLogin()">
+					<i class="material-icons left">input</i><span data-translate="login.button.enter">Enter</span>
+				</a>
+				<img class="icon-default margin-left-8" src="../../../assets/img/wait.gif" ng-if="!ready" />
+			</div>
+		</div>
+	</form>
+</div>

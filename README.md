@@ -2,7 +2,7 @@
 
 This README provides an overview of the iDesignRES Solar Energy Model within iDesignRES.
 
-It is handled by Tecnalia and part of WP1, Task number Task1.3. 
+It is handled by Tecnalia and part of WP1, Task number Task 1.3. 
 
 ## Purpose of the model
 
@@ -58,7 +58,7 @@ For electrical energy demand two different PV technologies are considered: singl
 
 This README provides an overview of the Model iDesignRES Building Stock Energy Model within iDesignRES.  
 
-It is handled by Tecnalia and part of WP1, Task number Task1.4. 
+It is handled by Tecnalia and part of WP1, Task number Task 1.4. 
 
 
 ## Purpose of the model

@@ -1,0 +1,122 @@
+<!-- Include the navbar -->
+<nav class="top-nav" ng-include="'/app/includes/navbar.html'"></nav>
+
+<div id="waiting-container" ng-if="!ready">
+	<img class="icon-wait margin-top-200" src="../../../assets/img/wait.gif" />
+	<br ng-if="notReadyText != null" /><div class="chip" ng-if="notReadyText != null">{{notReadyText}}</div>
+</div>
+<div id="form-container" ng-if="ready">
+	<div class="row">
+		<h5 data-translate="processes.titleSummary">Summary</h5>
+	</div>
+	<div class="row">
+		<div class="col s1"></div>
+		<div class="col s10">
+			<h6 data-translate="processes.form.generalInformation">General information:</h6>
+		</div>
+		<div class="col s1"></div>
+	</div>
+	<div class="row">
+		<div class="col s1"></div>
+		<div class="col s2 right-align"><span class="bold" data-translate="processes.form.identifier">Unique identifier:</span></div>
+		<div class="col s7 grey lighten-5 grey-text">{{processObj.uuid}}</div>
+		<div class="col s2"></div>
+	</div>
+	<div class="row">
+		<div class="col s1"></div>
+		<div class="col s2 right-align"><span class="bold" data-translate="processes.form.name">Name:</span></div>
+		<div class="col s7 grey lighten-5">{{processObj.name}}</div>
+		<div class="col s2"></div>
+	</div>
+	<div class="row" ng-if="processObj.description != null">
+		<div class="col s1"></div>
+		<div class="col s2 right-align"><span class="bold" data-translate="processes.form.description">Description:</span></div>
+		<div class="col s7 grey lighten-5">{{processObj.description}}</div>
+		<div class="col s2"></div>
+	</div>
+	<div class="row">
+		<div class="col s1"></div>
+		<div class="col s2 right-align"><span class="bold" data-translate="processes.form.createdDate">Created date:</span></div>
+		<div class="col s7 grey lighten-5">{{processObj.formattedCreatedDate}}</div>
+		<div class="col s2"></div>
+	</div>
+	<div class="row">
+		<div class="col s1"></div>
+		<div class="col s2 right-align"><span class="bold" data-translate="processes.form.lastModifiedDate">Last modified date:</span></div>
+		<div class="col s7 grey lighten-5">{{processObj.formattedLastModifiedDate}}</div>
+		<div class="col s2"></div>
+	</div>
+	<div class="row" ng-if="processObj.formattedDeletedDate != null">
+		<div class="col s1"></div>
+		<div class="col s2 right-align"><span class="bold" data-translate="processes.form.deletedDate">Deleted date:</span></div>
+		<div class="col s7 grey lighten-5">{{processObj.formattedDeletedDate}}</div>
+		<div class="col s2"></div>
+	</div>
+	<br />
+	<div class="row" ng-if="processObj.layers != null && processObj.layers.length > 0">
+		<div class="col s1"></div>
+		<div class="col s10">
+			<h6 data-translate="processes.form.layersInformation">Layers information:</h6>
+		</div>
+		<div class="col s1"></div>
+	</div>
+	<div class="row" ng-if="processObj.layers != null && processObj.layers.length > 0">
+		<div class="col s1"></div>
+		<div class="col s10">
+			<table class="responsive-table striped highlight">
+				<thead>
+					<tr>
+						<th class="blue-grey lighten-5 cyan-text text-darken-3"><span data-translate="processes.table.layerHeader">Layer</span></th>
+						<th class="blue-grey lighten-5 cyan-text text-darken-3"><span data-translate="processes.table.format">Format</span></th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr ng-repeat="layer in processObj.layers">
+						<td>{{layer.name}}</td>
+						<td>{{layer.layerFormatName}}</td>
+					</tr>
+				</tbody>
+			</table>
+		</div>
+		<div class="col s1"></div>
+	</div>
+	<br />
+	<div class="row" ng-if="processObj.results != null && processObj.results.length > 0">
+		<div class="col s1"></div>
+		<div class="col s10">
+			<h6 data-translate="processes.form.resultsInformation">Results information:</h6>
+		</div>
+		<div class="col s1"></div>
+	</div>
+	<div class="row" ng-if="processObj.results != null && processObj.results.length > 0">
+		<div class="col s1"></div>
+		<div class="col s10">
+			<table class="responsive-table striped highlight">
+				<thead>
+					<tr>
+						<th class="width5pc blue-grey lighten-5 cyan-text text-darken-3" colspan="2"><span data-translate="processes.table.resultHeader">Result</span></th>
+						<th class="blue-grey lighten-5 cyan-text text-darken-3"></th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr ng-repeat="result in processObj.results">
+						<td><i class="material-icons blue-grey-text text-darken-2 bold margin-top-2 center">description</i></td>
+						<td>{{result}}</td>
+						<td>
+							<a class="btn-floating btn-small waves-effect waves-light blue-grey darken-2 right margin-right-8 tooltipped" data-position="top" data-tooltip="{{'processes.tooltips.download' | translate}}" ng-init="sessionFactory.renderTooltipComponent()" ng-click="doDownloadFile(result)"><i class="material-icons">assignment_returned</i></a>
+						</td>
+					</tr>
+				</tbody>
+			</table>
+		</div>
+		<div class="col s1"></div>
+	</div>
+	<br />
+	<div class="row margin-bottom-8">
+		<div class="col s12 right-align">
+			<a class="waves-effect waves-light btn-small blue-grey darken-2" ng-click="routeFactory.goProcesses(currentPage)">
+				<i class="material-icons left">reply</i><span data-translate="processes.form.back">Back</span>
+			</a>
+		</div>
+	</div>
+</div>

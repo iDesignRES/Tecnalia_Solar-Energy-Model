@@ -1,0 +1,63 @@
+<!-- Include the navbar -->
+<nav class="top-nav" ng-include="'/app/includes/navbar.html'"></nav>
+
+<div id="waiting-container" ng-if="!ready">
+	<img class="icon-wait margin-top-200" src="../../../assets/img/wait.gif" />
+	<br ng-if="notReadyText != null" /><div class="chip" ng-if="notReadyText != null">{{notReadyText}}</div>
+</div>
+<div id="form-container" ng-if="ready">
+	<h5 data-translate="layers.titleDetailAdd">Add Layer</h5>
+	<form class="col s12 margin-top-32" name="layersForm" role="form" enctype="multipart/form-data">
+		<div class="row">
+			<div class="col s1"></div>
+			<div class="col s10">
+				<h6 data-translate="layers.form.generalInformation">General information:</h6>
+			</div>
+			<div class="col s1"></div>
+		</div>
+		<div class="row">
+			<div class="col s1"></div>
+			<div class="input-field col s10">
+				<input id="name" type="text" class="validate" tabindex="1" maxlength="80" ng-model="layerObj.name" required />
+				<label for="name" class="active" data-translate="layers.form.nameReq">Name (*)</label>
+			</div>
+		</div>
+		<div class="row">
+			<div class="col s1"></div>
+			<div class="input-field col s5">
+				<select id="selectScale" tabindex="2" ng-model="layerObj.scale" ng-options="scaleObj.uuid as scaleObj.name for scaleObj in layerObj.scales" ng-init="sessionFactory.renderSelectComponent()" required>
+					<option value="" disabled selected><span data-translate="layers.form.selectScale">Select Scale (*)</span></option>
+				</select>
+			</div>
+			<div class="input-field col s5">
+				<select id="selectFormat" tabindex="3" ng-model="layerObj.layerFormat" ng-options="formatObj.uuid as formatObj.name for formatObj in layerObj.formats" ng-init="sessionFactory.renderSelectComponent()" required>
+					<option value="" disabled selected><span data-translate="layers.form.selectFormat">Select Format (*)</span></option>
+				</select>
+			</div>
+		</div>
+		<div class="row">
+			<div class="col s1"></div>
+			<div class="file-field input-field col s10">
+				<div class="btn waves-effect waves-light blue-grey darken-2 tooltipped" data-position="left" data-tooltip="{{'layers.tooltips.attach' | translate}}" ng-init="sessionFactory.renderTooltipComponent()">
+		       		<i class="material-icons">camera_alt</i></a>
+		       		<input class="form-control" type="file" file-model="fileObj" />
+		    	</div>
+		    	<div class="file-path-wrapper">
+		    		<input class="file-path validate" readonly="readonly" />
+		    	</div>
+			</div>
+			<div class="col s1"></div>
+		</div>
+		<br />
+		<div class="row margin-bottom-8">
+			<div class="col s12 right-align">
+				<a class="waves-effect waves-light btn-small blue-grey darken-2" tabindex="4" ng-click="routeFactory.goLayers(currentPage)">
+					<i class="material-icons left">reply</i><span data-translate="layers.form.back">Back</span>
+				</a>
+				<a class="waves-effect waves-light btn-small blue-grey darken-2 margin-left-4" tabindex="5" ng-disabled="!layersForm.$valid" ng-click="doSave(fileObj)">
+					<i class="material-icons left">save</i><span data-translate="layers.form.save">Save</span>
+				</a>
+			</div>
+		</div>
+	</form>
+</div>

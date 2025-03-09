@@ -1,0 +1,69 @@
+<!-- Include the navbar -->
+<nav class="top-nav" ng-include="'/app/includes/navbar.html'"></nav>
+
+<div id="waiting-container" ng-if="!ready">
+	<img class="icon-wait margin-top-200" src="../../../assets/img/wait.gif" />
+	<br ng-if="notReadyText != null" /><div class="chip" ng-if="notReadyText != null">{{notReadyText}}</div>
+</div>
+<div id="form-container" ng-if="ready">
+	<div class="row">
+		<h5 data-translate="users.titleSummary">Summary</h5>
+	</div>
+	<div class="row">
+		<div class="col s1"></div>
+		<div class="col s10">
+			<h6 data-translate="users.form.generalInformation">General information:</h6>
+		</div>
+		<div class="col s1"></div>
+	</div>
+	<div class="row">
+		<div class="col s1"></div>
+		<div class="col s2 right-align"><span class="bold" data-translate="users.form.identifier">Unique identifier:</span></div>
+		<div class="col s7 grey lighten-5 grey-text">{{userObj.uuid}}</div>
+		<div class="col s2"></div>
+	</div>
+	<div class="row">
+		<div class="col s1"></div>
+		<div class="col s2 right-align"><span class="bold" data-translate="users.form.username">Username:</span></div>
+		<div class="col s7 grey lighten-5">{{userObj.username}}</div>
+		<div class="col s2"></div>
+	</div>
+	<div class="row">
+		<div class="col s1"></div>
+		<div class="col s2 right-align"><span class="bold" data-translate="users.form.email">Email:</span></div>
+		<div class="col s7 grey lighten-5">{{userObj.email}}</div>
+		<div class="col s2"></div>
+	</div>
+	<div class="row">
+		<div class="col s1"></div>
+		<div class="col s2 right-align"><span class="bold" data-translate="users.form.role">Role:</span></div>
+		<div class="col s7 grey lighten-5">{{userObj.role}}</div>
+		<div class="col s2"></div>
+	</div>
+	<div class="row">
+		<div class="col s1"></div>
+		<div class="col s2 right-align"><span class="bold" data-translate="users.form.createdDate">Created date:</span></div>
+		<div class="col s7 grey lighten-5">{{userObj.formattedCreatedDate}}</div>
+		<div class="col s2"></div>
+	</div>
+	<div class="row">
+		<div class="col s1"></div>
+		<div class="col s2 right-align"><span class="bold" data-translate="users.form.lastModifiedDate">Last modified date:</span></div>
+		<div class="col s7 grey lighten-5">{{userObj.formattedLastModifiedDate}}</div>
+		<div class="col s2"></div>
+	</div>
+	<div class="row" ng-if="userObj.formattedDeletedDate != null">
+		<div class="col s1"></div>
+		<div class="col s2 right-align"><span class="bold" data-translate="users.form.deletedDate">Deleted date:</span></div>
+		<div class="col s7 grey lighten-5">{{userObj.formattedDeletedDate}}</div>
+		<div class="col s2"></div>
+	</div>
+	<br />
+	<div class="row margin-bottom-8">
+		<div class="col s12 right-align">
+			<a class="waves-effect waves-light btn-small blue-grey darken-2" ng-click="routeFactory.goUsers(currentPage)">
+				<i class="material-icons left">reply</i><span data-translate="users.form.back">Back</span>
+			</a>
+		</div>
+	</div>
+</div>

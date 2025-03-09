@@ -1,0 +1,46 @@
+{
+	"processes": {
+		"title": "Processes",
+		"titleAssign": "Assign Layers",
+		"titleSummary": "Summary",
+		"table": {
+			"name": "Name",
+			"description": "Description",
+			"layerHeader": "Layer",
+			"layersHeader": "Layers",
+			"layer": "layer",
+			"layers": "layers",
+			"format": "Format",
+			"resultHeader": "Result",
+			"resultsHeader": "Results",
+			"result": "result",
+			"results": "results"
+		},
+		"form": {
+			"generalInformation": "General information:",
+			"layersInformation": "Layers information:",
+			"resultsInformation": "Results information:",
+			"identifier": "Unique identifier",
+			"name": "Name",
+			"description": "Description",
+			"createdDate": "Created date",
+			"lastModifiedDate": "Last modified date",
+			"deletedDate": "Deleted date",
+			"save": "Save",
+			"back": "Back"
+		},
+		"wait": {
+			"loadAll": "Loading the list of Processes...",
+			"load": "Loading the Process...",
+			"download": "Downloading the file..."
+		},
+		"tooltips": {
+			"summary": "Process detail",
+			"download": "Download file"
+		},
+		"error": {
+			"noRoles": "No Processes found in the database",
+			"noRole": "The selected Process was not found"
+		}
+	}
+}

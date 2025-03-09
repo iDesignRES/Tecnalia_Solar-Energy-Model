@@ -1,0 +1,155 @@
+services:
+    # MySQL Server
+    # User: root ; Password: PWDidesignres
+    database:
+        container_name: idesignres.mysql.dck
+        image: idesignres/mysql.dck
+        build:
+            context: backend/database
+            dockerfile: Dockerfile
+        networks:
+            network:
+                ipv4_address: 10.100.0.101
+        volumes:
+            - idesignres-mysql-volume:/var/lib/mysql
+        env_file:
+            - .env-database
+        labels:
+            - "traefik.enable=true"
+            - "traefik.tcp.routers.database.rule=HostSNI(`*`)"
+            - "traefik.tcp.services.database.loadbalancer.server.port=3306"
+            - "traefik.tcp.routers.database.entrypoints=mysql"
+
+    # SFT Server
+    # User: adminsftp ; Password: PWDSFTP
+    sftp:
+        container_name: idesignres.sftp.dck
+        image: idesignres/sftp.dck
+        build:
+            context: backend/sftp
+            dockerfile: Dockerfile
+            args:
+                - SFTP_ROOT_DIRECTORY=/idesignres
+                - SFTP_GROUPNAME=sftp
+                - SFTP_USERNAME=adminsftp
+                - SFTP_PASSWORD=PWDSFTP
+                - SFTP_UID_GID=3000
+        networks:
+            network:
+                ipv4_address: 10.100.0.100
+
+    # UI-Backend
+    uibackend:
+        container_name: idesignres.uibackend.dck
+        image: idesignres/uibackend.dck
+        build:
+            context: backend/ui
+            dockerfile: Dockerfile
+            args:
+                - DEFAULT_LOCALE=es-ES
+                - MYSQL_HOST=idesignres.mysql.dck
+                - MYSQL_DATABASE=dbidesignres
+                - MYSQL_USERNAME=root
+                - MYSQL_ROOT_PASSWORD=PWDidesignres
+                - SFTP_HOST=10.100.0.100
+                - SFTP_PORT=2238
+                - SFTP_USERNAME=adminsftp
+                - SFTP_PASSWORD=PWDSFTP
+                - SFTP_LAYERS_BASE_DIR=/files/
+                - SFTP_LAYERS_BASE_DIR=/layers/
+                - SFTP_OUTPUT_BASE_DIR=/output/
+        networks:
+            network:
+                ipv4_address: 10.100.0.105
+        labels:
+            - "traefik.enable=true"
+            - "traefik.http.routers.uibackend.rule=Host(`idesignres.digital.tecnalia.dev`) && PathPrefix(`/api/qgis-ui/`)"
+            - "traefik.http.routers.uibackend.tls=true"
+            - "traefik.http.routers.uibackend.entrypoints=websecure"
+            - "traefik.http.routers.uibackend.tls.certresolver=myresolver"
+        depends_on:
+            - database
+
+    # Frontend
+    frontend:
+        container_name: idesignres.frontend.dck
+        image: idesignres/frontend.dck
+        build:
+            context: frontend
+            dockerfile: Dockerfile
+            args:
+                - BACKEND_URL="https://idesignres.digital.tecnalia.dev"
+        networks:
+            network:
+                ipv4_address: 10.100.0.106
+        labels:
+            - "traefik.enable=true"
+            - "traefik.http.routers.frontend.rule=Host(`idesignres.digital.tecnalia.dev`)"
+            - "traefik.http.routers.frontend.tls=true"
+            - "traefik.http.routers.frontend.entrypoints=websecure"
+            - "traefik.http.routers.frontend.tls.certresolver=myresolver"
+        depends_on:
+            - database
+            - uibackend
+    
+    # Reverse proxy: Traefik
+    proxy:
+        image: traefik:v2.10.1
+        container_name: idesignres.proxy.dck
+        restart: always
+        command:
+            - "--providers.docker=true"
+            - "--providers.docker.exposedbydefault=false"
+            - "--entryPoints.websecure.address=:443"
+            - "--entryPoints.mysql.address=:3306"
+            - "--entrypoints.websecure.http.tls=true"
+            - "--certificatesresolvers.myresolver.acme.tlschallenge=true"
+            - "--certificatesresolvers.myresolver.acme.email=alberto.molinuevo@tecnalia.com"
+            - "--certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json"
+        ports:
+            - 443:443
+        volumes:
+            - "./volumes/proxy:/letsencrypt"
+            - "/var/run/docker.sock:/var/run/docker.sock:ro"
+        networks:
+            network:
+                ipv4_address: 10.100.0.102
+        labels:
+            - "traefik.enable=true"
+            - "traefik.docker.network=idesignres-network"
+            - "traefik.http.routers.dashboard-api.rule=Host(`traefik.idesignres.digital.tecnalia.dev`)"
+            - "traefik.http.routers.dashboard-api.entrypoints=websecure"
+            - "traefik.http.routers.dashboard-api.service=api@internal"
+        depends_on:
+            - database
+            - sftp
+            - uibackend
+            - frontend
+
+    # Portainer
+    # User: admin ; Password: PWDPortainer
+    portainer:
+        container_name: idesignres.portainer.dck
+        image: portainer/portainer-ce:latest
+        restart: unless-stopped
+        command: --admin-password '$$2a$$10$$rgOqrWk7sfMmQ9.a4g.qA.Op5f55lfm3WeM2v2h/AY3ejS.ttdjIe'
+        security_opt:
+            - no-new-privileges:true
+        ports:
+            - 9443:9443
+        networks:
+            network:
+                ipv4_address: 10.100.0.103
+        volumes:
+            - /etc/localtime:/etc/localtime:ro
+            - /var/run/docker.sock:/var/run/docker.sock:ro
+            - ./volumes/portainer-data:/data
+
+volumes:
+    idesignres-mysql-volume:
+
+networks:
+    network:
+        ipam:
+            config:
+                - subnet: 10.100.0.0/24
