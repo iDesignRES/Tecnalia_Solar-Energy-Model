@@ -9,6 +9,8 @@ import modules.io as io
 
 # Function: Build the connection parameters
 def buildConnectionParameters(config):
+    ''' Function to build the SFTP connection parameters. '''
+
     obj = { 'hostname': config['IDESIGNRES-SFTP']['idesignres.sftp.host'],
             'port': int(config['IDESIGNRES-SFTP']['idesignres.sftp.port']),
             'username': config['IDESIGNRES-SFTP']['idesignres.sftp.username'],
@@ -20,6 +22,8 @@ def buildConnectionParameters(config):
 
 # Function: Checks a user directory
 def checkUserDirectory(username, config):
+    ''' Function to check the user directory. '''
+
     try:
         # Build the path
         userDirectoryPath = io.retrieveOutputBasePath(False, config).replace('{1}', username)
@@ -60,6 +64,8 @@ def checkUserDirectory(username, config):
 
 # Function: Retrieve the layer files stored in the SFTP Server
 def retrieveLayerFiles(layerList, config):
+    ''' Function to retrieve the layer files. '''
+
     try:
         if layerList and len(layerList) > 0:
             # Retrieve the base path
@@ -100,6 +106,8 @@ def retrieveLayerFiles(layerList, config):
 
 # Function: Retrieve the data files stored in the SFTP Server
 def retrieveDataFiles(fileList, config):
+    ''' Function to retrieve the data files. '''
+
     try:
         if fileList and len(fileList) > 0:
             # Retrieve the base path
@@ -140,6 +148,8 @@ def retrieveDataFiles(fileList, config):
 
 # Function: Retrieve the dbase files stored in the SFTP Server
 def retrieveDbaseFiles(config):
+    ''' Function to retrieve the dbase files. '''
+
     try:
         # Retrieve the base path
         basePath = io.retrieveBasePath(config)
@@ -182,6 +192,8 @@ def retrieveDbaseFiles(config):
 
 # Function: Retrieve a single file stored in the SFTP Server
 def retrieveSingleFile(filePath, fileName, config):
+    ''' Function to retrieve a single file. '''
+
     try:
         # Retrieve the connection parameters
         conn = buildConnectionParameters(config)
@@ -212,6 +224,8 @@ def retrieveSingleFile(filePath, fileName, config):
 
 # Function: Downloads a resource stored in the SFTP Server
 def downloadResource(resource, config):
+    ''' Function to download a resource. '''
+
     try:
         if resource:
             # Retrieve the connection parameters
@@ -246,6 +260,8 @@ def downloadResource(resource, config):
 
 # Function: Checks if a file exists in the SFTP Server
 def fileExists(remoteFilePath, config):
+    ''' Function to check if a file exists in the SFTP Server. '''
+
     try:
         if remoteFilePath:
             # Retrieve the connection parameters
@@ -283,6 +299,8 @@ def fileExists(remoteFilePath, config):
  
  # Function: Upload an output file to the SFTP Server
 def uploadOutputFile(localFilePath, remoteFilePath, config):
+    ''' Function to upload an output file to the SFTP Server. '''
+
     try:
         if localFilePath and remoteFilePath:
             # Retrieve the connection parameters

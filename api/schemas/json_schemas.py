@@ -1,4 +1,4 @@
-authenticate_schema = {
+authenticateSchema = {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "type": "object",
   "properties": {
@@ -12,7 +12,7 @@ authenticate_schema = {
 }
 
 
-pv_power_plants_process_schema = {
+pvPowerPlantsProcessSchema = {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "type": "object",
   "properties": {
@@ -25,7 +25,7 @@ pv_power_plants_process_schema = {
   ]
 }
 
-building_energy_simulation_process_schema = {
+buildingEnergySimulationProcessSchema = {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "type": "object",
   "properties": {

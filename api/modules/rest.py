@@ -7,6 +7,8 @@ from flask import make_response
 
 # Function: Build a 200-OK response
 def buildResponse200(isWelcome, config, properties):
+    ''' Function to build a simple OK response. '''
+
     # Build the message
     message = properties['IDESIGNRES-MESSAGES']['idesignres.message.success']
     if isWelcome:
@@ -32,6 +34,8 @@ def buildResponse200(isWelcome, config, properties):
 
 # Function: Build a 200-OK response with value
 def buildResponse200Value(value, properties):
+    ''' Function to build an OK response, including a customized value. '''
+    
     # Build the header
     headerTypeHeader = properties['IDESIGNRES-REST']['idesignres.rest.content.type.header']
     headerTypeValue = properties['IDESIGNRES-REST']['idesignres.rest.content.type.value']
@@ -52,6 +56,8 @@ def buildResponse200Value(value, properties):
 
 # Function: Build a 400-Bad request response
 def buildResponse400(errorMessage, properties):
+    ''' Function to build a Bad Request response. '''
+
     # Build the header
     headerTypeHeader = properties['IDESIGNRES-REST']['idesignres.rest.content.type.header']
     headerTypeValue = properties['IDESIGNRES-REST']['idesignres.rest.content.type.value']
@@ -71,6 +77,8 @@ def buildResponse400(errorMessage, properties):
 
 #Function: Build a 401-Unauthorized request response
 def buildResponse401(properties):
+    ''' Function to build an Unauthorized Request response. '''
+
     # Build the header
     headerTypeHeader = properties['IDESIGNRES-REST']['idesignres.rest.content.type.header']
     headerTypeValue = properties['IDESIGNRES-REST']['idesignres.rest.content.type.value']

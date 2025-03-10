@@ -22,16 +22,16 @@ from flask_jwt_extended import jwt_required
 # JSON validation imports
 from jsonschema import validate
 from jsonschema.exceptions import ValidationError
-import schemas.json_schemas as json_schema
+import schemas.json_schemas as jsonSchema
 
 # Modules imports
 import modules.database as db
 import modules.io as io
 import modules.qgis as qgis
-import modules.qgis_pv_preprocess as qgis_pv1
-import modules.qgis_pv_process as qgis_pv2
-import modules.qgis_bp_preprocess as qgis_bp1
-import modules.qgis_bp_process as qgis_bp2
+import modules.qgis_pv_preprocess as qgisPV1
+import modules.qgis_pv_process as qgisPV2
+import modules.qgis_bp_preprocess as qgisBP1
+import modules.qgis_bp_process as qgisBP2
 import modules.rest as rest
 import modules.sftp as sftp
 
@@ -61,19 +61,22 @@ pd.options.mode.chained_assignment = None
 
 # Function: Set memory limit (in bytes)
 def setMemoryLimit():
-    # Limit memory to 16 GB
+    ''' Function to limit the memory to 16 GB. '''
     limit = 16 * 1024 * 1024 * 1024
     resource.setrlimit(resource.RLIMIT_AS, (limit, limit))
 
 
 @app.before_first_request
 def before_first_request():
+    ''' Function to set the memory limit before the first request. '''
     setMemoryLimit()
 
 
 # Function: Verify as online
 @app.route('/api/qgis/hello', methods = ['GET'])
 def hello():
+    ''' API function to check if the API is online. '''
+    
     # Show info logs
     logging.info('')
     logging.info('****************************************************************************************')
@@ -100,6 +103,8 @@ def hello():
 # Function: Authenticate
 @app.route('/api/qgis/authenticate', methods = ['POST'])
 def authenticate():
+    ''' Function to check if a user is authenticated. '''
+    
     # Show info logs
     logging.info('')
     logging.info('****************************************************************************************')
@@ -110,28 +115,22 @@ def authenticate():
     body = request.get_json()
     try:
         # Validate if the input corresponds to the schema
-        validate(instance = body, schema = json_schema.authenticate_schema)
+        validate(instance = body, schema = jsonSchema.authenticateSchema)
         if not body['username'].strip() or not body['password'].strip():
             raise ValueError(properties['IDESIGNRES-EXCEPTIONS']['idesignres.exception.validation.json.empty.property'])
 
-        # Show the request body
-        logging.info('')
-        logging.info('  QGIS Server/> Request body :')
-        logging.info(json.dumps(body, indent = 4))
-        logging.info('')
-        
         # Call to UI-Backend to authenticate and create the token
-        auth_response = requests.post(
+        authResponse = requests.post(
             config['IDESIGNRES-UIBACKEND']['idesignres.uibackend.url.authenticate'].replace(
                 '{1}', config['IDESIGNRES-UIBACKEND']['idesignres.uibackend.host']),
-            data=json.dumps(
-                {'username': str(body['username']).strip(),
-                'password': str(body['password']).strip()}),
-                headers={properties['IDESIGNRES-REST']['idesignres.rest.content.type.header']:
+                data = json.dumps(
+                    {'username': str(body['username']).strip(),
+                    'password': str(body['password']).strip()}),
+                headers = {properties['IDESIGNRES-REST']['idesignres.rest.content.type.header']:
                     properties['IDESIGNRES-REST']['idesignres.rest.content.type.value']},
-            verify=False)
+                verify = False)
         token = None
-        if auth_response and auth_response.status_code == 200:
+        if authResponse and authResponse.status_code == 200:
             token = create_access_token(identity = str(body['username']).strip())
         else:
             raise ConnectionRefusedError('')
@@ -143,7 +142,8 @@ def authenticate():
         response = rest.buildResponse400(str(valueError), properties)
     except ValidationError as validationError:
         # Create a Bad Request response
-        response = rest.buildResponse400(properties['IDESIGNRES-EXCEPTIONS']['idesignres.exception.validation.json.format'], properties)
+        response = rest.buildResponse400(properties['IDESIGNRES-EXCEPTIONS']['idesignres.exception.validation.json.format'],
+            properties)
     except ConnectionRefusedError as cre:
         # Create an Unauthorized response
         response = rest.buildResponse401(properties)
@@ -156,8 +156,10 @@ def authenticate():
 
 
 # Function: Execute solar preprocess
-def executeSolarPreprocess(process, nutsid, slope_angle, user):
-    out_csv_file = None
+def executeSolarPreprocess(process, nutsid, slopeAngle, user):
+    ''' API function to execute the solar preprocess. '''
+    
+    outCsvFile = None
     try:
         # Retrieve the layers from the database
         logging.info('')
@@ -173,59 +175,60 @@ def executeSolarPreprocess(process, nutsid, slope_angle, user):
             # Process the layer
             if success:
                 # Step 01 -> Process the base layer and retrieve the output file
-                nuts_out, nuts_out_CRS = qgis_pv1.pv1_step_01(layerList[0], nutsid, config)
+                nutsOut, nutsOutCrs = qgisPV1.pv1Step01(layerList[0], nutsid, config)
                     
                 # Step 02 -> "slope" raster
-                slo_clip_path = qgis_pv1.pv1_steps_02_03_04_05(layerList[1], nuts_out, '02', config)
+                slopeClipPath = qgisPV1.pv1Steps02030405(layerList[1], nutsOut, '02', config)
                 
                 # Step 03 -> "GHI" raster
-                ghi_clip_path = qgis_pv1.pv1_steps_02_03_04_05(layerList[2], nuts_out_CRS, '03', config)
+                ghiClipPath = qgisPV1.pv1Steps02030405(layerList[2], nutsOutCrs, '03', config)
                     
                 # Step 04 -> "land use" raster
-                lan_clip_path = qgis_pv1.pv1_steps_02_03_04_05(layerList[3], nuts_out, '04', config)
+                lanClipPath = qgisPV1.pv1Steps02030405(layerList[3], nutsOut, '04', config)
                      
                 # Step 05 -> "non protected areas" raster
-                npa_clip_path = qgis_pv1.pv1_steps_02_03_04_05(layerList[4], nuts_out, '05', config)
+                npaClipPath = qgisPV1.pv1Steps02030405(layerList[4], nutsOut, '05', config)
                     
                 # Step 06 -> Filter the "slope" raster
-                slo_flt_path = qgis_pv1.pv1_step_06(slo_clip_path, slope_angle, config)
+                slopeFltPath = qgisPV1.pv1Step06(slopeClipPath, slopeAngle, config)
                     
                 # Step 07 -> Filter "land use" raster by codes
-                lan_flt_path = qgis_pv1.pv1_step_07(lan_clip_path, config)
+                lanFltPath = qgisPV1.pv1Step07(lanClipPath, config)
                     
                 # Step 08 -> Change the resolution of the "land use" raster
-                lan_res_path = qgis_pv1.pv1_steps_08_10(lan_flt_path, '08', config)
+                lanResPath = qgisPV1.pv1Steps0810(lanFltPath, '08', config)
                     
                 # Step 09 -> Adjust the "land use" raster to the size of the "slope" raster
-                lan_align_path = qgis_pv1.pv1_steps_09_11_13(slo_flt_path, lan_res_path, '09', config)
+                lanAlignPath = qgisPV1.pv1Steps091113(slopeFltPath, lanResPath, '09', config)
                     
                 # Step 10 -> Change the resolution of the "non protected areas" raster
-                npa_res_path = qgis_pv1.pv1_steps_08_10(npa_clip_path, '10', config)
+                npaResPath = qgisPV1.pv1Steps0810(npaClipPath, '10', config)
                     
                 # Step 11 -> Adjust the "non protected areas" raster to the size of the "slope" raster
-                npa_align_path = qgis_pv1.pv1_steps_09_11_13(slo_flt_path, npa_res_path, '11', config)
+                npaAlignPath = qgisPV1.pv1Steps091113(slopeFltPath, npaResPath, '11', config)
                     
                 # Step 12 -> Change the resolution and the reference system of the "GHI" raster
-                ghi_repres_path = qgis_pv1.pv1_step_12(ghi_clip_path, config)
+                ghiRepresPath = qgisPV1.pv1Step12(ghiClipPath, config)
                   
                 # Step 13 -> Adjust the "GHI" raster to the size of the "slope" raster
-                ghi_align_path = qgis_pv1.pv1_steps_09_11_13(slo_flt_path, ghi_repres_path, '13', config)
+                ghiAlignPath = qgisPV1.pv1Steps091113(slopeFltPath, ghiRepresPath, '13', config)
                    
                 # Step 14 -> Calculate the multiplication of all the layers
-                rd_areas = qgis_pv1.pv1_step_14(ghi_align_path, npa_align_path, lan_align_path, slo_flt_path, config)
+                rdAreas = qgisPV1.pv1Step14(ghiAlignPath, npaAlignPath, lanAlignPath, slopeFltPath, config)
                     
                 # Step 15 -> Calculate regions
-                out_csv_file = qgis_pv1.pv1_step_15(rd_areas, nuts_out, process, user, nutsid, config)
+                outCsvFile = qgisPV1.pv1Step15(rdAreas, nutsOut, process, user, nutsid, config)
                 
                 # Upload the output file to the SFTP Server
-                if out_csv_file:
+                if outCsvFile:
                     logging.info('  QGIS Server/> Uploading the result file...')
                     logging.info('')
-                    rem_output = io.retrieveOutputTmpPath(False, config) + out_csv_file[out_csv_file.rfind('/') + 1:]
-                    rem_output = rem_output.replace('{1}', user)
-                    sftp.uploadOutputFile(out_csv_file, rem_output, config)
+                    remOutput = io.retrieveOutputTmpPath(False, config) +\
+                        outCsvFile[outCsvFile.rfind('/') + 1:]
+                    remOutput = remOutput.replace('{1}', user)
+                    sftp.uploadOutputFile(outCsvFile, remOutput, config)
                 
-        result = out_csv_file
+        result = outCsvFile
     except ValueError as valueError:
         result = None
     except ValidationError as validationError:
@@ -250,7 +253,9 @@ def executeSolarPreprocess(process, nutsid, slope_angle, user):
 
 # Function: Execute building preprocess
 def executeBuildingPreprocess(process, nutsid, user):
-    out_csv_file = None
+    ''' API function to execute the buildings preprocess. '''
+    
+    outCsvFile = None
     try:
         # Retrieve the layers from the database
         logging.info('')
@@ -279,78 +284,81 @@ def executeBuildingPreprocess(process, nutsid, user):
                         logging.info('')
 
                         # Step 01 -> Download and unzip
-                        destination_dir = qgis_bp1.bp1_step_01(nutsid, fileList, resourceList, config, properties)
+                        destinationDir = qgisBP1.bp1Step01(nutsid, fileList, resourceList, config, properties)
                             
                         # Step 02 -> Export the selected NUTS
-                        nuts_flt_crs, out_nuts_54009 = qgis_bp1.bp1_step_02(layerList[0], nutsid, config, properties)
+                        nutsFltCrs, outNuts54009 = qgisBP1.bp1Step02(layerList[0], nutsid, config, properties)
                             
                         # Step 03 -> Clip and save the vector layers
-                        clipped_layers = qgis_bp1.bp1_step_03(destination_dir, nuts_flt_crs)
+                        clippedLayers = qgisBP1.bp1Step03(destinationDir, nutsFltCrs)
                             
                         # Step 04 -> Load the buildings layer
-                        buildings_layer = qgis_bp1.bp1_step_04(clipped_layers, True, config)
+                        buildingsLayer = qgisBP1.bp1Step04(clippedLayers, True, config)
                             
                         # Step 05 -> Load the NUTS layer
-                        nuts_layer = qgis_bp1.bp1_step_05(out_nuts_54009)
+                        nutsLayer = qgisBP1.bp1Step05(outNuts54009)
                             
                         # Step 06 -> Load the land use layer
-                        land_use_layer = qgis_bp1.bp1_step_06(clipped_layers)
+                        landUseLayer = qgisBP1.bp1Step06(clippedLayers)
                             
                         # Step 07 -> Load the Raster Use layer
-                        raster_use_layer = qgis_bp1.bp1_step_07(layerList[2], config)
+                        rasterUseLayer = qgisBP1.bp1Step07(layerList[2], config)
                             
                         # Step 08 -> Load the Raster Height layer
-                        raster_height_layer = qgis_bp1.bp1_step_08(layerList[6], config)
+                        rasterHeightLayer = qgisBP1.bp1Step08(layerList[6], config)
                             
                         ##### Start the building preprocessing #####
                           
                         # Step 09 -> Assign NUTS
-                        qgis_bp1.bp1_step_09(buildings_layer, nuts_layer, nutsid)
+                        qgisBP1.bp1Step09(buildingsLayer, nutsLayer, nutsid)
                             
                         # Step 10 -> Calculate height volumes
-                        qgis_bp1.bp1_step_10(buildings_layer, raster_height_layer)
+                        qgisBP1.bp1Step10(buildingsLayer, rasterHeightLayer)
                             
                         # Step 11 -> Calculate statistics and mapping
-                        qgis_bp1.bp1_step_11(buildings_layer, raster_use_layer, land_use_layer, fileList[1], config)
+                        qgisBP1.bp1Step11(buildingsLayer, rasterUseLayer, landUseLayer, fileList[1], config)
                         
                         # Step 12 -> Adjoin facade calculations
-                        buildings = qgis_bp1.bp1_step_12(True, config)
+                        buildings = qgisBP1.bp1Step12(True, config)
                             
                         # Step 13 -> Mask raster layers
-                        clipped_rasters = qgis_bp1.bp1_step_13(layerList, config)
+                        clippedRasters = qgisBP1.bp1Step13(layerList, config)
                             
                         # Step 14 -> Process clipped layers
-                        layers_dict = qgis_bp1.bp1_step_14(nutsid, clipped_rasters, fileList[2], destination_dir, config)
+                        layers_dict = qgisBP1.bp1Step14(nutsid, clippedRasters,
+                            fileList[2], destinationDir, config)
                         
                         # Step 15 -> Assign year info
-                        buildings = qgis_bp1.bp1_step_15(nutsid, buildings, layers_dict, fileList[2], config)
+                        buildings = qgisBP1.bp1Step15(nutsid, buildings, layers_dict, fileList[2], config)
                         
                         # Step 16 -> Calculate additional info
-                        buildings = qgis_bp1.bp1_step_16(buildings)
+                        buildings = qgisBP1.bp1Step16(buildings)
                         
                         # Step 17 -> Prepare clustering ([n_clusters_AB , n_clusters_SFH, n_clusters_SS])
                         clusters = [4, 3, 1]
-                        AB_df, SFH_df, SS_df = qgis_bp1.bp1_step_17(buildings)
+                        dfAB, dfSFH, dfSS = qgisBP1.bp1Step17(buildings)
                         
                         # Step 18 -> Perform clustering (AB)
-                        df_clusters_AB = qgis_bp1.bp1_step_18(AB_df, clusters[0])
+                        dfClustersAB = qgisBP1.bp1Step18(dfAB, clusters[0])
                         
                         # Step 19 -> Perform clustering (SFH)
-                        df_clusters_SFH = qgis_bp1.bp1_step_19(SFH_df, clusters[1])
+                        dfClustersSFH = qgisBP1.bp1Step19(dfSFH, clusters[1])
                         
                         # Step 20 -> Perform clustering (SS)
-                        df_clusters_SS = qgis_bp1.bp1_step_20(SS_df, clusters[2])
+                        dfClustersSS = qgisBP1.bp1Step20(dfSS, clusters[2])
                         
                         # Step 21 -> Create the final Dataframe
-                        final_df, out_csv_file = qgis_bp1.bp1_step_21(df_clusters_AB, df_clusters_SFH, df_clusters_SS, process, user, nutsid)
+                        dfFinal, outCsvFile = qgisBP1.bp1Step21(dfClustersAB, dfClustersSFH,
+                            dfClustersSS, process, user, nutsid)
                         
                         # Upload the output file to the SFTP Server
-                        if out_csv_file:
+                        if outCsvFile:
                             logging.info('  QGIS Server/> Uploading the result file...')
                             logging.info('')
-                            rem_output = io.retrieveOutputTmpPath(False, config) + out_csv_file[out_csv_file.rfind('/') + 1:]
-                            rem_output = rem_output.replace('{1}', user)
-                            sftp.uploadOutputFile(out_csv_file, rem_output, config)
+                            remOutput = io.retrieveOutputTmpPath(False, config) +\
+                                outCsvFile[outCsvFile.rfind('/') + 1:]
+                            remOutput = remOutput.replace('{1}', user)
+                            sftp.uploadOutputFile(outCsvFile, remOutput, config)
 
         result = output_csv_file
     except ValueError as valueError:
@@ -379,6 +387,8 @@ def executeBuildingPreprocess(process, nutsid, user):
 @app.route('/api/qgis/pv-power-plants-process', methods = ['POST'])
 @jwt_required()
 def executePVPowerPlantsProcess():
+    ''' API function to execute the PV Power Plants process. '''
+    
     # Show info logs
     logging.info('')
     logging.info('****************************************************************************************')
@@ -394,7 +404,7 @@ def executePVPowerPlantsProcess():
 
     try:
         # Validate if the input corresponds to the schema
-        validate(instance = body, schema = json_schema.pv_power_plants_process_schema)
+        validate(instance = body, schema = jsonSchema.pvPowerPlantsProcessSchema)
         if not body['nutsid'].strip() or not body['slope_angle'] or not user.strip():
             raise ValueError(properties['IDESIGNRES-EXCEPTIONS']['idesignres.exception.validation.json.empty.property'])
         
@@ -403,12 +413,6 @@ def executePVPowerPlantsProcess():
         if body['nutsid'].strip().upper() not in nutsids:
             raise ValueError(properties['IDESIGNRES-EXCEPTIONS']['idesignres.exception.validation.nutsid.not.valid'])
 
-        # Show the request body
-        logging.info('')
-        logging.info('  QGIS Server/> Request body :')
-        logging.info(json.dumps(body, indent = 4))
-        logging.info('')
-        
         # Check if the user has his/her own output directory
         if not sftp.checkUserDirectory(user, config):
             raise ValueError(properties['IDESIGNRES-EXCEPTIONS']['idesignres.exception.validation.output'])
@@ -419,12 +423,14 @@ def executePVPowerPlantsProcess():
         if processList and len(processList) > 0 and processList[0]:
             # Check if the result already exists
             if int(config['IDESIGNRES']['idesignres.check.previous.results']) == 1:
-                rem_file = config['IDESIGNRES-PATH']['idesignres.path.output.zip.name'].replace('{1}',
+                remFile = config['IDESIGNRES-PATH']['idesignres.path.output.zip.name'].replace('{1}',
                     processList[0]['uuid']).replace('{2}', body['nutsid'].strip())
-                file_exists = sftp.fileExists(config['IDESIGNRES-PATH']['idesignres.path.output'] + user + '/' + rem_file, config)
-                if file_exists:
+                fileExists = sftp.fileExists(config['IDESIGNRES-PATH']['idesignres.path.output'] +\
+                    user + '/' + remFile, config)
+                if fileExists:
                     logging.info('')
-                    logging.info('  SFTP Server/> ' + properties['IDESIGNRES-EXCEPTIONS']['idesignres.exception.result.exists'])
+                    logging.info('  SFTP Server/> ' +\
+                        properties['IDESIGNRES-EXCEPTIONS']['idesignres.exception.result.exists'])
                     logging.info('')
                     raise ValueError(properties['IDESIGNRES-EXCEPTIONS']['idesignres.exception.result.exists'])
         
@@ -442,55 +448,57 @@ def executePVPowerPlantsProcess():
             # Execute the preprocess
             result = None
             if int(config['IDESIGNRES']['idesignres.preprocess.pv']) == 1:
-                result = executeSolarPreprocess(processList[0]['uuid'], body['nutsid'].strip(), body['slope_angle'], user.strip())
+                result = executeSolarPreprocess(processList[0]['uuid'], body['nutsid'].strip(),
+                    body['slope_angle'], user.strip())
                 if not result or not io.fileExists(result):
                     raise ValueError(properties['IDESIGNRES-EXCEPTIONS']['idesignres.exception.no.input.data.preprocess'])
             
             # Step 01 -> Load the specific configuration
-            list_parameters_th, list_parameters_pv, system_cost, land_use_th, land_use_pv, min_ghi_th, min_ghi_pv,\
-            eff_th, eff_op, aperture, t_coord, year, tilt, azimuth, tracking, loss, opex_th, opex_pv =\
-                qgis_pv2.pv2_step_01(config)
+            listParametersTH, listParametersPV, systemCost, landUseTH, landUsePV, minGhiTH, minGhiPV,\
+            effTH, effOp, aperture, tCoord, year, tilt, azimuth, tracking, loss, opexTH, opexPV =\
+                qgisPV2.pv2Step01(config)
             
             # Step 02 -> Download the result of the Solar preprocess and load the data
-            scada_th, scada_pv = qgis_pv2.pv2_step_02(user, body['nutsid'].strip(), processList[0]['uuid'], config)
-            if scada_th is None or scada_th.empty or scada_pv is None or scada_pv.empty:
+            scadaTH, scadaPV = qgisPV2.pv2Step02(user, body['nutsid'].strip(), processList[0]['uuid'], config)
+            if scadaTH is None or scadaTH.empty or scadaPV is None or scadaPV.empty:
                 raise ValueError(properties['IDESIGNRES-EXCEPTIONS']['idesignres.exception.no.input.data.preprocess'])
                 
             # Step 03 -> Calculate the available thermal area
-            area_th, power_th, capex_th = qgis_pv2.pv2_step_03(list_parameters_th, system_cost, land_use_th)
+            areaTH, powerTH, capexTH = qgisPV2.pv2Step03(listParametersTH, systemCost, landUseTH)
                 
             # Step 04 -> Calculate the available PV area
-            area_pv, power_pv, capex_pv = qgis_pv2.pv2_step_04(list_parameters_pv, system_cost, land_use_pv)
+            areaPV, powerPV, capexPV = qgisPV2.pv2Step04(listParametersPV, systemCost, landUsePV)
                 
             # Step 05 -> Thermal production
-            nuts2_th, rows_th, pot_dist_th, df_th = qgis_pv2.pv2_step_05(scada_th, area_th, min_ghi_th,
-                land_use_th, eff_th, eff_op, aperture, t_coord, year)
+            nuts2TH, rowsTH, potDistTH, dfTH = qgisPV2.pv2Step05(scadaTH, areaTH, minGhiTH,
+                landUseTH, effTH, effOp, aperture, tCoord, year)
                 
             # Step 06 -> PV production
-            name_nuts2, nuts2_pv, pot_dist_pv, df_pv = qgis_pv2.pv2_step_06(rows_th, scada_pv,
-                area_pv, min_ghi_pv, land_use_pv, tilt, azimuth, tracking, loss, t_coord, year)
+            nameNuts2, nuts2PV, potDistPV, dfPV = qgisPV2.pv2Step06(rowsTH, scadaPV,
+                areaPV, minGhiPV, landUsePV, tilt, azimuth, tracking, loss, tCoord, year)
               
             # Step 07 -> Calculate the aggregated production
-            prod_aggregated = qgis_pv2.pv2_step_07(df_th, df_pv, name_nuts2)
+            prodAggregated = qgisPV2.pv2Step07(dfTH, dfPV, nameNuts2)
                 
             # Step 08 -> Calculate the distribution production
-            nuts2_distrib = qgis_pv2.pv2_step_08(nuts2_th, nuts2_pv)
+            nuts2Distrib = qgisPV2.pv2Step08(nuts2TH, nuts2PV)
             
             # Step 09 -> Save the results
-            outputs = qgis_pv2.pv2_step_09(prod_aggregated, nuts2_distrib, name_nuts2, pot_dist_th,
-                pot_dist_pv, opex_th, opex_pv, config)
+            outputs = qgisPV2.pv2Step09(prodAggregated, nuts2Distrib, nameNuts2, potDistTH,
+                potDistPV, opexTH, opexPV, config)
                         
             # Compress and upload the output files to the SFTP Server
             if outputs and len(outputs) > 0:
                 logging.info('  QGIS Server/> Compressing the result files...')
                 logging.info('')
-                fil = io.retrieveOutputBasePath(True, config) + processList[0]['uuid'] + '_' + body['nutsid'].strip() + '.zip' 
+                fil = io.retrieveOutputBasePath(True, config) + processList[0]['uuid'] + '_' +\
+                    body['nutsid'].strip() + '.zip' 
                 with zipfile.ZipFile(fil, 'w', zipfile.ZIP_DEFLATED) as zipf:
-                    for loc_output in outputs:
-                        zipf.write(loc_output, loc_output[loc_output.rfind('/') + 1:])
-            rem_output = io.retrieveOutputBasePath(False, config) + fil[fil.rfind('/') + 1:]
-            rem_output = rem_output.replace('{1}', user)
-            sftp.uploadOutputFile(fil, rem_output, config)
+                    for locOutput in outputs:
+                        zipf.write(locOutput, locOutput[locOutput.rfind('/') + 1:])
+            remOutput = io.retrieveOutputBasePath(False, config) + fil[fil.rfind('/') + 1:]
+            remOutput = remOutput.replace('{1}', user)
+            sftp.uploadOutputFile(fil, remOutput, config)
 
         # Create the OK response
         response = rest.buildResponse200Value(properties['IDESIGNRES-REST']['idesignres.rest.result.download'], properties)
@@ -522,6 +530,8 @@ def executePVPowerPlantsProcess():
 @app.route('/api/qgis/building-energy-simulation-process', methods = ['POST'])
 @jwt_required()
 def executeBuildingEnergySimulationProcess():
+    ''' API function to execute the Building Energy Simulationprocess. '''
+    
     # Show info logs
     logging.info('')
     logging.info('****************************************************************************************')
@@ -537,7 +547,7 @@ def executeBuildingEnergySimulationProcess():
 
     try:
         # Validate if the input corresponds to the schema
-        validate(instance = body, schema = json_schema.building_energy_simulation_process_schema)
+        validate(instance = body, schema = jsonSchema.buildingEnergySimulationProcessSchema)
         if not body['nutsid'].strip() or not user.strip():
             raise ValueError(properties['IDESIGNRES-EXCEPTIONS']['idesignres.exception.validation.json.empty.property'])
         
@@ -666,11 +676,11 @@ def executeBuildingEnergySimulationProcess():
                         .replace('{1}', measure['building_use']).replace('{2}', 'Appliances'))
                         
         # Perform other validations (Passive measures)
-        ref_levels = [lvl.strip() for lvl in config['IDESIGNRES-PARAMETERS']['idesignres.params.ref.levels'].split(',')]
+        refLevels = [lvl.strip() for lvl in config['IDESIGNRES-PARAMETERS']['idesignres.params.ref.levels'].split(',')]
         for measure in body['scenario']['passive_measures']:
             if measure['building_use'].strip() not in archetypes:
                 raise ValueError(properties['IDESIGNRES-EXCEPTIONS']['idesignres.exception.validation.passive.measures.archetypes'])
-            if measure['ref_level'].strip().lower() not in ref_levels:
+            if measure['ref_level'].strip().lower() not in refLevels:
                 raise ValueError(properties['IDESIGNRES-EXCEPTIONS']['idesignres.exception.validation.passive.measures.ref.level'])
 
         # Check if the user has his/her own output directory
@@ -696,12 +706,14 @@ def executeBuildingEnergySimulationProcess():
         if processList and len(processList) > 0 and processList[1]:
             # Check if the result already exists
             if int(config['IDESIGNRES']['idesignres.check.previous.results']) == 1:
-                rem_file = config['IDESIGNRES-PATH']['idesignres.path.output.zip.name'].replace('{1}',
+                remFile = config['IDESIGNRES-PATH']['idesignres.path.output.zip.name'].replace('{1}',
                     processList[1]['uuid']).replace('{2}', body['nutsid'].strip())
-                file_exists = sftp.fileExists(config['IDESIGNRES-PATH']['idesignres.path.output'] + user + '/' + rem_file, config)
-                if file_exists:
+                fileExists = sftp.fileExists(config['IDESIGNRES-PATH']['idesignres.path.output'] +\
+                    user + '/' + remFile, config)
+                if fileExists:
                     logging.info('')
-                    logging.info('  SFTP Server/> ' + properties['IDESIGNRES-EXCEPTIONS']['idesignres.exception.result.exists'])
+                    logging.info('  SFTP Server/> ' +\
+                        properties['IDESIGNRES-EXCEPTIONS']['idesignres.exception.result.exists'])
                     logging.info('')
                     raise ValueError(properties['IDESIGNRES-EXCEPTIONS']['idesignres.exception.result.exists'])
         
@@ -731,93 +743,93 @@ def executeBuildingEnergySimulationProcess():
                         raise ValueError(properties['IDESIGNRES-EXCEPTIONS']['idesignres.exception.no.input.data.preprocess'])
 
                 # Step 01 -> Download the result of the Buildings preprocess
-                df_csv = qgis_bp2.bp2_step_01(user, body['nutsid'].strip(), processList[1]['uuid'], config)
-                if df_csv is None or df_csv.empty:
+                dfCsv = qgisBP2.bp2Step01(user, body['nutsid'].strip(), processList[1]['uuid'], config)
+                if dfCsv is None or dfCsv.empty:
                     raise ValueError(properties['IDESIGNRES-EXCEPTIONS']['idesignres.exception.no.input.data.preprocess'])
 
                 # Step 02 -> Retrieve temperatures
-                temps_path = qgis_bp2.bp2_step_02(body['nutsid'].strip(), body['year'], dbaseFileList[6], config, properties)
+                tempsPath = qgisBP2.bp2Step02(body['nutsid'].strip(), body['year'], dbaseFileList[6], config, properties)
                         
                 # Step 03 -> Retrieve radiation values
-                rad_path = qgis_bp2.bp2_step_03(body['nutsid'].strip(), body['year'], dbaseFileList[5], config, properties)
-                if not temps_path or not rad_path:
+                radPath = qgisBP2.bp2Step03(body['nutsid'].strip(), body['year'], dbaseFileList[5], config, properties)
+                if not tempsPath or not radPath:
                     raise ValueError(properties['IDESIGNRES-EXCEPTIONS']['idesignres.exception.validation.no.rad.temp'])
                
                 # Step 04 -> Load the database
-                df_dhw, df_years, df_sectors, df_seasons, df_temperatures, df_schedule, df_res_hh_tes, df_ser_hh_tes,\
-                df_uvalues, df_retro_uvalues, df_ach, df_base_temperatures, df_calendar, df_bes_capex, df_bes_opex,\
-                df_res, df_bes_capacity, df_retro_cost, df_solar_office, df_solar_noffice, df_dwellings, df_r_t_hh_eff =\
-                    qgis_bp2.bp2_step_04(dbaseFileList, body)
+                dfDHW, dfYears, dfSectors, dfSeasons, dfTemperatures, dfSchedule, dfResHHTes, dfSerHHTes,\
+                dfUvalues, dfRetroUvalues, dfACH, dfBaseTemperatures, dfCalendar, dfBesCapex, dfBesOpex,\
+                dfRes, dfBesCapacity, dfRetroCost, dfSolarOffice, dfSolarNoffice, dfDwellings, dfRTHHEff =\
+                    qgisBP2.bp2Step04(dbaseFileList, body)
                             
                 # Step 05 -> Add new columns to the input dataframe
-                df_input = qgis_bp2.bp2_step_05(df_csv)
+                dfInput = qgisBP2.bp2Step05(dfCsv)
                             
                 # Step 06 -> Add the input data
-                df_input = qgis_bp2.bp2_step_06(df_csv, df_dhw, df_years, df_sectors, df_dwellings, body, properties)
-                del df_years, df_sectors, df_dwellings
+                dfInput = qgisBP2.bp2Step06(dfCsv, dfDHW, dfYears, dfSectors, dfDwellings, body, properties)
+                del dfYears, dfSectors, dfDwellings
                             
                 # Step 07 -> Add the active measures
-                df_input = qgis_bp2.bp2_step_07(df_csv, df_res_hh_tes, df_ser_hh_tes, df_r_t_hh_eff, config, body)
-                del df_res_hh_tes, df_ser_hh_tes, df_r_t_hh_eff
+                dfInput = qgisBP2.bp2Step07(dfCsv, dfResHHTes, dfSerHHTes, dfRTHHEff, config, body)
+                del dfResHHTes, dfSerHHTes, dfRTHHEff
                             
                 # Step 08 -> Add the passive measures
-                df_input = qgis_bp2.bp2_step_08(df_csv, body)
+                dfInput = qgisBP2.bp2Step08(dfCsv, body)
                             
                 # Step 09 -> Add the U-Values and the Internal Gains dataframes
-                df_input = qgis_bp2.bp2_step_09(df_csv, df_dhw, df_uvalues, df_retro_uvalues, df_ach, body)
-                del df_dhw, df_uvalues, df_retro_uvalues, df_ach
+                dfInput = qgisBP2.bp2Step09(dfCsv, dfDHW, dfUvalues, dfRetroUvalues, dfACH, body)
+                del dfDHW, dfUvalues, dfRetroUvalues, dfACH
                             
                 # Step 10 -> Add the CAPEX dataframe
-                df_input = qgis_bp2.bp2_step_10(df_input, df_bes_capex)
-                del df_bes_capex
+                dfInput = qgisBP2.bp2Step10(dfInput, dfBesCapex)
+                del dfBesCapex
                             
                 # Step 11 -> Add the OPEX dataframe
-                df_input = qgis_bp2.bp2_step_11(df_input, df_bes_opex)
-                del df_bes_opex
+                dfInput = qgisBP2.bp2Step11(dfInput, dfBesOpex)
+                del dfBesOpex
                             
                 # Step 12 -> Add the Retroffiting Cost dataframe
-                df_input = qgis_bp2.bp2_step_12(df_input, df_retro_cost)
-                del df_retro_cost
+                dfInput = qgisBP2.bp2Step12(dfInput, dfRetroCost)
+                del dfRetroCost
                             
                 # Step 13 -> Add the Renewable Energy Systems dataframe
-                df_input = qgis_bp2.bp2_step_13(df_input, df_res)
-                del df_res
+                dfInput = qgisBP2.bp2Step13(dfInput, dfRes)
+                del dfRes
                             
                 # Step 14 -> Add the Capacity dataframe
-                df_input = qgis_bp2.bp2_step_14(df_input, df_bes_capacity, config)
-                del df_bes_capacity
+                dfInput = qgisBP2.bp2Step14(dfInput, dfBesCapacity, config)
+                del dfBesCapacity
                             
                 # Step 15 -> Add the Equivalent Power dataframe
-                df_input = qgis_bp2.bp2_step_15(df_input)
+                dfInput = qgisBP2.bp2Step15(dfInput)
                             
                 # Step 16 -> Calculate the costs
-                df_input = qgis_bp2.bp2_step_16(df_input)
+                dfInput = qgisBP2.bp2Step16(dfInput)
                         
                 # Step 17 -> Calculate the General Schedule
-                dict_schedule = qgis_bp2.bp2_step_17(df_input, df_schedule, df_temperatures, df_base_temperatures,
-                    df_solar_office, df_solar_noffice, body)
-                del df_temperatures, df_base_temperatures, df_solar_office, df_solar_noffice
+                dictSchedule = qgisBP2.bp2Step17(dfInput, dfSchedule, dfTemperatures, dfBaseTemperatures,
+                    dfSolarOffice, dfSolarNoffice, body)
+                del dfTemperatures, dfBaseTemperatures, dfSolarOffice, dfSolarNoffice
                             
                 # Step 18 -> Calculate the Scenario
-                dict_schedule = qgis_bp2.bp2_step_18(df_input, dict_schedule, config, body)
+                dictSchedule = qgisBP2.bp2Step18(dfInput, dictSchedule, config, body)
                             
                 # Step 19 -> Calculate the Anual Results
-                df_anual_res = qgis_bp2.bp2_step_19(df_input, dict_schedule)
+                dfAnualResults = qgisBP2.bp2Step19(dfInput, dictSchedule)
                             
                 # Step 20 -> Calculate the Consolidate
                 dictConsolidated = {}
                 for arch in archetypes:
-                    dictConsolidated[arch] = qgis_bp2.bp2_step_20(df_input, dict_schedule, arch)
+                    dictConsolidated[arch] = qgisBP2.bp2Step20(dfInput, dictSchedule, arch)
                             
                 # Step 21 -> Calculate the Hourly Results
                 dictHourlyResults = {}
                 for arch in archetypes:
-                    dictHourlyResults[arch] = qgis_bp2.bp2_step_21(df_input, dict_schedule, arch)
-                del dict_schedule
+                    dictHourlyResults[arch] = qgisBP2.bp2Step21(dfInput, dictSchedule, arch)
+                del dictSchedule
                            
                 # Step 22 -> Save the final result
-                output = qgis_bp2.bp2_step_22(df_input, df_anual_res, dictConsolidated, dictHourlyResults, config)
-                del df_input, df_anual_res, dictConsolidated, dictHourlyResults
+                output = qgisBP2.bp2Step22(dfInput, dfAnualResults, dictConsolidated, dictHourlyResults, config)
+                del dfInput, dfAnualResults, dictConsolidated, dictHourlyResults
                             
                 # Compress and upload the output file to the SFTP Server
                 if output:
@@ -826,9 +838,9 @@ def executeBuildingEnergySimulationProcess():
                     fil = io.retrieveOutputBasePath(True, config) + processList[1]['uuid'] + '_' + body['nutsid'].strip() + '.zip' 
                     with zipfile.ZipFile(fil, 'w', zipfile.ZIP_DEFLATED) as zipf:
                         zipf.write(output, output[output.rfind('/') + 1:])
-                    rem_output = io.retrieveOutputBasePath(False, config) + fil[fil.rfind('/') + 1:]
-                    rem_output = rem_output.replace('{1}', user)
-                    sftp.uploadOutputFile(fil, rem_output, config)
+                    remOutput = io.retrieveOutputBasePath(False, config) + fil[fil.rfind('/') + 1:]
+                    remOutput = remOutput.replace('{1}', user)
+                    sftp.uploadOutputFile(fil, remOutput, config)
 
         # Create the OK response
         response = rest.buildResponse200Value(properties['IDESIGNRES-REST']['idesignres.rest.result.download'], properties)

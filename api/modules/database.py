@@ -7,6 +7,8 @@ import pymysql
 
 # Function: Build the connection parameters
 def buildConnectionParameters(config):
+    ''' Function to define the database connection parameters. '''
+
     obj = { 'host': config['IDESIGNRES-DB']['idesignres.db.host'],
             'user': config['IDESIGNRES-DB']['idesignres.db.username'],
             'pwd': config['IDESIGNRES-DB']['idesignres.db.password'],
@@ -17,6 +19,8 @@ def buildConnectionParameters(config):
 
 # Function: Retrieve all the processes in the database
 def retrieveAllProcesses(config):
+    ''' Function to retrieve from the database all the available processes. '''
+
     result = []
     conn = None
     try:
@@ -57,6 +61,8 @@ def retrieveAllProcesses(config):
 
 # Function: Retrieve all the layers in the database
 def retrieveAllLayersByProcess(process, config):
+    ''' Function to retrieve from the database all the layers associated to a process. '''
+
     result = []
     conn = None
     try:
@@ -100,6 +106,8 @@ def retrieveAllLayersByProcess(process, config):
 
 # Function: Retrieve all the files in the database
 def retrieveAllFilesByProcess(process, config):
+    ''' Function to retrieve from the database all the files associated to a process. '''
+
     result = []
     conn = None
     try:
@@ -142,6 +150,8 @@ def retrieveAllFilesByProcess(process, config):
 
 # Function: Retrieve all the resources in the database
 def retrieveAllResources(process, config):
+    ''' Function to retrieve from the database all the resources. '''
+
     result = []
     conn = None
     try:

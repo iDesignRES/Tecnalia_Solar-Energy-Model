@@ -29,126 +29,134 @@ from sklearn.preprocessing import StandardScaler
 
 
 # Function: Build. Energy Sim. -> Preprocess -> Step 01 -> Obtain the ZIP file
-def bp1_step_01(nuts_id, file_list, resource_list, config, properties):
+def bp1Step01(nutsId, fileList, resourceList, config, properties):
+    ''' Build. Energy Sim. -> Preprocess -> Step 01 : Obtain the ZIP file. '''
+
     logging.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 01 -> Preparing the data...')
-    if not (4 <= len(nuts_id) <= 5 and nuts_id[:2].isalpha()):
+    if not (4 <= len(nutsId) <= 5 and nutsId[:2].isalpha()):
         logging.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 01 -> NUTS_ID not valid! [NUTS2/NUTS3]!')
         return
     
     # Read the Excel file
     logging.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 01 -> Reading the Excel file...')
-    df = pd.read_excel(io.retrieveBasePath(config) + file_list[0]['path'])
-    url = df.loc[df['NUTS_ID'] == nuts_id, 'Link'].values
+    df = pd.read_excel(io.retrieveBasePath(config) + fileList[0]['path'])
+    url = df.loc[df['NUTS_ID'] == nutsId, 'Link'].values
     if not url or len(url) == 0:
         raise ValueError(properties['IDESIGNRES-EXCEPTIONS']['idesignres.exception.nuts.id.not.found'])
 
     # Search the resource from the url, and download it
     logging.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 01 -> Obtaining the ZIP file...')
-    destination_dir = io.retrieveFilesTmpPath(config)
-    resource_obj = None
-    for resource in resource_list:
+    destinationDir = io.retrieveFilesTmpPath(config)
+    resourceObj = None
+    for resource in resourceList:
         if resource['web'] == url:
-            resource_obj = resource
+            resourceObj = resource
             break
     logging.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 01 -> Unzipping...')
     logging.info('')
-    if resource_obj:
-        resource_obj['local'] = sftp.downloadResource(resource_obj, config)
-        if resource_obj['local'] and zipfile.is_zipfile(resource_obj['local']):
-            with zipfile.ZipFile(resource_obj['local'], 'r') as zip_ref:
-                zip_ref.extractall(io.retrieveFilesTmpPath(config))
+    if resourceObj:
+        resourceObj['local'] = sftp.downloadResource(resourceObj, config)
+        if resourceObj['local'] and zipfile.is_zipfile(resourceObj['local']):
+            with zipfile.ZipFile(resourceObj['local'], 'r') as zipRef:
+                zipRef.extractall(io.retrieveFilesTmpPath(config))
         else:
             raise ValueError(properties['IDESIGNRES-EXCEPTIONS']['idesignres.exception.not.zip.file'])
     
     # Delete all the not necessary files
     logging.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 01 -> Removing the not necessary files...')
-    exclude_files = ['README', 'gis_osm_landuse_a_free_1', 'gis_osm_buildings_a_free_1']
-    for fil in os.listdir(destination_dir):
-        filename_without_extension = os.path.splitext(fil)[0]
-        if not any(fnmatch.fnmatch(filename_without_extension, pattern) for pattern in exclude_files):
-            os.remove(os.path.join(destination_dir, fil))
+    excludeFiles = ['README', 'gis_osm_landuse_a_free_1', 'gis_osm_buildings_a_free_1']
+    for fil in os.listdir(destinationDir):
+        filenameWithoutExt = os.path.splitext(fil)[0]
+        if not any(fnmatch.fnmatch(filenameWithoutExt, pattern) for pattern in excludeFiles):
+            os.remove(os.path.join(destinationDir, fil))
 
     # Finish    
     logging.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 01 -> [OK]')
     logging.info('')
-    return destination_dir
+    return destinationDir
 
 
 # Function: Build. Energy Sim. -> Preprocess -> Step 02 -> Export the selected NUTS
-def bp1_step_02(layer, nuts_id, config, properties):
+def bp1Step02(layer, nutsId, config, properties):
+    ''' Build. Energy Sim. -> Preprocess -> Step 02 : Export the selected NUTS. '''
+    
     logging.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 02 -> Exporting the selected NUTS...')
     
     # Read the layer file
     data = gpd.read_file(io.retrieveBasePath(config) + layer['path'])
     
     # Filter data according to length of NUTS_ID and select the name of the NUTS
-    if len(nuts_id) == 5:
-        nuts_filtered = data[data['NUTS_ID'] == nuts_id]
-        nuts_name_values = data[(data['NUTS_ID'] == nuts_id) & (data['LEVL_CODE'] == 3)]['NUTS_NAME'].values
+    if len(nutsId) == 5:
+        nutsFiltered = data[data['NUTS_ID'] == nutsId]
+        nutsNameValues = data[(data['NUTS_ID'] == nutsId) & (data['LEVL_CODE'] == 3)]['NUTS_NAME'].values
     else:
-        nuts_filtered = data[(data['NUTS_ID'].str.startswith(nuts_id)) & (data['LEVL_CODE'] == 3)]
-        nuts_name_values = data[(data['NUTS_ID'] == nuts_id) & (data['LEVL_CODE'] == 2)]['NUTS_NAME'].values
+        nutsFiltered = data[(data['NUTS_ID'].str.startswith(nutsId)) & (data['LEVL_CODE'] == 3)]
+        nutsNameValues = data[(data['NUTS_ID'] == nutsId) & (data['LEVL_CODE'] == 2)]['NUTS_NAME'].values
     
     # Ensure that values exist for NUTS_NAME
-    if len(nuts_name_values) > 0:
-        nuts_name = nuts_name_values[0]
-        nuts_filtered['NUTS2_NAME'] = nuts_name
+    if len(nutsNameValues) > 0:
+        nuts_name = nutsNameValues[0]
+        nutsFiltered['NUTS2_NAME'] = nuts_name
     else:
-        raise ValueError(properties['IDESIGNRES-EXCEPTIONS']['idesignres.exception.nuts.name.for_nuts.id'].replace('{1}', nuts_id))
+        raise ValueError(properties['IDESIGNRES-EXCEPTIONS']['idesignres.exception.nuts.name.for_nuts.id'].replace('{1}', nutsId))
     
     # Convert GeoDataFrame to 4326 and 54009 Mollewide coordinate systems
     logging.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 02 -> Converting GeoDataFrame to 4326 cooordinate system...')
-    nuts_filtered_crs = nuts_filtered.to_crs(epsg = 4326)
+    nutsFilteredCrs = nutsFiltered.to_crs(epsg = 4326)
     logging.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 02 -> Converting GeoDataFrame to 54009 Mollewide cooordinate system...')
-    nuts_filtered_moll54009 = nuts_filtered.to_crs('Esri:54009')
+    nutsFilteredMoll54009 = nutsFiltered.to_crs('Esri:54009')
     
     # Save
     logging.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 02 -> Saving...')
-    output_nuts_path, output_nuts_path_moll54009 = io.buildOutputPaths_BP_Step_02(layer, nuts_id, config, properties)
-    nuts_filtered_crs.to_file(output_nuts_path, driver=layer['format'].upper())
-    nuts_filtered_moll54009.to_file(output_nuts_path_moll54009, driver = layer['format'].upper())
+    outputNutsPath, outputNutsPathMoll54009 = io.buildOutputPathsBPStep02(layer, nutsId, config, properties)
+    nutsFilteredCrs.to_file(outputNutsPath, driver = layer['format'].upper())
+    nutsFilteredMoll54009.to_file(outputNutsPathMoll54009, driver = layer['format'].upper())
     
     # Finish    
     logging.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 02 -> [OK]')
     logging.info('')
-    return nuts_filtered_crs, output_nuts_path_moll54009
+    return nutsFilteredCrs, outputNutsPathMoll54009
 
 
 # Function: Build. Energy Sim. -> Preprocess -> Step 03 -> Clip and save the vector layers
-def bp1_step_03(destination_dir, nuts_filtered_crs):
+def bp1Step03(destinationDir, nutsFilteredCrs):
+    ''' Build. Energy Sim. -> Preprocess -> Step 03 : Clip and save the vector layers. '''
+    
     logging.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 03 -> Clipping the layer(s) (can take quite a while)...')
     
     # Use the NUTS layer at 4326 for cutting. Reproject and save layers in 54009 and gpkg
-    clipped_layers = []
-    for fil in os.listdir(destination_dir):
+    clippedLayers = []
+    for fil in os.listdir(destinationDir):
         if fil.endswith('shp'):
-            file_path = os.path.join(destination_dir, fil)
-            logging.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 03 -> File -> ' + file_path)
-            gdf = gpd.read_file(file_path)
-            gdf_clipped = gpd.clip(gdf, nuts_filtered_crs)
-            gdf_clipped = gdf_clipped.to_crs('Esri:54009'.upper())
+            filepath = os.path.join(destinationDir, fil)
+            logging.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 03 -> File -> ' + filepath)
+            gdf = gpd.read_file(filepath)
+            gdfClipped = gpd.clip(gdf, nutsFilteredCrs)
+            gdfClipped = gdfClipped.to_crs('Esri:54009'.upper())
             
             # Only save if the file is not empty
-            if not gdf_clipped.empty:
-                output = destination_dir + '/' + str(fil.rsplit('.', 1)[0]) + '_repro54009.gpkg'
+            if not gdfClipped.empty:
+                output = destinationDir + '/' + str(fil.rsplit('.', 1)[0]) + '_repro54009.gpkg'
                 logging.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 03 -> Save -> ' + output)
-                gdf_clipped.to_file(output, driver = 'GPKG')
-                clipped_layers.append(output)
+                gdfClipped.to_file(output, driver = 'GPKG')
+                clippedLayers.append(output)
             else:
                 logging.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 03 -> The file is empty, so it is not saved!')
     
     # Finish    
     logging.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 03 -> [OK]')
     logging.info('')
-    return clipped_layers
+    return clippedLayers
 
 
 # Function: Build. Energy Sim. -> Preprocess -> Step 04 -> Load the buildings layer
-def bp1_step_04(clipped_layers, isTest, config):
+def bp1Step04(clippedLayers, isTest, config):
+    ''' Build. Energy Sim. -> Preprocess -> Step 04 : Load the buildings layer. '''
+
     logging.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 04 -> Loading the buildings layer...')
-    buildings_path = config['IDESIGNRES-PATH']['idesignres.path.bp.test']\
-        if isTest else [path for path in clipped_layers if 'buildings' in path][0]
-    layer = qgis.loadVectorLayer(buildings_path, 'Buildings', 'ogr')
+    buildingsPath = config['IDESIGNRES-PATH']['idesignres.path.bp.test']\
+        if isTest else [path for path in clippedLayers if 'buildings' in path][0]
+    layer = qgis.loadVectorLayer(buildingsPath, 'Buildings', 'ogr')
     
     # Finish    
     logging.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 04 -> [OK]')
@@ -157,9 +165,11 @@ def bp1_step_04(clipped_layers, isTest, config):
     
     
 # Function: Build. Energy Sim. -> Preprocess -> Step 05 -> Load the NUTS layer
-def bp1_step_05(nuts_path_moll54009):
+def bp1Step05(nutsPathMoll54009):
+    ''' Build. Energy Sim. -> Preprocess -> Step 05 : Load the NUTS layer. '''
+
     logging.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 05 -> Loading the NUTS layer...')
-    layer = qgis.loadVectorLayer(nuts_path_moll54009, 'NUTS', 'ogr')
+    layer = qgis.loadVectorLayer(nutsPathMoll54009, 'NUTS', 'ogr')
     
      # Finish    
     logging.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 05 -> [OK]')
@@ -168,9 +178,11 @@ def bp1_step_05(nuts_path_moll54009):
 
 
 # Function: Build. Energy Sim. -> Preprocess -> Step 06 -> Load the land use layer
-def bp1_step_06(clipped_layers):
+def bp1Step06(clippedLayers):
+    ''' Build. Energy Sim. -> Preprocess -> Step 06 : Load the land use layer. '''
+
     logging.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 06 -> loading the land use layer...')
-    layer = qgis.loadVectorLayer([path for path in clipped_layers if 'landuse' in path][0], 'Land Use', 'ogr')
+    layer = qgis.loadVectorLayer([path for path in clippedLayers if 'landuse' in path][0], 'Land Use', 'ogr')
     
      # Finish    
     logging.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 06 -> [OK]')
@@ -179,10 +191,12 @@ def bp1_step_06(clipped_layers):
 
 
 # Function: Build. Energy Sim. -> Preprocess -> Step 07 -> Load the Raster Use layer
-def bp1_step_07(layer_obj, config):
+def bp1Step07(layerObj, config):
+    ''' Build. Energy Sim. -> Preprocess -> Step 07 : Load the raster use layer. '''
+
     logging.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 07 -> Loading the Raster Use layer...')
     layer = qgis.loadRasterLayerWithProvider(io.retrieveLayersBasePath(config) + '/' +\
-        layer_obj['name'] + '.' + layer_obj['format'], 'Raster Use', 'gdal')
+        layerObj['name'] + '.' + layerObj['format'], 'Raster Use', 'gdal')
     
      # Finish    
     logging.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 07 -> [OK]')
@@ -191,10 +205,12 @@ def bp1_step_07(layer_obj, config):
 
 
 # Function: Build. Energy Sim. -> Preprocess -> Step 08 -> Load the Raster Height layer
-def bp1_step_08(layer_obj, config):
+def bp1Step08(layerObj, config):
+    ''' Build. Energy Sim. -> Preprocess -> Step 08 : Load the raster height layer. '''
+
     logging.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 08 -> Loading the Raster Height layer...')
     layer = qgis.loadRasterLayerWithProvider(io.retrieveLayersBasePath(config) + '/' +\
-        layer_obj['name'] + '.' + layer_obj['format'], 'Raster Height', 'gdal')
+        layerObj['name'] + '.' + layerObj['format'], 'Raster Height', 'gdal')
     
     # Finish
     logging.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 08 -> [OK]')
@@ -203,92 +219,94 @@ def bp1_step_08(layer_obj, config):
 
 
 # Function: Build. Energy Sim. -> Preprocess -> Step 09 -> Assign NUTS
-def bp1_step_09(buildings_layer, nuts_layer, nuts_id):
-    """
-    This function assigns NUTS3, NUTS2 and BuildingFP_area to each building in a given layer (buildings_layer).
+def bp1Step09(buildingsLayer, nutsLayer, nutsId):
+    '''
+    Build. Energy Sim. -> Preprocess -> Step 09 : Assign NUTS.
+    This function assigns NUTS3, NUTS2 and BuildingFP_area to each building in a given layer (buildingsLayer).
     If the building's area is less than 30 m², the building is removed from the layer.
     If a building does not have a 'NUTS3' value, it is also removed.
-    """
+    '''
 
     logging.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> ##### Start building preprocessing #####')
     logging.info('')
     logging.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 09 -> Assigning NUTS...')
     
     # Verify if "NUTS3", "NUTS2" and "AREA" fields exist. If not, it creates them
-    if buildings_layer.fields().indexFromName('NUTS3') == -1:
-        buildings_layer.dataProvider().addAttributes([QgsField('NUTS3', QVariant.String)])
-        buildings_layer.updateFields()
+    if buildingsLayer.fields().indexFromName('NUTS3') == -1:
+        buildingsLayer.dataProvider().addAttributes([QgsField('NUTS3', QVariant.String)])
+        buildingsLayer.updateFields()
 
-    if buildings_layer.fields().indexFromName('NUTS2') == -1:
-        buildings_layer.dataProvider().addAttributes([QgsField('NUTS2', QVariant.String)])
-        buildings_layer.updateFields()
+    if buildingsLayer.fields().indexFromName('NUTS2') == -1:
+        buildingsLayer.dataProvider().addAttributes([QgsField('NUTS2', QVariant.String)])
+        buildingsLayer.updateFields()
 
-    if buildings_layer.fields().indexFromName('BuildingFP_area') == -1:
-        buildings_layer.dataProvider().addAttributes([QgsField('BuildingFP_area', QVariant.Double)])
-        buildings_layer.updateFields()
+    if buildingsLayer.fields().indexFromName('BuildingFP_area') == -1:
+        buildingsLayer.dataProvider().addAttributes([QgsField('BuildingFP_area', QVariant.Double)])
+        buildingsLayer.updateFields()
 
     # Extract the indexes
     logging.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 09 -> Extracting the indexes...')
-    index_NUTS3 = buildings_layer.fields().indexFromName('NUTS3')
-    index_NUTS2 = buildings_layer.fields().indexFromName('NUTS2')
-    index_AREA = buildings_layer.fields().indexFromName('BuildingFP_area')
+    indexNUTS3 = buildingsLayer.fields().indexFromName('NUTS3')
+    indexNUTS2 = buildingsLayer.fields().indexFromName('NUTS2')
+    indexAREA = buildingsLayer.fields().indexFromName('BuildingFP_area')
     
     # Update the features
-    buildings_layer_index = QgsSpatialIndex(buildings_layer.getFeatures())
-    features_to_update, n_processed = [], 0
-    for nuts_feat in nuts_layer.getFeatures():
-        if nuts_feat['LEVL_CODE'] != 3:
+    buildingsLayerIndex = QgsSpatialIndex(buildingsLayer.getFeatures())
+    featuresToUpdate, nProcessed = [], 0
+    for nutsFeat in nutsLayer.getFeatures():
+        if nutsFeat['LEVL_CODE'] != 3:
             continue
 
-        nuts3_id = nuts_feat['NUTS_ID']
-        intersecting_ids = buildings_layer_index.intersects(nuts_feat.geometry().boundingBox())
-        intersecting_features = buildings_layer.getFeatures(QgsFeatureRequest().setFilterFids(intersecting_ids))
-        for building_feat in intersecting_features:
-            if nuts_feat.geometry().intersects(building_feat.geometry()):
+        nuts3Id = nutsFeat['NUTS_ID']
+        intersectingIds = buildingsLayerIndex.intersects(nutsFeat.geometry().boundingBox())
+        intersectingFeatures = buildingsLayer.getFeatures(QgsFeatureRequest().setFilterFids(intersectingIds))
+        for buildingFeat in intersectingFeatures:
+            if nutsFeat.geometry().intersects(buildingFeat.geometry()):
                 # Assign NUTS3
-                building_feat['NUTS3'] = nuts3_id
+                buildingFeat['NUTS3'] = nuts3Id
                 # Assign NUTS2
-                building_feat['NUTS2'] = nuts_id[:4]
+                buildingFeat['NUTS2'] = nutsId[:4]
                 # Calculate the AREA
-                building_feat['BuildingFP_area'] = building_feat.geometry().area()
-                features_to_update.append(building_feat)
+                buildingFeat['BuildingFP_area'] = buildingFeat.geometry().area()
+                featuresToUpdate.append(buildingFeat)
 
-            if len(features_to_update) >= 2000:
+            if len(featuresToUpdate) >= 2000:
                 changes = {feature.id(): {
-                    index_NUTS3: feature['NUTS3'],
-                    index_NUTS2: feature['NUTS2'],
-                    index_AREA: feature['BuildingFP_area']} for feature in features_to_update
+                    indexNUTS3: feature['NUTS3'],
+                    indexNUTS2: feature['NUTS2'],
+                    indexAREA: feature['BuildingFP_area']} for feature in featuresToUpdate
                 }
-                dataProvider = buildings_layer.dataProvider()
+                dataProvider = buildingsLayer.dataProvider()
                 dataProvider.changeAttributeValues(changes)
-                features_to_update = []
-                n_processed += 5000
+                featuresToUpdate = []
+                nProcessed += 5000
     
-    if features_to_update:
+    if featuresToUpdate:
         changes = {feature.id(): {
-            index_NUTS3: feature['NUTS3'],
-            index_NUTS2: feature['NUTS2'],
-            index_AREA: feature['BuildingFP_area']} for feature in features_to_update
+            indexNUTS3: feature['NUTS3'],
+            indexNUTS2: feature['NUTS2'],
+            indexAREA: feature['BuildingFP_area']} for feature in featuresToUpdate
         }
-        dataProvider = buildings_layer.dataProvider()
+        dataProvider = buildingsLayer.dataProvider()
         dataProvider.changeAttributeValues(changes)
-    logging.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 09 -> ' + str(n_processed) + ' buildings processed')
+    logging.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 09 -> ' +\
+        str(nProcessed) + ' buildings processed')
     
     # Eliminate all geometries with an area of less than 30m².
     expression = QgsExpression(' "BuildingFP_area" < 30 ')
-    ids = [f.id() for f in buildings_layer.getFeatures(QgsFeatureRequest(expression))]
-    buildings_layer.dataProvider().deleteFeatures(ids)
+    ids = [f.id() for f in buildingsLayer.getFeatures(QgsFeatureRequest(expression))]
+    buildingsLayer.dataProvider().deleteFeatures(ids)
     logging.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 09 -> Deleted ' + str(len(ids)) + ' buildings (area of less than 30m²)')
     
     # Get a list of entity IDs that have the field ‘NUTS3’ as NULL
     expression = QgsExpression(' "NUTS3" is NULL ')
-    ids = [f.id() for f in buildings_layer.getFeatures(QgsFeatureRequest(expression))]
-    buildings_layer.dataProvider().deleteFeatures(ids)
+    ids = [f.id() for f in buildingsLayer.getFeatures(QgsFeatureRequest(expression))]
+    buildingsLayer.dataProvider().deleteFeatures(ids)
     logging.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 09 -> Removed ' + str(len(ids)) + ' features out of boundary')
     
     # Commit changes
     logging.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 09 -> Commiting changes...')
-    buildings_layer.commitChanges()
+    buildingsLayer.commitChanges()
     
     # Finish
     logging.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 09 -> [OK]')
@@ -296,60 +314,61 @@ def bp1_step_09(buildings_layer, nuts_layer, nuts_id):
 
 
 # Function: Build. Energy Sim. -> Preprocess -> Step 10 -> Calculate height volumes
-def bp1_step_10(buildings_layer, raster_height_layer):
-    """
+def bp1Step10(buildingsLayer, rasterHeightLayer):
+    '''
+    Build. Energy Sim. -> Preprocess -> Step 10 : Calculate height volumes.
     This function calculates the number of floors, GFA and volume of each building in the 'buildings'
     layer based on the'GHS_Heightmean' attribute.
     If a building doesn't have 'GHS_Heightmean' (height), the value is calculated from a raster
     layer with height data ('raster_height').
-    """
+    '''
 
     logging.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 10 -> Calculating heights and volumes...')
-    buildings_layer.startEditing()
-    if 'GHS_Heightmean' in [field.name() for field in buildings_layer.fields()]:
+    buildingsLayer.startEditing()
+    if 'GHS_Heightmean' in [field.name() for field in buildingsLayer.fields()]:
         logging.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 10 -> The field "GHS_Heightmean" already exists!')
     else:
         prefix = 'GHS_Height'
-        stats_to_calculate = QgsZonalStatistics.Mean
-        zonal_stats = QgsZonalStatistics(buildings_layer, raster_height_layer, 'GHS_Height', 1, stats_to_calculate)
-        zonal_stats.calculateStatistics(None)
+        statsToCalculate = QgsZonalStatistics.Mean
+        zonalStats = QgsZonalStatistics(buildingsLayer, rasterHeightLayer, 'GHS_Height', 1, statsToCalculate)
+        zonalStats.calculateStatistics(None)
     
     # Define the list of fields to be added
     logging.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 10 -> Defining the list of fields to be added...')
-    fields_to_add = ['N_Floors', 'Building_GFA', 'Volume']
+    fieldsToAdd = ['N_Floors', 'Building_GFA', 'Volume']
 
     # Create the fields (if they do not exist)
     logging.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 10 -> Creating the fields (can take quite a while)...')
-    if not all(field in [field.name() for field in buildings_layer.fields()] for field in fields_to_add):
-        buildings_layer.dataProvider().addAttributes([QgsField(field, QVariant.Double) for field in fields_to_add])
-        buildings_layer.updateFields()
+    if not all(field in [field.name() for field in buildingsLayer.fields()] for field in fieldsToAdd):
+        buildingsLayer.dataProvider().addAttributes([QgsField(field, QVariant.Double) for field in fieldsToAdd])
+        buildingsLayer.updateFields()
     else:
         logging.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 10 -> All the fields already exist!')
     
     # Calculate 'N_Floors' as a function of 'GHS_Heightmean' and GFA with N_floors
     counter = 0
-    for feature in buildings_layer.getFeatures():
+    for feature in buildingsLayer.getFeatures():
         counter += 1
-        GHS_Heightmean = feature['GHS_Heightmean']
-        if not GHS_Heightmean or GHS_Heightmean == 0:
-            GHS_Heightmean = 3.5
-        elif 0 <= GHS_Heightmean < 2.5:
-            GHS_Heightmean = 2.5
+        GHSHeightmean = feature['GHS_Heightmean']
+        if not GHSHeightmean or GHSHeightmean == 0:
+            GHSHeightmean = 3.5
+        elif 0 <= GHSHeightmean < 2.5:
+            GHSHeightmean = 2.5
             
         # Updating GHS_Heightmean on the feature
-        feature['GHS_Heightmean'] = GHS_Heightmean
+        feature['GHS_Heightmean'] = GHSHeightmean
         
         # Calculate and update 'N_Floors'
-        feature['N_Floors'] = round(GHS_Heightmean / 3)
+        feature['N_Floors'] = round(GHSHeightmean / 3)
         
         # Calculate building GFA and update
         feature['Building_GFA'] = feature['N_Floors'] * feature['BuildingFP_area']
         feature['Volume'] = feature['GHS_Heightmean'] * feature['BuildingFP_area']
-        buildings_layer.updateFeature(feature)
+        buildingsLayer.updateFeature(feature)
 
     # Commit changes
     logging.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 10 -> Commiting changes...')
-    buildings_layer.commitChanges()
+    buildingsLayer.commitChanges()
 
     # Finish
     logging.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 10 -> [OK]')
@@ -357,90 +376,90 @@ def bp1_step_10(buildings_layer, raster_height_layer):
 
 
 # Function: Build. Energy Sim. -> Preprocess -> Step 11 -> Calculate statistics and mapping
-def bp1_step_11(buildings_layer, raster_use_layer, land_use_layer, mapping_csv_obj, config):
-    """
-    This function calculates the majority use for each building from a raster layer ('raster_use') and
+def bp1Step11(buildingsLayer, rasterUseLayer, landUseLayer, mappingCsvObj, config):
+    '''
+    Build. Energy Sim. -> Preprocess -> Step 11 : Calculate statistics and mapping.
+    This function calculates the majority use for each building from a raster layer ('rasterUseLayer') and
     a vector layer with classified land use data ('land_use').
     The function also maps the use to defined groups, sub-sectors, and sectors according to a mapping
     table stored in a CSV file ('MappingCsvPath').
-    """
+    '''
     
     logging.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 11 -> Calculating statistics and mapping...')
-    csv_path = io.retrieveBasePath(config) + mapping_csv_obj['path']
+    csvPath = io.retrieveBasePath(config) + mappingCsvObj['path']
     
     # Calculate zone statistics with majority value
-    if 'GHS_Majority' in [field.name() for field in buildings_layer.fields()]:
+    if 'GHS_Majority' in [field.name() for field in buildingsLayer.fields()]:
         logging.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 11 -> The field "GHS_Majority" anready exists!')
     else:
-        zonal_stats = QgsZonalStatistics(buildings_layer, raster_use_layer, 'GHS_', stats = QgsZonalStatistics.Majority)
-        zonal_stats.calculateStatistics(None)
+        zonalStats = QgsZonalStatistics(buildingsLayer, rasterUseLayer, 'GHS_', stats = QgsZonalStatistics.Majority)
+        zonalStats.calculateStatistics(None)
 
     # Create spatial index for the Land Use layer
     logging.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 11 -> Creating spatial index for the Land Use layer...')
-    index = QgsSpatialIndex(land_use_layer.getFeatures())
+    index = QgsSpatialIndex(landUseLayer.getFeatures())
     
     # Create a dictionary from the CSV file
-    mapping_dict = {}
-    with open(csv_path, mode='r') as fil:
-        reader = csv.reader(fil, delimiter=';')
+    mappingDict = {}
+    with open(csvPath, mode = 'r') as fil:
+        reader = csv.reader(fil, delimiter = ';')
         next(reader)  # To skip the headers
         for row in reader:
-            mapping_dict[row[0]] = row[1:]
+            mappingDict[row[0]] = row[1:]
 
     # Create new columns in the buildings layer
     fields = ['Group', 'Sub_sector', 'Sector', 'Combined_Use']
     for field in fields:
-        buildings_layer.dataProvider().addAttributes([QgsField(field, QVariant.String)])
-    buildings_layer.updateFields()
+        buildingsLayer.dataProvider().addAttributes([QgsField(field, QVariant.String)])
+    buildingsLayer.updateFields()
 
-    total_features = buildings_layer.featureCount()
-    percentage_increment = total_features // 10
+    totalFeatures = buildingsLayer.featureCount()
+    percentageIncrement = totalFeatures // 10
     
-    buildings_layer.startEditing()
+    buildingsLayer.startEditing()
     
     # Allocation of uses and mapping
     logging.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 11 -> Starting use allocation/mapping (can take quite a while)...')
-    for feature in buildings_layer.getFeatures():
-        type_value = str(feature['type'])
+    for feature in buildingsLayer.getFeatures():
+        typeValue = str(feature['type'])
         
         # Check if the 'type' field exists and is not empty
-        if not type_value or type_value.isspace() or type_value in ['NULL', 'None', 'none', '']:
-            final_use = 'unknown'
-            land_use_value = None
-            
+        if not typeValue or typeValue.isspace() or typeValue in ['NULL', 'None', 'none', '']:
+            finalUse = 'unknown'
+            landUseValue = None
             geom = feature.geometry()
             intersects = index.intersects(geom.boundingBox())
             for i in intersects:
-                land_use_feat = land_use_layer.getFeature(i)
-                if land_use_feat.geometry().intersects(geom):
-                    land_use_value = land_use_feat['fclass']
+                landUseFeat = landUseLayer.getFeature(i)
+                if landUseFeat.geometry().intersects(geom):
+                    landUseValue = landUseFeat['fclass']
                     break
 
-            ghs_majority = feature['GHS_Majority']
-            if land_use_value in ('industrial', 'retail', 'military', 'commercial'):
-                final_use = land_use_value
-            elif ghs_majority == 0 or ghs_majority == 1:
-                final_use = 'residential'
-            elif ghs_majority == 2:
-                final_use = 'other non-residential'
-            feature['Combined_Use'] = final_use
+            ghsMajority = feature['GHS_Majority']
+            if landUseValue in ('industrial', 'retail', 'military', 'commercial'):
+                finalUse = landUseValue
+            elif ghsMajority == 0 or ghsMajority == 1:
+                finalUse = 'residential'
+            elif ghsMajority == 2:
+                finalUse = 'other non-residential'
+            feature['Combined_Use'] = finalUse
         else:
-            feature['Combined_Use'] = type_value
+            feature['Combined_Use'] = typeValue
 
-        combined_use = feature['Combined_Use']
-        if combined_use not in mapping_dict:
-            combined_use = 'other non-residential'.capitalize()
+        combinedUse = feature['Combined_Use']
+        if combinedUse not in mappingDict:
+            combinedUse = 'other non-residential'.capitalize()
 
-        if combined_use in mapping_dict:
-            feature['Group'] = mapping_dict[combined_use][0]
-            feature['Sub_sector'] = mapping_dict[combined_use][1]
-            feature['Sector'] = mapping_dict[combined_use][2]
+        if combinedUse in mappingDict:
+            feature['Group'] = mappingDict[combinedUse][0]
+            feature['Sub_sector'] = mappingDict[combinedUse][1]
+            feature['Sector'] = mappingDict[combinedUse][2]
             if feature['Sub_sector'] == 'Apartment blocks' and feature['N_floors'] < 3:
                 feature['Sub_sector'] = 'Single family- Terraced houses'
             elif feature['Sub_sector'] == 'Single family- Terraced houses' and feature['N_floors'] > 3:
                 feature['Sub_sector'] = 'Apartment blocks'
 
-        buildings_layer.updateFeature(feature)
+        buildingsLayer.updateFeature(feature)
         
     logging.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 11 -> Use allocation and mapping completed!')
     
@@ -450,18 +469,20 @@ def bp1_step_11(buildings_layer, raster_use_layer, land_use_layer, mapping_csv_o
 
 
 # Function: Build. Energy Sim. -> Preprocess -> Step 12 -> Adjoin facade calculations
-def bp1_step_12(isTest, config):
-    """
+def bp1Step12(isTest, config):
+    '''
+    Build. Energy Sim. -> Preprocess -> Step 12 : Adjoin facade calculations.
     This function calculates the length of the adjoining perimeter (facade) and the ratio of this length to the total
     perimeter of each building. Buildings with a ratio equal to or above 1 are removed, and the calculations are performed
     again for the buildings affected by these removals. The results are stored in a new GeoDataFrame returned by the function.
-    """
+    '''
     
     logging.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 12 -> Adjoining facade calculations...')
     
     # Load the building layer from the GPKG file
-    buildings_path = config['IDESIGNRES-PATH']['idesignres.path.bp.test'] if isTest else config['IDESIGNRES-PATH']['idesignres.path.bp.test']
-    buildings = gpd.read_file(buildings_path)
+    buildingsPath = config['IDESIGNRES-PATH']['idesignres.path.bp.test']\
+        if isTest else config['IDESIGNRES-PATH']['idesignres.path.bp.test']
+    buildings = gpd.read_file(buildingsPath)
     
     # Ensure that the geometry is of type Polygon or Multipolygon.
     buildings = buildings[buildings.geometry.type.isin(['Polygon', 'MultiPolygon'])]
@@ -473,62 +494,62 @@ def bp1_step_12(isTest, config):
     #####
     
     # Funtion (internal): Calculate adjoining
-    def calculate_adjoining(current_buildings, sindex, all_buildings):
+    def calculateAdjoining(currentBuildings, sindex, allBuildings):
         # Iterate on each building to calculate its dividing façade
-        for idx, building in current_buildings.iterrows():
-            adjoining_perimeter = 0.0
+        for idx, building in currentBuildings.iterrows():
+            adjoiningPerimeter = 0.0
 
             # Get the perimeter of the current building as a line (LineString)
-            building_perimeter = building.geometry.boundary
+            buildingPerimeter = building.geometry.boundary
 
             # Obtain the length of the perimeter
-            perimeter = building_perimeter.length
+            perimeter = buildingPerimeter.length
 
             # Obtain the bounding box of the current building
             bbox = building.geometry.bounds
 
             # Find possible intersections with the spatial index
-            possible_intersections = list(sindex.intersection(bbox))
+            possibleIntersections = list(sindex.intersection(bbox))
 
             # Iterate on buildings selected by the spatial index
-            for idx_others in possible_intersections:
-                if idx_others == idx:
+            for idxOthers in possibleIntersections:
+                if idxOthers == idx:
                     continue  # Ignore the same building
 
-                bbox_buildings = all_buildings.iloc[idx_others]
+                bboxBuildings = allBuildings.iloc[idxOthers]
 
                 # Calculate the intersection between the perimeter of the building and the other building
-                intersection = building_perimeter.intersection(bbox_buildings.geometry)
+                intersection = buildingPerimeter.intersection(bboxBuildings.geometry)
 
                 # If the intersection is of type LineString or MultiLineString, add length
                 if isinstance(intersection, LineString):
-                    adjoining_perimeter += intersection.length
+                    adjoiningPerimeter += intersection.length
                 elif intersection.geom_type == 'MultiLineString':
-                    adjoining_perimeter += sum(line.length for line in intersection.geoms)
+                    adjoiningPerimeter += sum(line.length for line in intersection.geoms)
 
                 # Save the length of the party wall and the perimeter in the column
-                current_buildings.at[idx, 'adjoining_perimeter'] = adjoining_perimeter
+                currentBuildings.at[idx, 'adjoining_perimeter'] = adjoiningPerimeter
 
-            current_buildings.at[idx, 'perimeter'] = perimeter
+            currentBuildings.at[idx, 'perimeter'] = perimeter
         
             # Calculate the ratio adj_facade / perimeter
-            current_buildings.at[idx, 'Ratio'] = adjoining_perimeter / perimeter if perimeter > 0 else 0
+            currentBuildings.at[idx, 'Ratio'] = adjoiningPerimeter / perimeter if perimeter > 0 else 0
     
     #####
     
     # Funtion (internal): Find adjacents
-    def find_adjacents(current_buildings, sindex):
+    def findAdjacents(currentBuildings, sindex):
         # Iterate over each building to look for adjacent buildings
         adjacents = set()
-        for idx, building in current_buildings.iterrows():
+        for idx, building in currentBuildings.iterrows():
             # Get the bounding box of the current building
             bbox = building.geometry.bounds
 
             # Find possible intersections with the spatial index
-            possible_intersections = list(sindex.intersection(bbox))
+            possibleIntersections = list(sindex.intersection(bbox))
 
             # Update
-            adjacents.update(possible_intersections)
+            adjacents.update(possibleIntersections)
 
         # Return a DataFrame with adjacent buildings
         return buildings.iloc[list(adjacents)].copy()
@@ -537,15 +558,15 @@ def bp1_step_12(isTest, config):
     
     # Calculate adjoining for all buildings
     logging.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 12 -> Calculate adjoining for all buildings...')
-    calculate_adjoining(buildings, sindex, buildings)
+    calculateAdjoining(buildings, sindex, buildings)
     
     # Filter buildings where Ratio is >= 1
     logging.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 12 -> Filtering buildings where Ratio >= 1...')
-    to_remove = buildings[buildings['Ratio'] >= 1].copy()
+    toRemove = buildings[buildings['Ratio'] >= 1].copy()
 
     # Obtain adjacencies for buildings to be removed
     logging.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 12 -> Finding adjancencies for buildings to be removed...')
-    to_recalculate = find_adjacents(to_remove, sindex)
+    toRecalculate = findAdjacents(toRemove, sindex)
     
     # Remove buildings with Ratio >= 1
     logging.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 12 -> Removing buildings where Ratio >= 1...')
@@ -553,15 +574,15 @@ def bp1_step_12(isTest, config):
 
     # Recalculating adjoining buildings
     logging.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 12 -> Recalculating adjoining buildings...')
-    calculate_adjoining(to_recalculate, sindex, buildings)
+    calculateAdjoining(toRecalculate, sindex, buildings)
 
     # Merge recalculated buildings again
     logging.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 12 -> Merging recalculated buildings...')
-    buildings.update(to_recalculate)
+    buildings.update(toRecalculate)
     
     # Save the result in a new GPKG file
     logging.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 12 -> Saving to a new GeoPackage file...')
-    buildings.to_file(buildings_path, driver = 'GPKG')
+    buildings.to_file(buildingsPath, driver = 'GPKG')
 
     # Finish
     logging.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 12 -> [OK]')
@@ -570,20 +591,27 @@ def bp1_step_12(isTest, config):
 
 
 # Function: Build. Energy Sim. -> Preprocess -> Step 13 -> Mask raster layers
-def bp1_step_13(layer_list, config):
+def bp1Step13(layerList, config):
+    ''' Build. Energy Sim. -> Preprocess -> Step 13 : Mask raster layers. '''
+
     logging.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 13 -> Masking raster layers (can take quite a while)...')
     
     # Retrieve the necessary paths
-    clipped_rasters_paths = []
-    layers = [{'name': layer_list[8]['name'], 'path': io.retrieveBasePath(config) + layer_list[8]['path'], 'format': layer_list[8]['format']},
-              {'name': layer_list[5]['name'], 'path': io.retrieveBasePath(config) + layer_list[8]['path'], 'format': layer_list[8]['format']},
-              {'name': layer_list[4]['name'], 'path': io.retrieveBasePath(config) + layer_list[8]['path'], 'format': layer_list[8]['format']},
-              {'name': layer_list[3]['name'], 'path': io.retrieveBasePath(config) + layer_list[8]['path'], 'format': layer_list[8]['format']},
-              {'name': layer_list[7]['name'], 'path': io.retrieveBasePath(config) + layer_list[8]['path'], 'format': layer_list[8]['format']}]
-    nuts_layer_path = io.retrieveBasePath(config) + layer_list[0]['path']
+    clippedRastersPaths = []
+    layers = [{'name': layerList[8]['name'], 'path': io.retrieveBasePath(config) +\
+        layerList[8]['path'], 'format': layerList[8]['format']},
+            {'name': layerList[5]['name'], 'path': io.retrieveBasePath(config) +\
+        layerList[8]['path'], 'format': layerList[8]['format']},
+            {'name': layerList[4]['name'], 'path': io.retrieveBasePath(config) +\
+        layerList[8]['path'], 'format': layerList[8]['format']},
+            {'name': layerList[3]['name'], 'path': io.retrieveBasePath(config) +\
+        layerList[8]['path'], 'format': layerList[8]['format']},
+            {'name': layerList[7]['name'], 'path': io.retrieveBasePath(config) +\
+        layerList[8]['path'], 'format': layerList[8]['format']}]
+    nutsLayerPath = io.retrieveBasePath(config) + layerList[0]['path']
     
     for layer in layers:
-        gdf = gpd.read_file(nuts_layer_path)
+        gdf = gpd.read_file(nutsLayerPath)
         geoms = gdf.geometry.values
 
         with rasterio.open(layer['path']) as src:
@@ -598,155 +626,163 @@ def bp1_step_13(layer_list, config):
             })
         
         # Save the temporary layer
-        output = io.buildOutputPath_BP_Step_13(layer['name'], layer['format'], config)
+        output = io.buildOutputPathBPStep13(layer['name'], layer['format'], config)
         logging.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 13 -> Saving: ' + output + '...')
         with rasterio.open(output, "w", **out_meta) as dst:
             dst.write(out_image)
-        clipped_rasters_paths.append(output)
+        clippedRastersPaths.append(output)
     
     # Finish
     logging.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 13 -> [OK]')
     logging.info('')
-    return clipped_rasters_paths
+    return clippedRastersPaths
 
 
 # Function: Build. Energy Sim. -> Preprocess -> Step 14 -> Process clipped layers
-def bp1_step_14(nuts_id, clipped, excel_file, download_folder, config):
+def bp1Step14(nutsId, clipped, excelFile, downloadFolder, config):
+    ''' Build. Energy Sim. -> Preprocess -> Step 14 : Process clipped layers. '''
+
     # CSV file with the percentages per country and year
     logging.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 14 -> Loading the Excel file to calculate the percentages...')
-    share_years_df = pd.read_excel(io.retrieveBasePath(config) + excel_file['path'])
+    dfShareYears = pd.read_excel(io.retrieveBasePath(config) + excelFile['path'])
     
     # Dictionary that will contain the 'layer' data
-    layers_dict = {}
+    layersDict = {}
     logging.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 14 -> Calculating the percentages...')
-    country_percentage_before_1945 = share_years_df.loc[share_years_df['NUTS_ID'] == nuts_id[:2], 'Before 1945'].values[0]
-    country_percentage_1945_1969 = share_years_df.loc[share_years_df['NUTS_ID'] == nuts_id[:2], '1945 - 1969'].values[0]
-    country_percentage_1970_1979 = share_years_df.loc[share_years_df['NUTS_ID'] == nuts_id[:2], '1970 - 1979'].values[0]
-    country_percentage_1980_1989 = share_years_df.loc[share_years_df['NUTS_ID'] == nuts_id[:2], '1980 - 1989'].values[0]
+    countryPctBefore1945 = dfShareYears.loc[dfShareYears['NUTS_ID'] == nutsId[:2], 'Before 1945'].values[0]
+    countryPct19451969 = dfShareYears.loc[dfShareYears['NUTS_ID'] == nutsId[:2], '1945 - 1969'].values[0]
+    countryPct19701979 = dfShareYears.loc[dfShareYears['NUTS_ID'] == nutsId[:2], '1970 - 1979'].values[0]
+    countryPct19801989 = dfShareYears.loc[dfShareYears['NUTS_ID'] == nutsId[:2], '1980 - 1989'].values[0]
     
-    total_mem, used_mem, free_mem = map(int, os.popen('free -t -m').readlines()[-1].split()[1:])
+    totalMem, usedMem, freeMem = map(int, os.popen('free -t -m').readlines()[-1].split()[1:])
     logging.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 14 -> Current mem usage (1) -> ' +\
-        str(round((used_mem / total_mem) * 100, 2)) + '%')
+        str(round((usedMem / totalMem) * 100, 2)) + '%')
     
-    chunk_size = int(config['IDESIGNRES-PARAMETERS']['idesignres.params.chunk.size'])
-    with rasterio.open(clipped[4]) as src_2020, rasterio.open(clipped[0]) as src_1975:
-        ratio = np.zeros((src_1975.height, src_1975.width), dtype = np.float16)
-        for row_off in range(0, src_1975.height, chunk_size):
-            for col_off in range(0, src_1975.width, chunk_size):
-                window = rasterio.windows.Window(col_off, row_off, chunk_size, chunk_size)
-                c_ratio = np.divide(
-                    src_1975.read(1, window = window).astype(np.float16),
-                    src_2020.read(1, window = window).astype(np.float16),
-                    out = np.zeros_like(src_1975.read(1, window = window).astype(np.float16)),
-                    where = (src_2020.read(1, window = window).astype(np.float16) != 0))
-                ratio[row_off:row_off + chunk_size, col_off:col_off + chunk_size] = c_ratio
-        layers_dict["Before1945"] = (ratio * country_percentage_before_1945, src_1975.profile)
-        layers_dict["1945to1969"] = (ratio * country_percentage_1945_1969, src_1975.profile)
-        del c_ratio, ratio
+    chunkSize = int(config['IDESIGNRES-PARAMETERS']['idesignres.params.chunk.size'])
+    with rasterio.open(clipped[4]) as src2020, rasterio.open(clipped[0]) as src1975:
+        ratio = np.zeros((src1975.height, src1975.width), dtype = np.float16)
+        for rowOff in range(0, src1975.height, chunkSize):
+            for colOff in range(0, src1975.width, chunkSize):
+                window = rasterio.windows.Window(colOff, rowOff, chunkSize, chunkSize)
+                cRatio = np.divide(
+                    src1975.read(1, window = window).astype(np.float16),
+                    src2020.read(1, window = window).astype(np.float16),
+                    out = np.zeros_like(src1975.read(1, window = window).astype(np.float16)),
+                    where = (src2020.read(1, window = window).astype(np.float16) != 0))
+                ratio[rowOff:rowOff + chunkSize, colOff:colOff + chunkSize] = cRatio
+        layersDict["Before1945"] = (ratio * countryPctBefore1945, src1975.profile)
+        layersDict["1945to1969"] = (ratio * countryPct19451969, src1975.profile)
+        del cRatio, ratio
         gc.collect()
 
-    total_mem, used_mem, free_mem = map(int, os.popen('free -t -m').readlines()[-1].split()[1:])
+    totalMem, usedMem, freeMem = map(int, os.popen('free -t -m').readlines()[-1].split()[1:])
     logging.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 14 -> Current mem usage (2) -> ' +\
-        str(round((used_mem / total_mem) * 100, 2)) + '%')
+        str(round((usedMem / totalMem) * 100, 2)) + '%')
     
-    with rasterio.open(clipped[4]) as src_2020, rasterio.open(clipped[0]) as src_1975, rasterio.open(clipped[1]) as src_1990:
-        diff = np.zeros((src_1975.height, src_1975.width), dtype = np.float16)
-        for row_off in range(0, src_1975.height, chunk_size):
-            for col_off in range(0, src_1975.width, chunk_size):
-                window = rasterio.windows.Window(col_off, row_off, chunk_size, chunk_size)
-                c_diff = np.divide(src_1990.read(1, window = window).astype(np.float16) - src_1975.read(1, window = window).astype(np.float16),
-                    src_2020.read(1, window = window).astype(np.float16),
-                    out = np.zeros_like(src_1975.read(1, window = window).astype(np.float16)),
-                    where = (src_2020.read(1, window = window).astype(np.float16) != 0))
-                diff[row_off:row_off + chunk_size, col_off:col_off + chunk_size] = c_diff
-        layers_dict["1970to1979"] = (diff * country_percentage_1970_1979, src_1975.profile)
-        layers_dict["1980to1989"] = (diff * country_percentage_1980_1989, src_1975.profile)
-        del c_diff, diff
+    with rasterio.open(clipped[4]) as src2020, rasterio.open(clipped[0]) as src1975, rasterio.open(clipped[1]) as src_1990:
+        diff = np.zeros((src1975.height, src1975.width), dtype = np.float16)
+        for rowOff in range(0, src1975.height, chunkSize):
+            for colOff in range(0, src1975.width, chunkSize):
+                window = rasterio.windows.Window(colOff, rowOff, chunkSize, chunkSize)
+                cDiff = np.divide(src_1990.read(1, window = window).astype(np.float16) -\
+                    src1975.read(1, window = window).astype(np.float16),
+                    src2020.read(1, window = window).astype(np.float16),
+                    out = np.zeros_like(src1975.read(1, window = window).astype(np.float16)),
+                    where = (src2020.read(1, window = window).astype(np.float16) != 0))
+                diff[rowOff:rowOff + chunkSize, colOff:colOff + chunkSize] = cDiff
+        layersDict["1970to1979"] = (diff * countryPct19701979, src1975.profile)
+        layersDict["1980to1989"] = (diff * countryPct19801989, src1975.profile)
+        del cDiff, diff
         gc.collect()
 
-    total_mem, used_mem, free_mem = map(int, os.popen('free -t -m').readlines()[-1].split()[1:])
+    totalMem, usedMem, freeMem = map(int, os.popen('free -t -m').readlines()[-1].split()[1:])
     logging.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 14 -> Current mem usage (3) -> ' +\
-        str(round((used_mem / total_mem) * 100, 2)) + '%')
+        str(round((usedMem / totalMem) * 100, 2)) + '%')
 
-    with rasterio.open(clipped[4]) as src_2020, rasterio.open(clipped[1]) as src_1990, rasterio.open(clipped[2]) as src_2000:
-        diff = np.zeros((src_2020.height, src_2020.width), dtype = np.float16)
-        for row_off in range(0, src_2020.height, chunk_size):
-            for col_off in range(0, src_2020.width, chunk_size):
-                window = rasterio.windows.Window(col_off, row_off, chunk_size, chunk_size)
-                c_diff = np.divide(src_2000.read(1, window = window).astype(np.float16) - src_1990.read(1, window = window).astype(np.float16),
-                    src_2020.read(1, window = window).astype(np.float16),
+    with rasterio.open(clipped[4]) as src2020, rasterio.open(clipped[1]) as src_1990, rasterio.open(clipped[2]) as src_2000:
+        diff = np.zeros((src2020.height, src2020.width), dtype = np.float16)
+        for rowOff in range(0, src2020.height, chunkSize):
+            for colOff in range(0, src2020.width, chunkSize):
+                window = rasterio.windows.Window(colOff, rowOff, chunkSize, chunkSize)
+                cDiff = np.divide(src_2000.read(1, window = window).astype(np.float16) -\
+                    src_1990.read(1, window = window).astype(np.float16),
+                    src2020.read(1, window = window).astype(np.float16),
                     out = np.zeros_like(src_1990.read(1, window = window).astype(np.float16)),
-                    where = (src_2020.read(1, window = window).astype(np.float16) != 0))
-                diff[row_off:row_off + chunk_size, col_off:col_off + chunk_size] = c_diff
-        layers_dict["1990to2000"] = (diff, src_1990.profile)
-        del c_diff, diff
+                    where = (src2020.read(1, window = window).astype(np.float16) != 0))
+                diff[rowOff:rowOff + chunkSize, colOff:colOff + chunkSize] = cDiff
+        layersDict["1990to2000"] = (diff, src_1990.profile)
+        del cDiff, diff
         gc.collect()
     
-    total_mem, used_mem, free_mem = map(int, os.popen('free -t -m').readlines()[-1].split()[1:])
+    totalMem, usedMem, freeMem = map(int, os.popen('free -t -m').readlines()[-1].split()[1:])
     logging.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 14 -> Current mem usage (4) -> ' +\
-        str(round((used_mem / total_mem) * 100, 2)) + '%')
+        str(round((usedMem / totalMem) * 100, 2)) + '%')
 
-    with rasterio.open(clipped[4]) as src_2020, rasterio.open(clipped[2]) as src_2000, rasterio.open(clipped[3]) as src_2010:
-        diff = np.zeros((src_2020.height, src_2020.width), dtype=np.float16)
-        for row_off in range(0, src_2020.height, chunk_size):
-            for col_off in range(0, src_2020.width, chunk_size):
-                window = rasterio.windows.Window(col_off, row_off, chunk_size, chunk_size)
-                c_diff = np.divide(src_2010.read(1, window = window).astype(np.float16) - src_2000.read(1, window = window).astype(np.float16),
-                    src_2020.read(1, window = window).astype(np.float16),
+    with rasterio.open(clipped[4]) as src2020, rasterio.open(clipped[2]) as src_2000, rasterio.open(clipped[3]) as src_2010:
+        diff = np.zeros((src2020.height, src2020.width), dtype = np.float16)
+        for rowOff in range(0, src2020.height, chunkSize):
+            for colOff in range(0, src2020.width, chunkSize):
+                window = rasterio.windows.Window(colOff, rowOff, chunkSize, chunkSize)
+                cDiff = np.divide(src_2010.read(1, window = window).astype(np.float16) -\
+                    src_2000.read(1, window = window).astype(np.float16),
+                    src2020.read(1, window = window).astype(np.float16),
                     out = np.zeros_like(src_2000.read(1, window = window).astype(np.float16)),
-                    where = (src_2020.read(1, window = window).astype(np.float16) != 0))
-                diff[row_off:row_off + chunk_size, col_off:col_off + chunk_size] = c_diff
-        layers_dict["2000to2010"] = (diff, src_1990.profile)
-        del c_diff, diff
+                    where = (src2020.read(1, window = window).astype(np.float16) != 0))
+                diff[rowOff:rowOff + chunkSize, colOff:colOff + chunkSize] = cDiff
+        layersDict["2000to2010"] = (diff, src_1990.profile)
+        del cDiff, diff
         gc.collect()
 
-    total_mem, used_mem, free_mem = map(int, os.popen('free -t -m').readlines()[-1].split()[1:])
+    totalMem, usedMem, freeMem = map(int, os.popen('free -t -m').readlines()[-1].split()[1:])
     logging.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 14 -> Current mem usage (5) -> ' +\
-        str(round((used_mem / total_mem) * 100, 2)) + '%')
+        str(round((usedMem / totalMem) * 100, 2)) + '%')
     
-    with rasterio.open(clipped[4]) as src_2020, rasterio.open(clipped[3]) as src_2010:
-        diff = np.zeros((src_2020.height, src_2020.width), dtype=np.float16)
-        for row_off in range(0, src_2020.height, chunk_size):
-            for col_off in range(0, src_2020.width, chunk_size):
-                window = rasterio.windows.Window(col_off, row_off, chunk_size, chunk_size)
-                c_diff = np.divide(src_2020.read(1, window = window).astype(np.float16) - src_2010.read(1, window = window).astype(np.float16),
-                    src_2020.read(1, window = window).astype(np.float16),
+    with rasterio.open(clipped[4]) as src2020, rasterio.open(clipped[3]) as src_2010:
+        diff = np.zeros((src2020.height, src2020.width), dtype = np.float16)
+        for rowOff in range(0, src2020.height, chunkSize):
+            for colOff in range(0, src2020.width, chunkSize):
+                window = rasterio.windows.Window(colOff, rowOff, chunkSize, chunkSize)
+                cDiff = np.divide(src2020.read(1, window = window).astype(np.float16) -\
+                    src_2010.read(1, window = window).astype(np.float16),
+                    src2020.read(1, window = window).astype(np.float16),
                     out = np.zeros_like(src_2010.read(1, window = window).astype(np.float16)),
-                    where = (src_2020.read(1, window = window).astype(np.float16) != 0))
-                diff[row_off:row_off + chunk_size, col_off:col_off + chunk_size] = c_diff
-        layers_dict["Post2010"] = (diff, src_1990.profile)
-        del c_diff, diff
+                    where = (src2020.read(1, window = window).astype(np.float16) != 0))
+                diff[rowOff:rowOff + chunkSize, colOff:colOff + chunkSize] = cDiff
+        layersDict["Post2010"] = (diff, src_1990.profile)
+        del cDiff, diff
         gc.collect()
     
-    total_mem, used_mem, free_mem = map(int, os.popen('free -t -m').readlines()[-1].split()[1:])
+    totalMem, usedMem, freeMem = map(int, os.popen('free -t -m').readlines()[-1].split()[1:])
     logging.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 14 -> Current mem usage (6) -> ' +\
-        str(round((used_mem / total_mem) * 100, 2)) + '%')
+        str(round((usedMem / totalMem) * 100, 2)) + '%')
     
     # Finish
     logging.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 14 -> [OK]')
     logging.info('')
-    return layers_dict
+    return layersDict
 
 
 # Function: Build. Energy Sim. -> Preprocess -> Step 15 -> Assign year info
-def bp1_step_15(nuts_id, buildings, layers_dict, excel_file, config):
+def bp1Step15(nutsId, buildings, layersDict, excelFile, config):
+    ''' Build. Energy Sim. -> Preprocess -> Step 15 : Assign year info. '''
+
     logging.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 15 -> Assigning year info...')
-    for raster_name, (raster_data, transform) in layers_dict.items():
-        buildings[raster_name] = buildings.geometry.centroid.apply(\
-            lambda point: getPixelValue(point.x, point.y, raster_data, transform))
+    for rasterName, (rasterData, transform) in layersDict.items():
+        buildings[rasterName] = buildings.geometry.centroid.apply(\
+            lambda point: getPixelValue(point.x, point.y, rasterData, transform))
             
     # Assign value = 1 to the field with the highest % of built-up area in all those records where there is no year information
-    columns_to_check = ['Before1945', '1945to1969', '1970to1979', '1980to1989', '1990to2000', '2000to2010', 'Post2010']
+    columnsToCheck = ['Before1945', '1945to1969', '1970to1979', '1980to1989', '1990to2000', '2000to2010', 'Post2010']
 
     # Get the 'MostCommon' column for this particular 'country_code'.
-    share_years_df = pd.read_excel(io.retrieveBasePath(config) + excel_file['path'])
-    most_common_column = share_years_df.loc[share_years_df['NUTS_ID'].str[:2] == nuts_id[:2], 'MostCommon'].values[0]
+    dfShareYears = pd.read_excel(io.retrieveBasePath(config) + excelFile['path'])
+    mostCommonColumn = dfShareYears.loc[dfShareYears['NUTS_ID'].str[:2] == nutsId[:2], 'MostCommon'].values[0]
 
     # Check if all values in the columns are 0 (which means no data available)
-    condition = (buildings[columns_to_check] == 0).all(axis = 1)
+    condition = (buildings[columnsToCheck] == 0).all(axis = 1)
 
     # Assign 1 to the corresponding column in the rows where all values are 0
-    buildings.loc[condition, most_common_column] = 1
+    buildings.loc[condition, mostCommonColumn] = 1
     
     # Finish
     logging.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 15 -> [OK]')
@@ -755,7 +791,9 @@ def bp1_step_15(nuts_id, buildings, layers_dict, excel_file, config):
 
 
 # Function: Build. Energy Sim. -> Preprocess -> Step 16 -> Calculate additional info
-def bp1_step_16(buildings):
+def bp1Step16(buildings):
+    ''' Build. Energy Sim. -> Preprocess -> Step 16 : Calculate additional info. '''
+
     logging.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 16 -> Calculating additional info...')
     
     # Calculation of built-up area per year from share data
@@ -775,8 +813,6 @@ def bp1_step_16(buildings):
         buildings['BuildingFP_area'] * 2)) / buildings['Volume']
     buildings['R_WalltoGFA'] = (buildings['perimeter'] * buildings['GHS_Heightmean']) / buildings['Building_GFA']
     
-    #buildings.to_file(driver='GPKG', filename=buildings_path)
-    
     # Finish
     logging.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 16 -> [OK]')
     logging.info('')
@@ -784,14 +820,16 @@ def bp1_step_16(buildings):
 
 
 # Function: Build. Energy Sim. -> Preprocess -> Step 17 -> Prepare clustering
-def bp1_step_17(buildings):
+def bp1Step17(buildings):
+    ''' Build. Energy Sim. -> Preprocess -> Step 17 : Prepare clustering. '''
+
     logging.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 17 -> Preparing clustering...')
     
     # Filter the dataframe to keep only those in the Sub_sector field that are 'Apartment block'
-    apartment_block = buildings[buildings['Sub_sector'] == 'Apartment blocks']
+    apartmentBlock = buildings[buildings['Sub_sector'] == 'Apartment blocks']
 
     # Check if there are no buildings in the Sub_sector 'Apartment block'
-    if apartment_block.empty:
+    if apartmentBlock.empty:
         logging.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 17 -> No empty buildings for "Apartment block" Subsector!')
         return pd.DataFrame()
 
@@ -799,48 +837,50 @@ def bp1_step_17(buildings):
     periods = ['Before1945', '1945to1969', '1970to1979', '1980to1989', '1990to2000', '2000to2010', 'Post2010']
 
     # Duplicate rows for each period
-    def expand_row(row):
-        period_data = []
+    def expandRow(row):
+        periodData = []
         for period in periods:
-            new_row = row.copy()
-            new_row['Period'] = period
-            new_row['BuiltArea_ShareYears'] = row['Building_GFA'] * row[period]
-            period_data.append(new_row.to_dict())
-        return period_data
+            newRow = row.copy()
+            newRow['Period'] = period
+            newRow['BuiltArea_ShareYears'] = row['Building_GFA'] * row[period]
+            periodData.append(newRow.to_dict())
+        return periodData
 
-    # Duplicate rows 7 times and apply expand_row to each row
-    expanded_data = apartment_block.apply(expand_row, axis = 1)
+    # Duplicate rows 7 times and apply 'expandRow' to each row
+    expandedData = apartmentBlock.apply(expandRow, axis = 1)
 
-    # Concatenate all dictionaries returned by expand_row into a single dataframe
-    AB_df = pd.DataFrame([item for sublist in expanded_data for item in sublist])
+    # Concatenate all dictionaries returned by 'expandRow' into a single dataframe
+    dfAB = pd.DataFrame([item for sublist in expandedData for item in sublist])
     
-    # Filter the dataframe to keep only those in the Sub_sector field that are ‘Single family- Terraced houses’.
-    SFH_df = buildings[buildings['Sub_sector'] == 'Single family- Terraced houses']
+    # Filter the dataframe to keep only those in the Sub_sector field that are 'Single family- Terraced houses'.
+    dfSFH = buildings[buildings['Sub_sector'] == 'Single family- Terraced houses']
     
     # Filter the dataframe to keep only those in the Sector field that are 'Service sector'
-    SS_df = buildings[buildings['Sector'] == 'Service sector']
+    dfSS = buildings[buildings['Sector'] == 'Service sector']
     
     # Finish
     logging.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 17 -> [OK]')
     logging.info('')
-    return AB_df, SFH_df, SS_df
+    return dfAB, dfSFH, dfSS
 
 
 # Function: Build. Energy Sim. -> Preprocess -> Step 18 -> Perform clustering (AB)
-def bp1_step_18(AB_df, n_clusters_AB):
+def bp1Step18(dfAB, nClustersAB):
+    ''' Build. Energy Sim. -> Preprocess -> Step 09 : Perform clustering (AB). '''
+
     logging.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 18 -> Performing clustering (AB)...')
 
-    df_all_years = pd.DataFrame()
-    df_clusters_AB = pd.DataFrame(
+    dfAllYears = pd.DataFrame()
+    dfClustersAB = pd.DataFrame(
         columns = ['Sub_sector', 'Cluster', 'Centroid_GHS_Heightmean', 'Centroid_ExtFachade', 'Centroid_ShapeFactor'])
 
-    def calculate_distance(row, centroid):
+    def calculateDistance(row, centroid):
         return np.sqrt(
             (row['%ExtFachade'] - centroid['%ExtFachade']) ** 2
             + (row['ShapeFactor'] - centroid['ShapeFactor']) ** 2
             + (row['GHS_Heightmean'] - centroid['GHS_Heightmean']) ** 2)
 
-    period_to_year = {
+    periodToYear = {
         'Before1945': 1900,
         '1945to1969': 1955,
         '1970to1979': 1975,
@@ -850,127 +890,135 @@ def bp1_step_18(AB_df, n_clusters_AB):
         'Post2010': 2020
     }
 
-    for period in AB_df['Period'].unique():
-        df_period = AB_df.loc[AB_df['Period'] == period].copy()
-        df_period['Year'] = period_to_year[period]
-        df_period['NormalizedBuiltArea'] = df_period['BuiltArea_ShareYears'] / df_period['BuiltArea_ShareYears'].sum()
-        weights = df_period['NormalizedBuiltArea'].values
+    for period in dfAB['Period'].unique():
+        dfPeriod = dfAB.loc[dfAB['Period'] == period].copy()
+        dfPeriod['Year'] = periodToYear[period]
+        dfPeriod['NormalizedBuiltArea'] = dfPeriod['BuiltArea_ShareYears'] / dfPeriod['BuiltArea_ShareYears'].sum()
+        weights = dfPeriod['NormalizedBuiltArea'].values
 
-        df_clustering = df_period[['GHS_Heightmean', '%ExtFachade', 'ShapeFactor']]
+        dfClustering = dfPeriod[['GHS_Heightmean', '%ExtFachade', 'ShapeFactor']]
         scaler = StandardScaler()
-        df_scaled = scaler.fit_transform(df_clustering)
+        dfScaled = scaler.fit_transform(dfClustering)
 
         # Adjust the KMeans model
-        km = KMeans(n_clusters=n_clusters_AB, max_iter = 8000)
-        df_period['cluster'] = km.fit_predict(df_scaled, sample_weight = weights)
-        df_period['cluster'] = df_period['cluster'].apply(lambda x: f"{x}_{period}")
-        centroids = df_period.groupby('cluster')[['GHS_Heightmean', '%ExtFachade', 'ShapeFactor']].mean()
+        km = KMeans(n_clusters = nClustersAB, max_iter = 8000)
+        dfPeriod['cluster'] = km.fit_predict(dfScaled, sample_weight = weights)
+        dfPeriod['cluster'] = dfPeriod['cluster'].apply(lambda x: f"{x}_{period}")
+        centroids = dfPeriod.groupby('cluster')[['GHS_Heightmean', '%ExtFachade', 'ShapeFactor']].mean()
         
         # Calculate the distance from each entity to the centroid
-        df_period['distance'] = df_period.apply(lambda row: calculate_distance(row, centroids.loc[row['cluster']]), axis = 1)
-        df_period_centroid_osmids = df_period.loc[df_period.groupby('cluster')['distance'].idxmin()]
-        df_centroid_osm_ids = df_period_centroid_osmids.set_index('cluster')['osm_id']
-        df_period['centroid_osm_id'] = df_period['cluster'].apply(lambda x: 1 if df_centroid_osm_ids[x] in df_period['osm_id'].values else 0)
-        sum_GFArea = df_period.groupby('cluster')['BuiltArea_ShareYears'].sum()
-        df_all_years = pd.concat([df_all_years, df_period])
+        dfPeriod['distance'] = dfPeriod.apply(lambda row: calculateDistance(row, centroids.loc[row['cluster']]), axis = 1)
+        dfPeriodCentroidOsmIds = dfPeriod.loc[dfPeriod.groupby('cluster')['distance'].idxmin()]
+        dfCentroidOsmIds = dfPeriodCentroidOsmIds.set_index('cluster')['osm_id']
+        dfPeriod['centroid_osm_id'] = dfPeriod['cluster'].apply(lambda x: 1\
+            if dfCentroidOsmIds[x] in dfPeriod['osm_id'].values else 0)
+        sumGFArea = dfPeriod.groupby('cluster')['BuiltArea_ShareYears'].sum()
+        dfAllYears = pd.concat([dfAllYears, dfPeriod])
 
         # Stores the information in df_clusters and then prints the centroids and nearest entities for each cluster
-        for cluster in df_period['cluster'].unique():
+        for cluster in dfPeriod['cluster'].unique():
             centroid = centroids.loc[cluster]
-            closest_entity = df_period[df_period['osm_id'] == df_centroid_osm_ids[cluster]]
-            new_df = pd.DataFrame([{'Period': period,
-                'Cluster': cluster, 'Centroid_GHS_Heightmean': centroid['GHS_Heightmean'], 'Centroid_ExtFachade': centroid['%ExtFachade'],
-                'Centroid_ShapeFactor': centroid['ShapeFactor'], 'Closest_Entity_OSM_ID': closest_entity['osm_id'].values[0],
-                'Closest_Entity_FootprintArea': closest_entity['BuildingFP_area'].values[0],
-                'Closest_Entity_GFA': closest_entity['Building_GFA'].values[0],
-                'Closest_Entity_Height': closest_entity['GHS_Heightmean'].values[0],
-                'Closest_Entity_N_floors': closest_entity['N_Floors'].values[0], 'Closest_Entity_Volume': closest_entity['Volume'].values[0],
-                'Closest_Entity_TotalPerimeter': closest_entity['perimeter'].values[0],
-                'Closest_Entity_%ExtFachade': closest_entity['%ExtFachade'].values[0],
-                'Closest_Entity_R_WalltoGFA': closest_entity['R_WalltoGFA'].values[0],
-                'Closest_Entity_ShapeFactor': closest_entity['ShapeFactor'].values[0],
-                'Year': df_period['Year'].iloc[0], 'Area': sum_GFArea[cluster]}])
+            closestEntity = dfPeriod[dfPeriod['osm_id'] == dfCentroidOsmIds[cluster]]
+            dfNew = pd.DataFrame([{'Period': period,
+                'Cluster': cluster, 'Centroid_GHS_Heightmean': centroid['GHS_Heightmean'],
+                'Centroid_ExtFachade': centroid['%ExtFachade'],
+                'Centroid_ShapeFactor': centroid['ShapeFactor'],
+                'Closest_Entity_OSM_ID': closestEntity['osm_id'].values[0],
+                'Closest_Entity_FootprintArea': closestEntity['BuildingFP_area'].values[0],
+                'Closest_Entity_GFA': closestEntity['Building_GFA'].values[0],
+                'Closest_Entity_Height': closestEntity['GHS_Heightmean'].values[0],
+                'Closest_Entity_N_floors': closestEntity['N_Floors'].values[0],
+                'Closest_Entity_Volume': closestEntity['Volume'].values[0],
+                'Closest_Entity_TotalPerimeter': closestEntity['perimeter'].values[0],
+                'Closest_Entity_%ExtFachade': closestEntity['%ExtFachade'].values[0],
+                'Closest_Entity_R_WalltoGFA': closestEntity['R_WalltoGFA'].values[0],
+                'Closest_Entity_ShapeFactor': closestEntity['ShapeFactor'].values[0],
+                'Year': dfPeriod['Year'].iloc[0], 'Area': sumGFArea[cluster]}])
 
-            new_df = new_df.dropna(how='all', axis = 1)
-            new_df = new_df.dropna(how='all', axis = 0)
-            df_clusters_AB = df_clusters_AB.dropna(how = 'all', axis=1)
-            df_clusters_AB = df_clusters_AB.dropna(how = 'all', axis=0)
-            df_clusters_AB = pd.concat([df_clusters_AB, new_df]).reset_index(drop=True)
+            dfNew = dfNew.dropna(how='all', axis = 1)
+            dfNew = dfNew.dropna(how='all', axis = 0)
+            dfClustersAB = dfClustersAB.dropna(how = 'all', axis = 1)
+            dfClustersAB = dfClustersAB.dropna(how = 'all', axis = 0)
+            dfClustersAB = pd.concat([dfClustersAB, dfNew]).reset_index(drop = True)
 
     # Finish
     logging.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 18 -> [OK]')
     logging.info('')
-    return df_clusters_AB
+    return dfClustersAB
 
 
 # Function: Build. Energy Sim. -> Preprocess -> Step 19 -> Perform clustering (SFH)
-def bp1_step_19(SFH_df, n_clusters_SFH):
+def bp1Step19(dfSFH, nClustersSFH):
+    ''' Build. Energy Sim. -> Preprocess -> Step 19 : Perform clustering (SFH). '''
+   
     logging.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 19 -> Performing clustering (SFH)...')
     
-    df_all_Sub_sector = pd.DataFrame()
-    df_clusters_SFH = pd.DataFrame(
+    dfAllSubSector = pd.DataFrame()
+    dfClustersSFH = pd.DataFrame(
         columns = ['Sub_sector', 'Cluster', 'Centroid_GHS_Heightmean', 'Centroid_ExtFachade', 'Centroid_ShapeFactor'])
 
-    def calculate_distance(row, centroid):
+    def calculateDistance(row, centroid):
         return np.sqrt(
             (row['%ExtFachade'] - centroid['%ExtFachade']) ** 2
             + (row['ShapeFactor'] - centroid['ShapeFactor']) ** 2
             + (row['GHS_Heightmean'] - centroid['GHS_Heightmean']) ** 2)
 
     # Iterating over each unique Sub_sector in the dataset
-    for Sub_sector in SFH_df['Sub_sector'].unique():
+    for Sub_sector in dfSFH['Sub_sector'].unique():
         # Selecting the rows for specific Sub_sector
-        df_subsector = SFH_df.loc[SFH_df['Sub_sector'] == Sub_sector].copy()
-        df_subsector['NormalizedBuiltArea'] = df_subsector['Building_GFA'] / df_subsector['Building_GFA'].sum()
-        weights = df_subsector['NormalizedBuiltArea'].values
-        df_clustering = df_subsector[['GHS_Heightmean', '%ExtFachade', 'ShapeFactor']]
+        dfSubsector = dfSFH.loc[dfSFH['Sub_sector'] == Sub_sector].copy()
+        dfSubsector['NormalizedBuiltArea'] = dfSubsector['Building_GFA'] / dfSubsector['Building_GFA'].sum()
+        weights = dfSubsector['NormalizedBuiltArea'].values
+        dfClustering = dfSubsector[['GHS_Heightmean', '%ExtFachade', 'ShapeFactor']]
         
         # Scaling the features to have zero mean and unit variance using StandardScaler for optimal performance
         scaler = StandardScaler()
-        df_scaled = scaler.fit_transform(df_clustering)
+        dfScaled = scaler.fit_transform(dfClustering)
 
         # Applying KMeans clustering algorithm
-        km = KMeans(n_clusters=n_clusters_SFH, max_iter = 8000)
-        df_subsector['cluster'] = km.fit_predict(df_scaled, sample_weight = weights)
+        km = KMeans(n_clusters = nClustersSFH, max_iter = 8000)
+        dfSubsector['cluster'] = km.fit_predict(dfScaled, sample_weight = weights)
 
         # Assign a unique cluster identifier for each Sub_sector
-        df_subsector['cluster'] = df_subsector['cluster'].apply(lambda x: f"{x}_{Sub_sector}")
+        dfSubsector['cluster'] = dfSubsector['cluster'].apply(lambda x: f"{x}_{Sub_sector}")
 
         # Compute the centroids of each cluster
-        centroids = df_subsector.groupby('cluster')[['GHS_Heightmean', '%ExtFachade', 'ShapeFactor']].mean()
-        df_subsector['distance'] = df_subsector.apply(lambda row: calculate_distance(row, centroids.loc[row['cluster']]), axis=1)
-        df_subsector_centroid_osmids = df_subsector.loc[df_subsector.groupby('cluster')['distance'].idxmin()]
-        df_centroid_osm_ids = df_subsector_centroid_osmids.set_index('cluster')['osm_id']
-        df_subsector['centroid_osm_id'] = df_subsector['cluster'].apply(
-            lambda x: 1 if df_centroid_osm_ids[x] in df_subsector['osm_id'].values else 0)
-        sum_GFArea = df_subsector.groupby('cluster')['Building_GFA'].sum()
+        centroids = dfSubsector.groupby('cluster')[['GHS_Heightmean', '%ExtFachade', 'ShapeFactor']].mean()
+        dfSubsector['distance'] = dfSubsector.apply(lambda row: calculateDistance(row, centroids.loc[row['cluster']]), axis = 1)
+        dfSubsectorCentroidOsmIds = dfSubsector.loc[dfSubsector.groupby('cluster')['distance'].idxmin()]
+        dfCentroidOsmIds = dfSubsectorCentroidOsmIds.set_index('cluster')['osm_id']
+        dfSubsector['centroid_osm_id'] = dfSubsector['cluster'].apply(
+            lambda x: 1 if dfCentroidOsmIds[x] in dfSubsector['osm_id'].values else 0)
+        sumGFArea = dfSubsector.groupby('cluster')['Building_GFA'].sum()
 
-        df_all_Sub_sector = pd.concat([df_all_Sub_sector, df_subsector])
-        for cluster in df_subsector['cluster'].unique():
+        dfAllSubSector = pd.concat([dfAllSubSector, dfSubsector])
+        for cluster in dfSubsector['cluster'].unique():
             centroid = centroids.loc[cluster]
-            closest_entity = df_subsector[df_subsector['osm_id'] == df_centroid_osm_ids[cluster]]
-            new_df = pd.DataFrame([{'Sub_sector': Sub_sector,
+            closestEntity = dfSubsector[dfSubsector['osm_id'] == dfCentroidOsmIds[cluster]]
+            dfNew = pd.DataFrame([{'Sub_sector': Sub_sector,
                 'Cluster': cluster, 'Centroid_GHS_Heightmean': centroid['GHS_Heightmean'],
-                'Centroid_ExtFachade': centroid['%ExtFachade'], 'Centroid_ShapeFactor': centroid['ShapeFactor'],
-                'Closest_Entity_OSM_ID': closest_entity['osm_id'].values[0],
-                'Closest_Entity_FootprintArea': closest_entity['BuildingFP_area'].values[0],
-                'Closest_Entity_GFA': closest_entity['Building_GFA'].values[0],
-                'Closest_Entity_Height': closest_entity['GHS_Heightmean'].values[0],
-                'Closest_Entity_N_floors': closest_entity['N_Floors'].values[0],
-                'Closest_Entity_Volume': closest_entity['Volume'].values[0],
-                'Closest_Entity_TotalPerimeter': closest_entity['perimeter'].values[0],
-                'Closest_Entity_%ExtFachade': closest_entity['%ExtFachade'].values[0],
-                'Closest_Entity_R_WalltoGFA': closest_entity['R_WalltoGFA'].values[0],
-                'Closest_Entity_ShapeFactor': closest_entity['ShapeFactor'].values[0], 'Sum_GFArea': sum_GFArea[cluster]}])
+                'Centroid_ExtFachade': centroid['%ExtFachade'],
+                'Centroid_ShapeFactor': centroid['ShapeFactor'],
+                'Closest_Entity_OSM_ID': closestEntity['osm_id'].values[0],
+                'Closest_Entity_FootprintArea': closestEntity['BuildingFP_area'].values[0],
+                'Closest_Entity_GFA': closestEntity['Building_GFA'].values[0],
+                'Closest_Entity_Height': closestEntity['GHS_Heightmean'].values[0],
+                'Closest_Entity_N_floors': closestEntity['N_Floors'].values[0],
+                'Closest_Entity_Volume': closestEntity['Volume'].values[0],
+                'Closest_Entity_TotalPerimeter': closestEntity['perimeter'].values[0],
+                'Closest_Entity_%ExtFachade': closestEntity['%ExtFachade'].values[0],
+                'Closest_Entity_R_WalltoGFA': closestEntity['R_WalltoGFA'].values[0],
+                'Closest_Entity_ShapeFactor': closestEntity['ShapeFactor'].values[0],
+                'Sum_GFArea': sumGFArea[cluster]}])
 
-            new_df = new_df.dropna(how = 'all', axis = 1)
-            new_df = new_df.dropna(how = 'all', axis = 0)
-            df_clusters_SFH = df_clusters_SFH.dropna(how = 'all', axis = 1)
-            df_clusters_SFH = df_clusters_SFH.dropna(how = 'all', axis = 0)
-            df_clusters_SFH = pd.concat([df_clusters_SFH, new_df]).reset_index(drop=True)
+            dfNew = dfNew.dropna(how = 'all', axis = 1)
+            dfNew = dfNew.dropna(how = 'all', axis = 0)
+            dfClustersSFH = dfClustersSFH.dropna(how = 'all', axis = 1)
+            dfClustersSFH = dfClustersSFH.dropna(how = 'all', axis = 0)
+            dfClustersSFH = pd.concat([dfClustersSFH, dfNew]).reset_index(drop = True)
 
     # Conversion of 'Period' to 'Year' through a dictionary mapping
-    period_to_year = {
+    periodToYear = {
         'Before1945': 1900,
         '1945to1969': 1955,
         '1970to1979': 1975,
@@ -980,113 +1028,116 @@ def bp1_step_19(SFH_df, n_clusters_SFH):
         'Post2010': 2020
     }
 
-    # Iterate over each row in df_clusters_SFH
-    new_rows = []
-    for _, row in df_clusters_SFH.iterrows():
-        for period, year in period_to_year.items():
-            new_row = row.copy()
-            new_row['Period'] = period
-            new_row['Year'] = year
-            new_rows.append(new_row)
-    df_expanded = pd.DataFrame(new_rows)
+    # Iterate over each row in dfClustersSFH
+    newRows = []
+    for _, row in dfClustersSFH.iterrows():
+        for period, year in periodToYear.items():
+            newRow = row.copy()
+            newRow['Period'] = period
+            newRow['Year'] = year
+            newRows.append(newRow)
+    dfExpanded = pd.DataFrame(newRows)
 
     # Reset the index of the expanded DataFrame
-    df_expanded.reset_index(drop=True, inplace=True)
+    dfExpanded.reset_index(drop = True, inplace = True)
 
-    # First, 'melt' df_all_Sub_sector to get a row for each cluster and period
-    df_area = df_all_Sub_sector.melt(id_vars=['cluster'],
-                                     value_vars=[c for c in df_all_Sub_sector.columns if c.endswith('_A')],
-                                     var_name='Period',
-                                     value_name='Area')
+    # First, 'melt' dfAllSubSector to get a row for each cluster and period
+    dfArea = dfAllSubSector.melt(id_vars = ['cluster'],
+        value_vars = [c for c in dfAllSubSector.columns if c.endswith('_A')],
+        var_name = 'Period',
+        value_name = 'Area')
 
     # Remove the '_A' from the end of the period
-    df_area['Period'] = df_area['Period'].str.rstrip('_A')
+    dfArea['Period'] = dfArea['Period'].str.rstrip('_A')
 
     # Sum the area values by cluster and period
-    df_area = df_area.groupby(['cluster', 'Period'])['Area'].sum().reset_index()
+    dfArea = dfArea.groupby(['cluster', 'Period'])['Area'].sum().reset_index()
 
-    # Create a combined index column for df_area
-    df_area['merge_index'] = df_area['cluster'] + df_area['Period']
+    # Create a combined index column for dfArea
+    dfArea['merge_index'] = dfArea['cluster'] + dfArea['Period']
 
-    # Create a combined index column for df_expanded
-    df_expanded['merge_index'] = df_expanded['Cluster'] + df_expanded['Period']
+    # Create a combined index column for dfExpanded
+    dfExpanded['merge_index'] = dfExpanded['Cluster'] + dfExpanded['Period']
 
-    # Sort df_area by this combined index
-    df_area.sort_values('merge_index', inplace = True)
+    # Sort dfArea by this combined index
+    dfArea.sort_values('merge_index', inplace = True)
 
     # Create a new df that merges on 'merge_index'
-    df_merged_SFH = df_expanded.merge(df_area, how = 'left', on = 'merge_index')
+    dfMergedSFH = dfExpanded.merge(dfArea, how = 'left', on = 'merge_index')
 
     # Now we no longer need the 'merge_index' column
-    df_merged_SFH.drop(columns = 'merge_index', inplace = True)
+    dfMergedSFH.drop(columns = 'merge_index', inplace = True)
     
     # Finish
     logging.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 19 -> [OK]')
     logging.info('')
-    return df_merged_SFH
+    return dfMergedSFH
 
 
 # Function: Build. Energy Sim. -> Preprocess -> Step 20 -> Perform clustering (SS)
-def bp1_step_20(SS_df, n_clusters_SS):
+def bp1Step20(dfSS, nClustersSS):
+    ''' Build. Energy Sim. -> Preprocess -> Step 20 : Perform clustering (SS). '''
+
     logging.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 20 -> Performing clustering (SS)...')
     
-    df_all_Sub_sector = pd.DataFrame()
-    df_clusters_SS = pd.DataFrame(
+    dfAllSubSector = pd.DataFrame()
+    dfClustersSS = pd.DataFrame(
         columns = ['Sub_sector', 'Cluster', 'Centroid_GHS_Heightmean', 'Centroid_ExtFachade', 'Centroid_ShapeFactor'])
 
-    def calculate_distance(row, centroid):
+    def calculateDistance(row, centroid):
         return np.sqrt(
             (row['%ExtFachade'] - centroid['%ExtFachade']) ** 2
             + (row['ShapeFactor'] - centroid['ShapeFactor']) ** 2
             + (row['GHS_Heightmean'] - centroid['GHS_Heightmean']) ** 2)
 
-    for Sub_sector in SS_df['Sub_sector'].unique():
-        df_subsector = SS_df.loc[SS_df['Sub_sector'] == Sub_sector].copy()
-        df_subsector['NormalizedBuiltArea'] = df_subsector['Building_GFA'] / df_subsector['Building_GFA'].sum()
-        weights = df_subsector['NormalizedBuiltArea'].values
-        df_clustering = df_subsector[['GHS_Heightmean', '%ExtFachade', 'ShapeFactor']]
+    for sub_sector in dfSS['Sub_sector'].unique():
+        dfSubsector = dfSS.loc[dfSS['Sub_sector'] == sub_sector].copy()
+        dfSubsector['NormalizedBuiltArea'] = dfSubsector['Building_GFA'] / dfSubsector['Building_GFA'].sum()
+        weights = dfSubsector['NormalizedBuiltArea'].values
+        dfClustering = dfSubsector[['GHS_Heightmean', '%ExtFachade', 'ShapeFactor']]
 
         scaler = StandardScaler()
-        df_scaled = scaler.fit_transform(df_clustering)
+        dfScaled = scaler.fit_transform(dfClustering)
 
-        km = KMeans(n_clusters=n_clusters_SS, max_iter=8000)
-        df_subsector['cluster'] = km.fit_predict(df_scaled, sample_weight=weights)
-        df_subsector['cluster'] = df_subsector['cluster'].apply(lambda x: f"{x}_{Sub_sector}")
+        km = KMeans(n_clusters = nClustersSS, max_iter = 8000)
+        dfSubsector['cluster'] = km.fit_predict(dfScaled, sample_weight = weights)
+        dfSubsector['cluster'] = dfSubsector['cluster'].apply(lambda x: f"{x}_{Sub_sector}")
 
-        centroids = df_subsector.groupby('cluster')[['GHS_Heightmean', '%ExtFachade', 'ShapeFactor']].mean()
-        df_subsector['distance'] = df_subsector.apply(lambda row: calculate_distance(row, centroids.loc[row['cluster']]), axis = 1)
+        centroids = dfSubsector.groupby('cluster')[['GHS_Heightmean', '%ExtFachade', 'ShapeFactor']].mean()
+        dfSubsector['distance'] = dfSubsector.apply(lambda row: calculateDistance(row, centroids.loc[row['cluster']]), axis = 1)
 
-        df_subsector_centroid_osmids = df_subsector.loc[df_subsector.groupby('cluster')['distance'].idxmin()]
-        df_centroid_osm_ids = df_subsector_centroid_osmids.set_index('cluster')['osm_id']
-        df_subsector['centroid_osm_id'] = df_subsector['cluster'].apply(
-            lambda x: 1 if df_centroid_osm_ids[x] in df_subsector['osm_id'].values else 0)
-        sum_GFArea = df_subsector.groupby('cluster')['Building_GFA'].sum()
+        dfSubsectorCentroidOsmIds = dfSubsector.loc[dfSubsector.groupby('cluster')['distance'].idxmin()]
+        dfCentroidOsmIds = dfSubsectorCentroidOsmIds.set_index('cluster')['osm_id']
+        dfSubsector['centroid_osm_id'] = dfSubsector['cluster'].apply(
+            lambda x: 1 if dfCentroidOsmIds[x] in dfSubsector['osm_id'].values else 0)
+        sumGFArea = dfSubsector.groupby('cluster')['Building_GFA'].sum()
 
-        df_all_Sub_sector = pd.concat([df_all_Sub_sector, df_subsector])
-        for cluster in df_subsector['cluster'].unique():
+        dfAllSubSector = pd.concat([dfAllSubSector, dfSubsector])
+        for cluster in dfSubsector['cluster'].unique():
             centroid = centroids.loc[cluster]
-            closest_entity = df_subsector[df_subsector['osm_id'] == df_centroid_osm_ids[cluster]]
-            new_df = pd.DataFrame([{'Sub_sector': Sub_sector,
+            closestEntity = dfSubsector[dfSubsector['osm_id'] == dfCentroidOsmIds[cluster]]
+            dfNew = pd.DataFrame([{'Sub_sector': sub_sector,
                 'Cluster': cluster, 'Centroid_GHS_Heightmean': centroid['GHS_Heightmean'],
                 'Centroid_ExtFachade': centroid['%ExtFachade'], 'Centroid_ShapeFactor': centroid['ShapeFactor'],
-                'Closest_Entity_OSM_ID': closest_entity['osm_id'].values[0],
-                'Closest_Entity_FootprintArea': closest_entity['BuildingFP_area'].values[0],
-                'Closest_Entity_GFA': closest_entity['Building_GFA'].values[0],
-                'Closest_Entity_Height': closest_entity['GHS_Heightmean'].values[0],
-                'Closest_Entity_N_floors': closest_entity['N_Floors'].values[0],
-                'Closest_Entity_Volume': closest_entity['Volume'].values[0],
-                'Closest_Entity_TotalPerimeter': closest_entity['perimeter'].values[0],
-                'Closest_Entity_%ExtFachade': closest_entity['%ExtFachade'].values[0],
-                'Closest_Entity_R_WalltoGFA': closest_entity['R_WalltoGFA'].values[0],
-                'Closest_Entity_ShapeFactor': closest_entity['ShapeFactor'].values[0], 'Sum_GFArea': sum_GFArea[cluster]}])
+                'Closest_Entity_OSM_ID': closestEntity['osm_id'].values[0],
+                'Closest_Entity_FootprintArea': closestEntity['BuildingFP_area'].values[0],
+                'Closest_Entity_GFA': closestEntity['Building_GFA'].values[0],
+                'Closest_Entity_Height': closestEntity['GHS_Heightmean'].values[0],
+                'Closest_Entity_N_floors': closestEntity['N_Floors'].values[0],
+                'Closest_Entity_Volume': closestEntity['Volume'].values[0],
+                'Closest_Entity_TotalPerimeter': closestEntity['perimeter'].values[0],
+                'Closest_Entity_%ExtFachade': closestEntity['%ExtFachade'].values[0],
+                'Closest_Entity_R_WalltoGFA': closestEntity['R_WalltoGFA'].values[0],
+                'Closest_Entity_ShapeFactor': closestEntity['ShapeFactor'].values[0],
+                'Sum_GFArea': sumGFArea[cluster]}])
 
-            new_df = new_df.dropna(how = 'all', axis = 1)
-            new_df = new_df.dropna(how = 'all', axis = 0)
-            df_clusters_SS = df_clusters_SS.dropna(how = 'all', axis = 1)
-            df_clusters_SS = df_clusters_SS.dropna(how = 'all', axis = 0)
-            df_clusters_SS = pd.concat([df_clusters_SS, new_df]).reset_index(drop = True)
+            dfNew = dfNew.dropna(how = 'all', axis = 1)
+            dfNew = dfNew.dropna(how = 'all', axis = 0)
+            dfClustersSS = dfClustersSS.dropna(how = 'all', axis = 1)
+            dfClustersSS = dfClustersSS.dropna(how = 'all', axis = 0)
+            dfClustersSS = pd.concat([dfClustersSS, dfNew]).reset_index(drop = True)
 
-        period_to_year = {
+        periodToYear = {
             'Before1945': 1900,
             '1945to1969': 1955,
             '1970to1979': 1975,
@@ -1096,93 +1147,97 @@ def bp1_step_20(SS_df, n_clusters_SS):
             'Post2010': 2020
         }
 
-        # Iterate over each row in df_clusters_SS
-        new_rows = []
-        for _, row in df_clusters_SS.iterrows():
-            for period, year in period_to_year.items():
-                new_row = row.copy()
-                new_row['Period'] = period
-                new_row['Year'] = year
-                new_rows.append(new_row)
+        # Iterate over each row in dfClustersSS
+        newRows = []
+        for _, row in dfClustersSS.iterrows():
+            for period, year in periodToYear.items():
+                newRow = row.copy()
+                newRow['Period'] = period
+                newRow['Year'] = year
+                newRows.append(newRow)
 
-        df_expanded = pd.DataFrame(new_rows)
+        dfExpanded = pd.DataFrame(newRows)
 
         # Reset the new dataframe index
-        df_expanded.reset_index(drop = True, inplace = True)
+        dfExpanded.reset_index(drop = True, inplace = True)
 
-        # First, we melt df_all_Sub_sector to get one row for each cluster and period.
-        df_area = df_all_Sub_sector.melt(id_vars=['cluster'],
-            value_vars = [c for c in df_all_Sub_sector.columns if c.endswith('_A')], var_name = 'Period', value_name = 'Area')
+        # First, we melt dfAllSubSector to get one row for each cluster and period.
+        dfArea = dfAllSubSector.melt(id_vars = ['cluster'],
+            value_vars = [c for c in dfAllSubSector.columns if c.endswith('_A')],
+            var_name = 'Period', value_name = 'Area')
 
         # We remove the '_A' from the end of the period
-        df_area['Period'] = df_area['Period'].str.rstrip('_A')
+        dfArea['Period'] = dfArea['Period'].str.rstrip('_A')
 
         # add the values of area per cluster and period
-        df_area = df_area.groupby(['cluster', 'Period'])['Area'].sum().reset_index()
+        dfArea = dfArea.groupby(['cluster', 'Period'])['Area'].sum().reset_index()
 
-        # We create a combined index column for df_area
-        df_area['merge_index'] = df_area['cluster'] + df_area['Period']
+        # We create a combined index column for dfArea
+        dfArea['merge_index'] = dfArea['cluster'] + dfArea['Period']
 
-        # Create a combined index column for df_expanded
-        df_expanded['merge_index'] = df_expanded['Cluster'] + df_expanded['Period']
+        # Create a combined index column for dfExpanded
+        dfExpanded['merge_index'] = dfExpanded['Cluster'] + dfExpanded['Period']
 
-        # We sort df_area by this combined index
-        df_area.sort_values('merge_index', inplace = True)
+        # We sort dfArea by this combined index
+        dfArea.sort_values('merge_index', inplace = True)
 
         # We create a new df that is merge on merge_index
-        df_mergedSS = df_expanded.merge(df_area, how = 'left', on = 'merge_index')
+        dfMergedSS = dfExpanded.merge(dfArea, how = 'left', on = 'merge_index')
 
         # Then we no longer need the merge_index column
-        df_mergedSS.drop(columns = 'merge_index', inplace = True)
+        dfMergedSS.drop(columns = 'merge_index', inplace = True)
     
     # Finish
     logging.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 20 -> [OK]')
     logging.info('')
-    return df_mergedSS
+    return dfMergedSS
 
 
 # Function: Build. Energy Sim. -> Preprocess -> Step 21 -> Create the final Dataframe
-def bp1_step_21(df_clusters_AB, df_clusters_SFH, df_clusters_Ss, process, username, nutsid):
+def bp1Step21(dfClustersAB, dfClustersSFH, dfClustersSS, process, username, nutsid):
+    ''' Build. Energy Sim. -> Preprocess -> Step 21 : Create the final dataframe. '''
+
     logging.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 21 -> Creating the final Dataframe...')
     
     # Create an empty DataFrame with the required columns
-    final_df = pd.DataFrame(columns = ['Building ID', 'Use', 'Age', 'Footprint Area', 'Number of floors', 'Volume', 'Gross floor area',
-        'Total External Facade area', 'Opaque Facade area', 'Window area', 'Height'])
+    dfFinal = pd.DataFrame(columns = ['Building ID', 'Use', 'Age', 'Footprint Area', 'Number of floors', 'Volume',
+        'Gross floor area', 'Total External Facade area', 'Opaque Facade area', 'Window area', 'Height'])
 
     # Define the auxiliary function for calculating the required fields
-    def calculate_fields(df, use, building_id_format):
-        df_new = pd.DataFrame()
-        if building_id_format == 'AB_Format':
-            df_new['Building ID'] = 'Apartment Block' + '_' + df['Cluster'].astype(str)
+    def calculateFields(df, use, buildingIdFormat):
+        dfNew = pd.DataFrame()
+        if buildingIdFormat == 'AB_Format':
+            dfNew['Building ID'] = 'Apartment Block' + '_' + df['Cluster'].astype(str)
         else:
-            df_new['Building ID'] = df['Cluster'].astype(str) + '_' + df['Year'].astype(str)
-        df_new['Use'] = df[use] if use != 'Apartment Block' else use
-        df_new['Age'] = df['Year']
-        df_new['Footprint Area'] = df['Area'] / df['Closest_Entity_N_floors']
-        df_new['Number of floors'] = df['Closest_Entity_N_floors']
-        df_new['Volume'] = (df['Area'] / df['Closest_Entity_N_floors']) * df['Closest_Entity_Height']
-        df_new['Gross floor area'] = df['Area']
-        df_new['Total External Facade area'] = (df['Closest_Entity_R_WalltoGFA'] * df['Area'] * df['Closest_Entity_%ExtFachade'])
-        df_new['Height'] = df['Closest_Entity_Height']
-        return df_new
+            dfNew['Building ID'] = df['Cluster'].astype(str) + '_' + df['Year'].astype(str)
+        dfNew['Use'] = df[use] if use != 'Apartment Block' else use
+        dfNew['Age'] = df['Year']
+        dfNew['Footprint Area'] = df['Area'] / df['Closest_Entity_N_floors']
+        dfNew['Number of floors'] = df['Closest_Entity_N_floors']
+        dfNew['Volume'] = (df['Area'] / df['Closest_Entity_N_floors']) * df['Closest_Entity_Height']
+        dfNew['Gross floor area'] = df['Area']
+        dfNew['Total External Facade area'] = (df['Closest_Entity_R_WalltoGFA'] *\
+            df['Area'] * df['Closest_Entity_%ExtFachade'])
+        dfNew['Height'] = df['Closest_Entity_Height']
+        return dfNew
 
     # Apply the auxiliary function to calculate the fields and add them to the final DataFrame
-    frames = [calculate_fields(df_clusters_AB, use = 'Apartment Block', building_id_format = 'AB_Format'),
-              calculate_fields(df_clusters_SFH, use = 'Sub_sector', building_id_format = 'SS_Format'),
-              calculate_fields(df_clusters_SS, use = 'Sub_sector', building_id_format = 'SS_Format')]
-    final_df = pd.concat(frames)
+    frames = [calculateFields(dfClustersAB, use = 'Apartment Block', buildingIdFormat = 'AB_Format'),
+              calculateFields(dfClustersSFH, use = 'Sub_sector', buildingIdFormat = 'SS_Format'),
+              calculateFields(dfClustersSS, use = 'Sub_sector', buildingIdFormat = 'SS_Format')]
+    dfFinal = pd.concat(frames)
     
     # Save the DataFrame as a CSV file
     logging.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 21 -> Saving...')
-    csv_name = io.retrieveOutputTmpPathConcatFile(True, process, username, nutsid, config)
-    logging.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 21 -> Temp. output file -> ' + csv_name)
-    final_df.to_csv(csv_name, index = False, sep = ',')
+    csvName = io.retrieveOutputTmpPathConcatFile(True, process, username, nutsid, config)
+    logging.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 21 -> Temp. output file -> ' + csvName)
+    dfFinal.to_csv(csvName, index = False, sep = ',')
     logging.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 21 -> Saved!!')
     
     # Finish
     logging.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 21 -> [OK]')
     logging.info('')
-    return final_df, csv_name
+    return dfFinal, csvName
     
     
 
@@ -1193,9 +1248,11 @@ def bp1_step_21(df_clusters_AB, df_clusters_SFH, df_clusters_Ss, process, userna
 
 
 # Auxiliary function: Get pixel value
-def getPixelValue(centroid_x, centroid_y, raster_data, transform):
-    pixel_x, pixel_y = ~transform['transform'] * (centroid_x, centroid_y)
-    pixel_x, pixel_y = int(pixel_x), int(pixel_y)
-    pixel_value = raster_data[pixel_y, pixel_x]
-    return pixel_value
+def getPixelValue(centroidX, centroidY, rasterData, transform):
+    ''' Function to get a pixel value. '''
+
+    pixelX, pixelY = ~transform['transform'] * (centroidX, centroidY)
+    pixelX, pixelY = int(pixelX), int(pixelY)
+    pixelValue = rasterData[pixelY, pixelX]
+    return pixelValue
 
