@@ -1,5 +1,5 @@
 -----------------------------------
-Component version: 0.4.160
+Component version: 0.5.1
 -----------------------------------
 
 
@@ -9,7 +9,6 @@ Python key dependencies:
 fiona:1.9.6
 Flask:2.0.0
 Flask-JWT-Extended:4.4.1
-Flask-Testing.0.8.1 
 geopandas:0.10.2
 jsonschema:4.17.3
 openpyxl:3.1.3

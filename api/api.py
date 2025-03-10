@@ -60,16 +60,18 @@ pd.options.mode.chained_assignment = None
 
 
 # Function: Set memory limit (in bytes)
-def setMemoryLimit():
+def setMemoryLimit(limitConfig):
     ''' Function to limit the memory to 16 GB. '''
-    limit = 16 * 1024 * 1024 * 1024
+    
+    limit = limitConfig * 1024 * 1024 * 1024
     resource.setrlimit(resource.RLIMIT_AS, (limit, limit))
 
 
 @app.before_first_request
 def before_first_request():
     ''' Function to set the memory limit before the first request. '''
-    setMemoryLimit()
+    
+    setMemoryLimit(int(config['IDESIGNRES']['idesignres.memory.limit.gb']))
 
 
 # Function: Verify as online
