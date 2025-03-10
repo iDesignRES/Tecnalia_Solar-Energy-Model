@@ -15,9 +15,13 @@ Body:
   "username": "xxxxxx",
   "password": "xxxxxx"
 }
+
+Data dictionary:
+- username: text
+- password: text.
 ```
 
-Consult the component to obtain valid credentials.
+Consult the component owner to obtain valid credentials.
 
 The function returns the following response (if login is successful):
 ```
@@ -44,6 +48,10 @@ Body:
 }
 Authentication:
 Use the JWT token as a "Bearer" token.
+
+Data dictionary:
+- nutsid: text
+- slope_angle: integer between 0 and 360.
 ```
 
 
@@ -1231,6 +1239,42 @@ Body:
 }
 Authentication:
 Use the JWT token as a "Bearer" token.
+
+Data dictionary:
+- nutsid: text
+- year: integer between 1900 and 2025.
+- increase_residential_built_area: decimal number as percentage, between 0 and 1.
+- increase_service_built_area: decimal number as percentage, between 0 and 1.
+- hdd_reduction: decimal number as percentage, between 0 and 1.
+- cdd_reduction: decimal number as percentage, between 0 and 1.
+- building_use: text.
+- user_defined_data: boolean.
+- pct_build_equipped: decimal number as percentage, between 0 and 1.
+- solids: decimal number as percentage, between 0 and 1.
+- lpg: decimal number as percentage, between 0 and 1.
+- diesel_oil: decimal number as percentage, between 0 and 1.
+- gas_heat_pumps: decimal number as percentage, between 0 and 1.
+- natural_gas: decimal number as percentage, between 0 and 1.
+- biomass: decimal number as percentage, between 0 and 1.
+- geothermal: decimal number as percentage, between 0 and 1.
+- distributed_heat: decimal number as percentage, between 0 and 1.
+- advanced_electric_heating: decimal number as percentage, between 0 and 1.
+- conventional_electric_heating: decimal number as percentage, between 0 and 1.
+- bio_oil: decimal number as percentage, between 0 and 1.
+- bio_gas: decimal number as percentage, between 0 and 1.
+- hydrogen: decimal number as percentage, between 0 and 1.
+- electricity_in_circulation: decimal number as percentage, between 0 and 1.
+- electric_space_cooling: decimal number as percentage, between 0 and 1.
+- solar: decimal number as percentage, between 0 and 1.
+- electricity: decimal number as percentage, between 0 and 1.
+- ref_level: text.
+- Pre-1945: decimal number as percentage, between 0 and 1.
+- 1945-1969: decimal number as percentage, between 0 and 1.
+- 1970-1979: decimal number as percentage, between 0 and 1.
+- 1980-1989: decimal number as percentage, between 0 and 1.
+- 1990-1999: decimal number as percentage, between 0 and 1.
+- 2000-2010: decimal number as percentage, between 0 and 1.
+- Post-2010: decimal number as percentage, between 0 and 1.
 
 Clarifications:
 1) The fields "building_use" can only have the values:
