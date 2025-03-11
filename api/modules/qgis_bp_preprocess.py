@@ -14,6 +14,7 @@ from rasterio.mask import mask
 import modules.io as io
 import modules.qgis as qgis
 import modules.sftp as sftp
+from modules.logging_config import logger
 
 from qgis.core import QgsField
 from qgis.core import QgsSpatialIndex
@@ -32,28 +33,28 @@ from sklearn.preprocessing import StandardScaler
 def bp1Step01(nutsId, fileList, resourceList, config, properties):
     ''' Build. Energy Sim. -> Preprocess -> Step 01 : Obtain the ZIP file. '''
 
-    logging.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 01 -> Preparing the data...')
+    logger.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 01 -> Preparing the data...')
     if not (4 <= len(nutsId) <= 5 and nutsId[:2].isalpha()):
-        logging.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 01 -> NUTS_ID not valid! [NUTS2/NUTS3]!')
+        logger.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 01 -> NUTS_ID not valid! [NUTS2/NUTS3]!')
         return
     
     # Read the Excel file
-    logging.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 01 -> Reading the Excel file...')
+    logger.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 01 -> Reading the Excel file...')
     df = pd.read_excel(io.retrieveBasePath(config) + fileList[0]['path'])
     url = df.loc[df['NUTS_ID'] == nutsId, 'Link'].values
     if not url or len(url) == 0:
         raise ValueError(properties['IDESIGNRES-EXCEPTIONS']['idesignres.exception.nuts.id.not.found'])
 
     # Search the resource from the url, and download it
-    logging.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 01 -> Obtaining the ZIP file...')
+    logger.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 01 -> Obtaining the ZIP file...')
     destinationDir = io.retrieveFilesTmpPath(config)
     resourceObj = None
     for resource in resourceList:
         if resource['web'] == url:
             resourceObj = resource
             break
-    logging.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 01 -> Unzipping...')
-    logging.info('')
+    logger.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 01 -> Unzipping...')
+    logger.info('')
     if resourceObj:
         resourceObj['local'] = sftp.downloadResource(resourceObj, config)
         if resourceObj['local'] and zipfile.is_zipfile(resourceObj['local']):
@@ -63,7 +64,7 @@ def bp1Step01(nutsId, fileList, resourceList, config, properties):
             raise ValueError(properties['IDESIGNRES-EXCEPTIONS']['idesignres.exception.not.zip.file'])
     
     # Delete all the not necessary files
-    logging.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 01 -> Removing the not necessary files...')
+    logger.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 01 -> Removing the not necessary files...')
     excludeFiles = ['README', 'gis_osm_landuse_a_free_1', 'gis_osm_buildings_a_free_1']
     for fil in os.listdir(destinationDir):
         filenameWithoutExt = os.path.splitext(fil)[0]
@@ -71,8 +72,8 @@ def bp1Step01(nutsId, fileList, resourceList, config, properties):
             os.remove(os.path.join(destinationDir, fil))
 
     # Finish    
-    logging.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 01 -> [OK]')
-    logging.info('')
+    logger.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 01 -> [OK]')
+    logger.info('')
     return destinationDir
 
 
@@ -80,7 +81,7 @@ def bp1Step01(nutsId, fileList, resourceList, config, properties):
 def bp1Step02(layer, nutsId, config, properties):
     ''' Build. Energy Sim. -> Preprocess -> Step 02 : Export the selected NUTS. '''
     
-    logging.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 02 -> Exporting the selected NUTS...')
+    logger.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 02 -> Exporting the selected NUTS...')
     
     # Read the layer file
     data = gpd.read_file(io.retrieveBasePath(config) + layer['path'])
@@ -101,20 +102,20 @@ def bp1Step02(layer, nutsId, config, properties):
         raise ValueError(properties['IDESIGNRES-EXCEPTIONS']['idesignres.exception.nuts.name.for_nuts.id'].replace('{1}', nutsId))
     
     # Convert GeoDataFrame to 4326 and 54009 Mollewide coordinate systems
-    logging.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 02 -> Converting GeoDataFrame to 4326 cooordinate system...')
+    logger.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 02 -> Converting GeoDataFrame to 4326 cooordinate system...')
     nutsFilteredCrs = nutsFiltered.to_crs(epsg = 4326)
-    logging.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 02 -> Converting GeoDataFrame to 54009 Mollewide cooordinate system...')
+    logger.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 02 -> Converting GeoDataFrame to 54009 Mollewide cooordinate system...')
     nutsFilteredMoll54009 = nutsFiltered.to_crs('Esri:54009')
     
     # Save
-    logging.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 02 -> Saving...')
+    logger.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 02 -> Saving...')
     outputNutsPath, outputNutsPathMoll54009 = io.buildOutputPathsBPStep02(layer, nutsId, config, properties)
     nutsFilteredCrs.to_file(outputNutsPath, driver = layer['format'].upper())
     nutsFilteredMoll54009.to_file(outputNutsPathMoll54009, driver = layer['format'].upper())
     
     # Finish    
-    logging.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 02 -> [OK]')
-    logging.info('')
+    logger.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 02 -> [OK]')
+    logger.info('')
     return nutsFilteredCrs, outputNutsPathMoll54009
 
 
@@ -122,14 +123,14 @@ def bp1Step02(layer, nutsId, config, properties):
 def bp1Step03(destinationDir, nutsFilteredCrs):
     ''' Build. Energy Sim. -> Preprocess -> Step 03 : Clip and save the vector layers. '''
     
-    logging.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 03 -> Clipping the layer(s) (can take quite a while)...')
+    logger.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 03 -> Clipping the layer(s) (can take quite a while)...')
     
     # Use the NUTS layer at 4326 for cutting. Reproject and save layers in 54009 and gpkg
     clippedLayers = []
     for fil in os.listdir(destinationDir):
         if fil.endswith('shp'):
             filepath = os.path.join(destinationDir, fil)
-            logging.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 03 -> File -> ' + filepath)
+            logger.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 03 -> File -> ' + filepath)
             gdf = gpd.read_file(filepath)
             gdfClipped = gpd.clip(gdf, nutsFilteredCrs)
             gdfClipped = gdfClipped.to_crs('Esri:54009'.upper())
@@ -137,15 +138,15 @@ def bp1Step03(destinationDir, nutsFilteredCrs):
             # Only save if the file is not empty
             if not gdfClipped.empty:
                 output = destinationDir + '/' + str(fil.rsplit('.', 1)[0]) + '_repro54009.gpkg'
-                logging.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 03 -> Save -> ' + output)
+                logger.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 03 -> Save -> ' + output)
                 gdfClipped.to_file(output, driver = 'GPKG')
                 clippedLayers.append(output)
             else:
-                logging.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 03 -> The file is empty, so it is not saved!')
+                logger.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 03 -> The file is empty, so it is not saved!')
     
     # Finish    
-    logging.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 03 -> [OK]')
-    logging.info('')
+    logger.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 03 -> [OK]')
+    logger.info('')
     return clippedLayers
 
 
@@ -153,14 +154,14 @@ def bp1Step03(destinationDir, nutsFilteredCrs):
 def bp1Step04(clippedLayers, isTest, config):
     ''' Build. Energy Sim. -> Preprocess -> Step 04 : Load the buildings layer. '''
 
-    logging.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 04 -> Loading the buildings layer...')
+    logger.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 04 -> Loading the buildings layer...')
     buildingsPath = config['IDESIGNRES-PATH']['idesignres.path.bp.test']\
         if isTest else [path for path in clippedLayers if 'buildings' in path][0]
     layer = qgis.loadVectorLayer(buildingsPath, 'Buildings', 'ogr')
     
     # Finish    
-    logging.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 04 -> [OK]')
-    logging.info('')
+    logger.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 04 -> [OK]')
+    logger.info('')
     return layer
     
     
@@ -168,12 +169,12 @@ def bp1Step04(clippedLayers, isTest, config):
 def bp1Step05(nutsPathMoll54009):
     ''' Build. Energy Sim. -> Preprocess -> Step 05 : Load the NUTS layer. '''
 
-    logging.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 05 -> Loading the NUTS layer...')
+    logger.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 05 -> Loading the NUTS layer...')
     layer = qgis.loadVectorLayer(nutsPathMoll54009, 'NUTS', 'ogr')
     
      # Finish    
-    logging.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 05 -> [OK]')
-    logging.info('')
+    logger.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 05 -> [OK]')
+    logger.info('')
     return layer
 
 
@@ -181,12 +182,12 @@ def bp1Step05(nutsPathMoll54009):
 def bp1Step06(clippedLayers):
     ''' Build. Energy Sim. -> Preprocess -> Step 06 : Load the land use layer. '''
 
-    logging.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 06 -> loading the land use layer...')
+    logger.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 06 -> loading the land use layer...')
     layer = qgis.loadVectorLayer([path for path in clippedLayers if 'landuse' in path][0], 'Land Use', 'ogr')
     
      # Finish    
-    logging.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 06 -> [OK]')
-    logging.info('')
+    logger.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 06 -> [OK]')
+    logger.info('')
     return layer
 
 
@@ -194,13 +195,13 @@ def bp1Step06(clippedLayers):
 def bp1Step07(layerObj, config):
     ''' Build. Energy Sim. -> Preprocess -> Step 07 : Load the raster use layer. '''
 
-    logging.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 07 -> Loading the Raster Use layer...')
+    logger.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 07 -> Loading the Raster Use layer...')
     layer = qgis.loadRasterLayerWithProvider(io.retrieveLayersBasePath(config) + '/' +\
         layerObj['name'] + '.' + layerObj['format'], 'Raster Use', 'gdal')
     
      # Finish    
-    logging.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 07 -> [OK]')
-    logging.info('')
+    logger.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 07 -> [OK]')
+    logger.info('')
     return layer
 
 
@@ -208,13 +209,13 @@ def bp1Step07(layerObj, config):
 def bp1Step08(layerObj, config):
     ''' Build. Energy Sim. -> Preprocess -> Step 08 : Load the raster height layer. '''
 
-    logging.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 08 -> Loading the Raster Height layer...')
+    logger.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 08 -> Loading the Raster Height layer...')
     layer = qgis.loadRasterLayerWithProvider(io.retrieveLayersBasePath(config) + '/' +\
         layerObj['name'] + '.' + layerObj['format'], 'Raster Height', 'gdal')
     
     # Finish
-    logging.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 08 -> [OK]')
-    logging.info('')
+    logger.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 08 -> [OK]')
+    logger.info('')
     return layer
 
 
@@ -227,9 +228,9 @@ def bp1Step09(buildingsLayer, nutsLayer, nutsId):
     If a building does not have a 'NUTS3' value, it is also removed.
     '''
 
-    logging.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> ##### Start building preprocessing #####')
-    logging.info('')
-    logging.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 09 -> Assigning NUTS...')
+    logger.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> ##### Start building preprocessing #####')
+    logger.info('')
+    logger.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 09 -> Assigning NUTS...')
     
     # Verify if "NUTS3", "NUTS2" and "AREA" fields exist. If not, it creates them
     if buildingsLayer.fields().indexFromName('NUTS3') == -1:
@@ -245,7 +246,7 @@ def bp1Step09(buildingsLayer, nutsLayer, nutsId):
         buildingsLayer.updateFields()
 
     # Extract the indexes
-    logging.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 09 -> Extracting the indexes...')
+    logger.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 09 -> Extracting the indexes...')
     indexNUTS3 = buildingsLayer.fields().indexFromName('NUTS3')
     indexNUTS2 = buildingsLayer.fields().indexFromName('NUTS2')
     indexAREA = buildingsLayer.fields().indexFromName('BuildingFP_area')
@@ -289,28 +290,28 @@ def bp1Step09(buildingsLayer, nutsLayer, nutsId):
         }
         dataProvider = buildingsLayer.dataProvider()
         dataProvider.changeAttributeValues(changes)
-    logging.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 09 -> ' +\
+    logger.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 09 -> ' +\
         str(nProcessed) + ' buildings processed')
     
     # Eliminate all geometries with an area of less than 30m².
     expression = QgsExpression(' "BuildingFP_area" < 30 ')
     ids = [f.id() for f in buildingsLayer.getFeatures(QgsFeatureRequest(expression))]
     buildingsLayer.dataProvider().deleteFeatures(ids)
-    logging.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 09 -> Deleted ' + str(len(ids)) + ' buildings (area of less than 30m²)')
+    logger.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 09 -> Deleted ' + str(len(ids)) + ' buildings (area of less than 30m²)')
     
     # Get a list of entity IDs that have the field ‘NUTS3’ as NULL
     expression = QgsExpression(' "NUTS3" is NULL ')
     ids = [f.id() for f in buildingsLayer.getFeatures(QgsFeatureRequest(expression))]
     buildingsLayer.dataProvider().deleteFeatures(ids)
-    logging.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 09 -> Removed ' + str(len(ids)) + ' features out of boundary')
+    logger.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 09 -> Removed ' + str(len(ids)) + ' features out of boundary')
     
     # Commit changes
-    logging.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 09 -> Commiting changes...')
+    logger.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 09 -> Commiting changes...')
     buildingsLayer.commitChanges()
     
     # Finish
-    logging.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 09 -> [OK]')
-    logging.info('')
+    logger.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 09 -> [OK]')
+    logger.info('')
 
 
 # Function: Build. Energy Sim. -> Preprocess -> Step 10 -> Calculate height volumes
@@ -323,10 +324,10 @@ def bp1Step10(buildingsLayer, rasterHeightLayer):
     layer with height data ('raster_height').
     '''
 
-    logging.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 10 -> Calculating heights and volumes...')
+    logger.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 10 -> Calculating heights and volumes...')
     buildingsLayer.startEditing()
     if 'GHS_Heightmean' in [field.name() for field in buildingsLayer.fields()]:
-        logging.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 10 -> The field "GHS_Heightmean" already exists!')
+        logger.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 10 -> The field "GHS_Heightmean" already exists!')
     else:
         prefix = 'GHS_Height'
         statsToCalculate = QgsZonalStatistics.Mean
@@ -334,16 +335,16 @@ def bp1Step10(buildingsLayer, rasterHeightLayer):
         zonalStats.calculateStatistics(None)
     
     # Define the list of fields to be added
-    logging.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 10 -> Defining the list of fields to be added...')
+    logger.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 10 -> Defining the list of fields to be added...')
     fieldsToAdd = ['N_Floors', 'Building_GFA', 'Volume']
 
     # Create the fields (if they do not exist)
-    logging.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 10 -> Creating the fields (can take quite a while)...')
+    logger.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 10 -> Creating the fields (can take quite a while)...')
     if not all(field in [field.name() for field in buildingsLayer.fields()] for field in fieldsToAdd):
         buildingsLayer.dataProvider().addAttributes([QgsField(field, QVariant.Double) for field in fieldsToAdd])
         buildingsLayer.updateFields()
     else:
-        logging.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 10 -> All the fields already exist!')
+        logger.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 10 -> All the fields already exist!')
     
     # Calculate 'N_Floors' as a function of 'GHS_Heightmean' and GFA with N_floors
     counter = 0
@@ -367,12 +368,12 @@ def bp1Step10(buildingsLayer, rasterHeightLayer):
         buildingsLayer.updateFeature(feature)
 
     # Commit changes
-    logging.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 10 -> Commiting changes...')
+    logger.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 10 -> Commiting changes...')
     buildingsLayer.commitChanges()
 
     # Finish
-    logging.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 10 -> [OK]')
-    logging.info('')
+    logger.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 10 -> [OK]')
+    logger.info('')
 
 
 # Function: Build. Energy Sim. -> Preprocess -> Step 11 -> Calculate statistics and mapping
@@ -385,18 +386,18 @@ def bp1Step11(buildingsLayer, rasterUseLayer, landUseLayer, mappingCsvObj, confi
     table stored in a CSV file ('MappingCsvPath').
     '''
     
-    logging.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 11 -> Calculating statistics and mapping...')
+    logger.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 11 -> Calculating statistics and mapping...')
     csvPath = io.retrieveBasePath(config) + mappingCsvObj['path']
     
     # Calculate zone statistics with majority value
     if 'GHS_Majority' in [field.name() for field in buildingsLayer.fields()]:
-        logging.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 11 -> The field "GHS_Majority" anready exists!')
+        logger.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 11 -> The field "GHS_Majority" anready exists!')
     else:
         zonalStats = QgsZonalStatistics(buildingsLayer, rasterUseLayer, 'GHS_', stats = QgsZonalStatistics.Majority)
         zonalStats.calculateStatistics(None)
 
     # Create spatial index for the Land Use layer
-    logging.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 11 -> Creating spatial index for the Land Use layer...')
+    logger.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 11 -> Creating spatial index for the Land Use layer...')
     index = QgsSpatialIndex(landUseLayer.getFeatures())
     
     # Create a dictionary from the CSV file
@@ -419,7 +420,7 @@ def bp1Step11(buildingsLayer, rasterUseLayer, landUseLayer, mappingCsvObj, confi
     buildingsLayer.startEditing()
     
     # Allocation of uses and mapping
-    logging.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 11 -> Starting use allocation/mapping (can take quite a while)...')
+    logger.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 11 -> Starting use allocation/mapping (can take quite a while)...')
     for feature in buildingsLayer.getFeatures():
         typeValue = str(feature['type'])
         
@@ -461,11 +462,11 @@ def bp1Step11(buildingsLayer, rasterUseLayer, landUseLayer, mappingCsvObj, confi
 
         buildingsLayer.updateFeature(feature)
         
-    logging.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 11 -> Use allocation and mapping completed!')
+    logger.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 11 -> Use allocation and mapping completed!')
     
     # Finish
-    logging.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 11 -> [OK]')
-    logging.info('')
+    logger.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 11 -> [OK]')
+    logger.info('')
 
 
 # Function: Build. Energy Sim. -> Preprocess -> Step 12 -> Adjoin facade calculations
@@ -477,7 +478,7 @@ def bp1Step12(isTest, config):
     again for the buildings affected by these removals. The results are stored in a new GeoDataFrame returned by the function.
     '''
     
-    logging.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 12 -> Adjoining facade calculations...')
+    logger.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 12 -> Adjoining facade calculations...')
     
     # Load the building layer from the GPKG file
     buildingsPath = config['IDESIGNRES-PATH']['idesignres.path.bp.test']\
@@ -557,36 +558,36 @@ def bp1Step12(isTest, config):
     #####
     
     # Calculate adjoining for all buildings
-    logging.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 12 -> Calculate adjoining for all buildings...')
+    logger.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 12 -> Calculate adjoining for all buildings...')
     calculateAdjoining(buildings, sindex, buildings)
     
     # Filter buildings where Ratio is >= 1
-    logging.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 12 -> Filtering buildings where Ratio >= 1...')
+    logger.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 12 -> Filtering buildings where Ratio >= 1...')
     toRemove = buildings[buildings['Ratio'] >= 1].copy()
 
     # Obtain adjacencies for buildings to be removed
-    logging.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 12 -> Finding adjancencies for buildings to be removed...')
+    logger.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 12 -> Finding adjancencies for buildings to be removed...')
     toRecalculate = findAdjacents(toRemove, sindex)
     
     # Remove buildings with Ratio >= 1
-    logging.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 12 -> Removing buildings where Ratio >= 1...')
+    logger.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 12 -> Removing buildings where Ratio >= 1...')
     buildings = buildings[buildings['Ratio'] < 1]
 
     # Recalculating adjoining buildings
-    logging.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 12 -> Recalculating adjoining buildings...')
+    logger.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 12 -> Recalculating adjoining buildings...')
     calculateAdjoining(toRecalculate, sindex, buildings)
 
     # Merge recalculated buildings again
-    logging.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 12 -> Merging recalculated buildings...')
+    logger.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 12 -> Merging recalculated buildings...')
     buildings.update(toRecalculate)
     
     # Save the result in a new GPKG file
-    logging.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 12 -> Saving to a new GeoPackage file...')
+    logger.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 12 -> Saving to a new GeoPackage file...')
     buildings.to_file(buildingsPath, driver = 'GPKG')
 
     # Finish
-    logging.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 12 -> [OK]')
-    logging.info('')
+    logger.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 12 -> [OK]')
+    logger.info('')
     return buildings
 
 
@@ -594,7 +595,7 @@ def bp1Step12(isTest, config):
 def bp1Step13(layerList, config):
     ''' Build. Energy Sim. -> Preprocess -> Step 13 : Mask raster layers. '''
 
-    logging.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 13 -> Masking raster layers (can take quite a while)...')
+    logger.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 13 -> Masking raster layers (can take quite a while)...')
     
     # Retrieve the necessary paths
     clippedRastersPaths = []
@@ -627,14 +628,14 @@ def bp1Step13(layerList, config):
         
         # Save the temporary layer
         output = io.buildOutputPathBPStep13(layer['name'], layer['format'], config)
-        logging.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 13 -> Saving: ' + output + '...')
+        logger.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 13 -> Saving: ' + output + '...')
         with rasterio.open(output, "w", **out_meta) as dst:
             dst.write(out_image)
         clippedRastersPaths.append(output)
     
     # Finish
-    logging.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 13 -> [OK]')
-    logging.info('')
+    logger.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 13 -> [OK]')
+    logger.info('')
     return clippedRastersPaths
 
 
@@ -643,19 +644,19 @@ def bp1Step14(nutsId, clipped, excelFile, downloadFolder, config):
     ''' Build. Energy Sim. -> Preprocess -> Step 14 : Process clipped layers. '''
 
     # CSV file with the percentages per country and year
-    logging.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 14 -> Loading the Excel file to calculate the percentages...')
+    logger.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 14 -> Loading the Excel file to calculate the percentages...')
     dfShareYears = pd.read_excel(io.retrieveBasePath(config) + excelFile['path'])
     
     # Dictionary that will contain the 'layer' data
     layersDict = {}
-    logging.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 14 -> Calculating the percentages...')
+    logger.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 14 -> Calculating the percentages...')
     countryPctBefore1945 = dfShareYears.loc[dfShareYears['NUTS_ID'] == nutsId[:2], 'Before 1945'].values[0]
     countryPct19451969 = dfShareYears.loc[dfShareYears['NUTS_ID'] == nutsId[:2], '1945 - 1969'].values[0]
     countryPct19701979 = dfShareYears.loc[dfShareYears['NUTS_ID'] == nutsId[:2], '1970 - 1979'].values[0]
     countryPct19801989 = dfShareYears.loc[dfShareYears['NUTS_ID'] == nutsId[:2], '1980 - 1989'].values[0]
     
     totalMem, usedMem, freeMem = map(int, os.popen('free -t -m').readlines()[-1].split()[1:])
-    logging.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 14 -> Current mem usage (1) -> ' +\
+    logger.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 14 -> Current mem usage (1) -> ' +\
         str(round((usedMem / totalMem) * 100, 2)) + '%')
     
     chunkSize = int(config['IDESIGNRES-PARAMETERS']['idesignres.params.chunk.size'])
@@ -676,7 +677,7 @@ def bp1Step14(nutsId, clipped, excelFile, downloadFolder, config):
         gc.collect()
 
     totalMem, usedMem, freeMem = map(int, os.popen('free -t -m').readlines()[-1].split()[1:])
-    logging.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 14 -> Current mem usage (2) -> ' +\
+    logger.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 14 -> Current mem usage (2) -> ' +\
         str(round((usedMem / totalMem) * 100, 2)) + '%')
     
     with rasterio.open(clipped[4]) as src2020, rasterio.open(clipped[0]) as src1975, rasterio.open(clipped[1]) as src_1990:
@@ -696,7 +697,7 @@ def bp1Step14(nutsId, clipped, excelFile, downloadFolder, config):
         gc.collect()
 
     totalMem, usedMem, freeMem = map(int, os.popen('free -t -m').readlines()[-1].split()[1:])
-    logging.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 14 -> Current mem usage (3) -> ' +\
+    logger.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 14 -> Current mem usage (3) -> ' +\
         str(round((usedMem / totalMem) * 100, 2)) + '%')
 
     with rasterio.open(clipped[4]) as src2020, rasterio.open(clipped[1]) as src_1990, rasterio.open(clipped[2]) as src_2000:
@@ -715,7 +716,7 @@ def bp1Step14(nutsId, clipped, excelFile, downloadFolder, config):
         gc.collect()
     
     totalMem, usedMem, freeMem = map(int, os.popen('free -t -m').readlines()[-1].split()[1:])
-    logging.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 14 -> Current mem usage (4) -> ' +\
+    logger.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 14 -> Current mem usage (4) -> ' +\
         str(round((usedMem / totalMem) * 100, 2)) + '%')
 
     with rasterio.open(clipped[4]) as src2020, rasterio.open(clipped[2]) as src_2000, rasterio.open(clipped[3]) as src_2010:
@@ -734,7 +735,7 @@ def bp1Step14(nutsId, clipped, excelFile, downloadFolder, config):
         gc.collect()
 
     totalMem, usedMem, freeMem = map(int, os.popen('free -t -m').readlines()[-1].split()[1:])
-    logging.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 14 -> Current mem usage (5) -> ' +\
+    logger.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 14 -> Current mem usage (5) -> ' +\
         str(round((usedMem / totalMem) * 100, 2)) + '%')
     
     with rasterio.open(clipped[4]) as src2020, rasterio.open(clipped[3]) as src_2010:
@@ -753,12 +754,12 @@ def bp1Step14(nutsId, clipped, excelFile, downloadFolder, config):
         gc.collect()
     
     totalMem, usedMem, freeMem = map(int, os.popen('free -t -m').readlines()[-1].split()[1:])
-    logging.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 14 -> Current mem usage (6) -> ' +\
+    logger.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 14 -> Current mem usage (6) -> ' +\
         str(round((usedMem / totalMem) * 100, 2)) + '%')
     
     # Finish
-    logging.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 14 -> [OK]')
-    logging.info('')
+    logger.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 14 -> [OK]')
+    logger.info('')
     return layersDict
 
 
@@ -766,7 +767,7 @@ def bp1Step14(nutsId, clipped, excelFile, downloadFolder, config):
 def bp1Step15(nutsId, buildings, layersDict, excelFile, config):
     ''' Build. Energy Sim. -> Preprocess -> Step 15 : Assign year info. '''
 
-    logging.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 15 -> Assigning year info...')
+    logger.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 15 -> Assigning year info...')
     for rasterName, (rasterData, transform) in layersDict.items():
         buildings[rasterName] = buildings.geometry.centroid.apply(\
             lambda point: getPixelValue(point.x, point.y, rasterData, transform))
@@ -785,8 +786,8 @@ def bp1Step15(nutsId, buildings, layersDict, excelFile, config):
     buildings.loc[condition, mostCommonColumn] = 1
     
     # Finish
-    logging.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 15 -> [OK]')
-    logging.info('')
+    logger.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 15 -> [OK]')
+    logger.info('')
     return buildings
 
 
@@ -794,7 +795,7 @@ def bp1Step15(nutsId, buildings, layersDict, excelFile, config):
 def bp1Step16(buildings):
     ''' Build. Energy Sim. -> Preprocess -> Step 16 : Calculate additional info. '''
 
-    logging.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 16 -> Calculating additional info...')
+    logger.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 16 -> Calculating additional info...')
     
     # Calculation of built-up area per year from share data
     buildings['Before1945_A'] = buildings['Before1945'] * buildings['Building_GFA']
@@ -814,8 +815,8 @@ def bp1Step16(buildings):
     buildings['R_WalltoGFA'] = (buildings['perimeter'] * buildings['GHS_Heightmean']) / buildings['Building_GFA']
     
     # Finish
-    logging.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 16 -> [OK]')
-    logging.info('')
+    logger.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 16 -> [OK]')
+    logger.info('')
     return buildings
 
 
@@ -823,14 +824,14 @@ def bp1Step16(buildings):
 def bp1Step17(buildings):
     ''' Build. Energy Sim. -> Preprocess -> Step 17 : Prepare clustering. '''
 
-    logging.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 17 -> Preparing clustering...')
+    logger.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 17 -> Preparing clustering...')
     
     # Filter the dataframe to keep only those in the Sub_sector field that are 'Apartment block'
     apartmentBlock = buildings[buildings['Sub_sector'] == 'Apartment blocks']
 
     # Check if there are no buildings in the Sub_sector 'Apartment block'
     if apartmentBlock.empty:
-        logging.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 17 -> No empty buildings for "Apartment block" Subsector!')
+        logger.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 17 -> No empty buildings for "Apartment block" Subsector!')
         return pd.DataFrame()
 
     # The years / periods we are going to use
@@ -859,8 +860,8 @@ def bp1Step17(buildings):
     dfSS = buildings[buildings['Sector'] == 'Service sector']
     
     # Finish
-    logging.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 17 -> [OK]')
-    logging.info('')
+    logger.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 17 -> [OK]')
+    logger.info('')
     return dfAB, dfSFH, dfSS
 
 
@@ -868,7 +869,7 @@ def bp1Step17(buildings):
 def bp1Step18(dfAB, nClustersAB):
     ''' Build. Energy Sim. -> Preprocess -> Step 09 : Perform clustering (AB). '''
 
-    logging.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 18 -> Performing clustering (AB)...')
+    logger.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 18 -> Performing clustering (AB)...')
 
     dfAllYears = pd.DataFrame()
     dfClustersAB = pd.DataFrame(
@@ -942,8 +943,8 @@ def bp1Step18(dfAB, nClustersAB):
             dfClustersAB = pd.concat([dfClustersAB, dfNew]).reset_index(drop = True)
 
     # Finish
-    logging.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 18 -> [OK]')
-    logging.info('')
+    logger.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 18 -> [OK]')
+    logger.info('')
     return dfClustersAB
 
 
@@ -951,7 +952,7 @@ def bp1Step18(dfAB, nClustersAB):
 def bp1Step19(dfSFH, nClustersSFH):
     ''' Build. Energy Sim. -> Preprocess -> Step 19 : Perform clustering (SFH). '''
    
-    logging.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 19 -> Performing clustering (SFH)...')
+    logger.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 19 -> Performing clustering (SFH)...')
     
     dfAllSubSector = pd.DataFrame()
     dfClustersSFH = pd.DataFrame(
@@ -1069,8 +1070,8 @@ def bp1Step19(dfSFH, nClustersSFH):
     dfMergedSFH.drop(columns = 'merge_index', inplace = True)
     
     # Finish
-    logging.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 19 -> [OK]')
-    logging.info('')
+    logger.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 19 -> [OK]')
+    logger.info('')
     return dfMergedSFH
 
 
@@ -1078,7 +1079,7 @@ def bp1Step19(dfSFH, nClustersSFH):
 def bp1Step20(dfSS, nClustersSS):
     ''' Build. Energy Sim. -> Preprocess -> Step 20 : Perform clustering (SS). '''
 
-    logging.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 20 -> Performing clustering (SS)...')
+    logger.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 20 -> Performing clustering (SS)...')
     
     dfAllSubSector = pd.DataFrame()
     dfClustersSS = pd.DataFrame(
@@ -1188,8 +1189,8 @@ def bp1Step20(dfSS, nClustersSS):
         dfMergedSS.drop(columns = 'merge_index', inplace = True)
     
     # Finish
-    logging.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 20 -> [OK]')
-    logging.info('')
+    logger.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 20 -> [OK]')
+    logger.info('')
     return dfMergedSS
 
 
@@ -1197,7 +1198,7 @@ def bp1Step20(dfSS, nClustersSS):
 def bp1Step21(dfClustersAB, dfClustersSFH, dfClustersSS, process, username, nutsid):
     ''' Build. Energy Sim. -> Preprocess -> Step 21 : Create the final dataframe. '''
 
-    logging.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 21 -> Creating the final Dataframe...')
+    logger.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 21 -> Creating the final Dataframe...')
     
     # Create an empty DataFrame with the required columns
     dfFinal = pd.DataFrame(columns = ['Building ID', 'Use', 'Age', 'Footprint Area', 'Number of floors', 'Volume',
@@ -1228,15 +1229,15 @@ def bp1Step21(dfClustersAB, dfClustersSFH, dfClustersSS, process, username, nuts
     dfFinal = pd.concat(frames)
     
     # Save the DataFrame as a CSV file
-    logging.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 21 -> Saving...')
+    logger.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 21 -> Saving...')
     csvName = io.retrieveOutputTmpPathConcatFile(True, process, username, nutsid, config)
-    logging.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 21 -> Temp. output file -> ' + csvName)
+    logger.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 21 -> Temp. output file -> ' + csvName)
     dfFinal.to_csv(csvName, index = False, sep = ',')
-    logging.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 21 -> Saved!!')
+    logger.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 21 -> Saved!!')
     
     # Finish
-    logging.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 21 -> [OK]')
-    logging.info('')
+    logger.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 21 -> [OK]')
+    logger.info('')
     return dfFinal, csvName
     
     

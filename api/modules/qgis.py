@@ -3,6 +3,8 @@ import os
 
 import modules.io as io
 
+from modules.logging_config import logger
+
 from qgis.core import *
 from qgis.server import *
 

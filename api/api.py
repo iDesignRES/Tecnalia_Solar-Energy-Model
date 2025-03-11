@@ -34,6 +34,7 @@ import modules.qgis_bp_preprocess as qgisBP1
 import modules.qgis_bp_process as qgisBP2
 import modules.rest as rest
 import modules.sftp as sftp
+from modules.logging_config import logger
 
 import pandas as pd
 
@@ -53,7 +54,7 @@ app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(hours = 96)
 jwt = JWTManager(app)
 
 # Init logging
-logging.basicConfig(level = logging.INFO)
+#logging.basicConfig(level = logger.info)
 
 # Configure Pandas
 pd.options.mode.chained_assignment = None
@@ -61,7 +62,7 @@ pd.options.mode.chained_assignment = None
 
 # Function: Set memory limit (in bytes)
 def setMemoryLimit(limitConfig):
-    ''' Function to limit the memory to 16 GB. '''
+    ''' Function to limit the memory. '''
     
     limit = limitConfig * 1024 * 1024 * 1024
     resource.setrlimit(resource.RLIMIT_AS, (limit, limit))
@@ -80,23 +81,23 @@ def hello():
     ''' API function to check if the API is online. '''
     
     # Show info logs
-    logging.info('')
-    logging.info('****************************************************************************************')
-    logging.info('****************************  IDESIGNRES :: Version ' + config['IDESIGNRES']['idesignres.version'])
-    logging.info('****************************  FUNCTION   :: Hello!')
-    logging.info('****************************************************************************************')
+    logger.info('')
+    logger.info('****************************************************************************************')
+    logger.info('****************************  IDESIGNRES :: Version ' + config['IDESIGNRES']['idesignres.version'])
+    logger.info('****************************  FUNCTION   :: Hello!')
+    logger.info('****************************************************************************************')
     
     # Show the QGIS Server version
-    logging.info('')
-    logging.info('  QGIS Server/> Running')
-    logging.info('  QGIS Server/> Version : ' + qgis.getVersion())
-    logging.info('')
+    logger.info('')
+    logger.info('  QGIS Server/> Running')
+    logger.info('  QGIS Server/> Version : ' + qgis.getVersion())
+    logger.info('')
 
     # Show the request response
-    logging.info('  Response/>    [' + properties['IDESIGNRES-REST']['idesignres.rest.ok.code'] + ']')
-    logging.info('')
-    logging.info('****************************************************************************************')
-    logging.info('')
+    logger.info('  Response/>    [' + properties['IDESIGNRES-REST']['idesignres.rest.ok.code'] + ']')
+    logger.info('')
+    logger.info('****************************************************************************************')
+    logger.info('')
 
     # Create and return the OK response
     return rest.buildResponse200(True, config, properties)
@@ -108,11 +109,11 @@ def authenticate():
     ''' Function to check if a user is authenticated. '''
     
     # Show info logs
-    logging.info('')
-    logging.info('****************************************************************************************')
-    logging.info('****************************  IDESIGNRES :: Version ' + config['IDESIGNRES']['idesignres.version'])
-    logging.info('****************************  FUNCTION   :: Authenticate')
-    logging.info('****************************************************************************************')
+    logger.info('')
+    logger.info('****************************************************************************************')
+    logger.info('****************************  IDESIGNRES :: Version ' + config['IDESIGNRES']['idesignres.version'])
+    logger.info('****************************  FUNCTION   :: Authenticate')
+    logger.info('****************************************************************************************')
     
     body = request.get_json()
     try:
@@ -164,15 +165,15 @@ def executeSolarPreprocess(process, nutsid, slopeAngle, user):
     outCsvFile = None
     try:
         # Retrieve the layers from the database
-        logging.info('')
+        logger.info('')
         layerList = db.retrieveAllLayersByProcess(process, config)
         if layerList and len(layerList) > 0:
             # Load the layers from the SFTP Server
-            logging.info('')
-            logging.info('  QGIS Server/> Retrieving the layers from the SFTP Server (if needed)...')
-            logging.info('')
+            logger.info('')
+            logger.info('  QGIS Server/> Retrieving the layers from the SFTP Server (if needed)...')
+            logger.info('')
             success = sftp.retrieveLayerFiles(layerList, config)
-            logging.info('')
+            logger.info('')
         
             # Process the layer
             if success:
@@ -223,8 +224,8 @@ def executeSolarPreprocess(process, nutsid, slopeAngle, user):
                 
                 # Upload the output file to the SFTP Server
                 if outCsvFile:
-                    logging.info('  QGIS Server/> Uploading the result file...')
-                    logging.info('')
+                    logger.info('  QGIS Server/> Uploading the result file...')
+                    logger.info('')
                     remOutput = io.retrieveOutputTmpPath(False, config) +\
                         outCsvFile[outCsvFile.rfind('/') + 1:]
                     remOutput = remOutput.replace('{1}', user)
@@ -240,16 +241,16 @@ def executeSolarPreprocess(process, nutsid, slopeAngle, user):
     finally:
         # Remove all the temporary layer files if it is allowed
         if int(config['IDESIGNRES']['idesignres.persistence.layers.tmp']) != 1:
-            logging.info('  QGIS Server/> Removing al the temporary layer files...')
+            logger.info('  QGIS Server/> Removing al the temporary layer files...')
             io.removeFilesFromDirectory(io.retrieveLayersTmpPath(config))
         
         # Remove all the temporary files if it is allowed
         if int(config['IDESIGNRES']['idesignres.persistence.files.tmp']) != 1:
-            logging.info('  QGIS Server/> Removing al the temporary files...')
+            logger.info('  QGIS Server/> Removing al the temporary files...')
             io.removeFilesFromDirectory(io.retrieveFilesTmpPath(config))
 
     # Return the result
-    logging.info('')
+    logger.info('')
     return result
 
 
@@ -260,30 +261,30 @@ def executeBuildingPreprocess(process, nutsid, user):
     outCsvFile = None
     try:
         # Retrieve the layers from the database
-        logging.info('')
+        logger.info('')
         layerList = db.retrieveAllLayersByProcess(process, config)
         if layerList and len(layerList) > 0:
             # Load the layers from the SFTP Server
-            logging.info('')
-            logging.info('  QGIS Server/> Retrieving the layers from the SFTP Server (if needed)...')
-            logging.info('')
+            logger.info('')
+            logger.info('  QGIS Server/> Retrieving the layers from the SFTP Server (if needed)...')
+            logger.info('')
             
             success = sftp.retrieveLayerFiles(layerList, config)
             if success:
                 # Retrieve the files from the database
-                logging.info('')
+                logger.info('')
                 fileList = db.retrieveAllFilesByProcess(process, config)
                 if fileList and len(fileList) > 0:
                     # Load the files from the SFTP Server
-                    logging.info('')
-                    logging.info('  QGIS Server/> Retrieving the files from the SFTP Server (if needed)...')
-                    logging.info('')
+                    logger.info('')
+                    logger.info('  QGIS Server/> Retrieving the files from the SFTP Server (if needed)...')
+                    logger.info('')
                     success = sftp.retrieveDataFiles(fileList, config)
                     if success:
                         # Retrieve the resources from the database
-                        logging.info('')
+                        logger.info('')
                         resourceList = db.retrieveAllResources(process, config)
-                        logging.info('')
+                        logger.info('')
 
                         # Step 01 -> Download and unzip
                         destinationDir = qgisBP1.bp1Step01(nutsid, fileList, resourceList, config, properties)
@@ -355,8 +356,8 @@ def executeBuildingPreprocess(process, nutsid, user):
                         
                         # Upload the output file to the SFTP Server
                         if outCsvFile:
-                            logging.info('  QGIS Server/> Uploading the result file...')
-                            logging.info('')
+                            logger.info('  QGIS Server/> Uploading the result file...')
+                            logger.info('')
                             remOutput = io.retrieveOutputTmpPath(False, config) +\
                                 outCsvFile[outCsvFile.rfind('/') + 1:]
                             remOutput = remOutput.replace('{1}', user)
@@ -372,16 +373,16 @@ def executeBuildingPreprocess(process, nutsid, user):
     finally:
         # Remove all the temporary layer files
         if int(config['IDESIGNRES']['idesignres.persistence.layers.tmp']) != 1:
-            logging.info('  QGIS Server/> Removing al the temporary layer files...')
+            logger.info('  QGIS Server/> Removing al the temporary layer files...')
             io.removeFilesFromDirectory(io.retrieveLayersTmpPath(config))
         
         # Remove all the layer files if it is allowed
         if int(config['IDESIGNRES']['idesignres.persistence.layers']) != 1:
-            logging.info('  QGIS Server/> Removing al the layer files...')
+            logger.info('  QGIS Server/> Removing al the layer files...')
             io.removeFilesFromDirectory(io.retrieveLayersBasePath(config))
 
     # Return the result
-    logging.info('')
+    logger.info('')
     return result
 
 
@@ -392,11 +393,11 @@ def executePVPowerPlantsProcess():
     ''' API function to execute the PV Power Plants process. '''
     
     # Show info logs
-    logging.info('')
-    logging.info('****************************************************************************************')
-    logging.info('****************************  IDESIGNRES :: Version ' + config['IDESIGNRES']['idesignres.version'])
-    logging.info('****************************  FUNCTION   :: PV Power Plants process')
-    logging.info('****************************************************************************************')
+    logger.info('')
+    logger.info('****************************************************************************************')
+    logger.info('****************************  IDESIGNRES :: Version ' + config['IDESIGNRES']['idesignres.version'])
+    logger.info('****************************  FUNCTION   :: PV Power Plants process')
+    logger.info('****************************************************************************************')
 
     # Extract the current user from the JWT token
     user = get_jwt_identity()
@@ -418,7 +419,7 @@ def executePVPowerPlantsProcess():
         # Check if the user has his/her own output directory
         if not sftp.checkUserDirectory(user, config):
             raise ValueError(properties['IDESIGNRES-EXCEPTIONS']['idesignres.exception.validation.output'])
-        logging.info('')
+        logger.info('')
         
         # Retrieve the processess from the database
         processList = db.retrieveAllProcesses(config)
@@ -430,19 +431,19 @@ def executePVPowerPlantsProcess():
                 fileExists = sftp.fileExists(config['IDESIGNRES-PATH']['idesignres.path.output'] +\
                     user + '/' + remFile, config)
                 if fileExists:
-                    logging.info('')
-                    logging.info('  SFTP Server/> ' +\
+                    logger.info('')
+                    logger.info('  SFTP Server/> ' +\
                         properties['IDESIGNRES-EXCEPTIONS']['idesignres.exception.result.exists'])
-                    logging.info('')
+                    logger.info('')
                     raise ValueError(properties['IDESIGNRES-EXCEPTIONS']['idesignres.exception.result.exists'])
         
             # Init QGIS
-            logging.info('')
+            logger.info('')
             qgisApp = qgis.init()
 
             # Create QGIS project
-            logging.info('')
-            logging.info('  QGIS Server/> Creating project...')
+            logger.info('')
+            logger.info('  QGIS Server/> Creating project...')
             qgis.createProject(io.retrieveProjectsBasePathConcatProjectName(config),
                 io.retrieveDefaultProjectName(config),
                 properties)
@@ -491,8 +492,8 @@ def executePVPowerPlantsProcess():
                         
             # Compress and upload the output files to the SFTP Server
             if outputs and len(outputs) > 0:
-                logging.info('  QGIS Server/> Compressing the result files...')
-                logging.info('')
+                logger.info('  QGIS Server/> Compressing the result files...')
+                logger.info('')
                 fil = io.retrieveOutputBasePath(True, config) + processList[0]['uuid'] + '_' +\
                     body['nutsid'].strip() + '.zip' 
                 with zipfile.ZipFile(fil, 'w', zipfile.ZIP_DEFLATED) as zipf:
@@ -516,15 +517,15 @@ def executePVPowerPlantsProcess():
     finally:
         # Remove all the output files if it is allowed
         if int(config['IDESIGNRES']['idesignres.persistence.output']) != 1:
-            logging.info('  QGIS Server/> Removing al the local output files...')
+            logger.info('  QGIS Server/> Removing al the local output files...')
             io.removeFilesFromDirectory(io.retrieveOutputBasePath(True, config))
         
         # Remove the project file
-        logging.info('  QGIS Server/> Removing the project...')
+        logger.info('  QGIS Server/> Removing the project...')
         qgis.removeProject(io.retrieveProjectsBasePathConcatProjectName(config))
 
     # Return the response
-    logging.info('')
+    logger.info('')
     return response
     
 
@@ -535,11 +536,11 @@ def executeBuildingEnergySimulationProcess():
     ''' API function to execute the Building Energy Simulationprocess. '''
     
     # Show info logs
-    logging.info('')
-    logging.info('****************************************************************************************')
-    logging.info('****************************  IDESIGNRES :: Version ' + config['IDESIGNRES']['idesignres.version'])
-    logging.info('****************************  FUNCTION   :: Building energy simulation process')
-    logging.info('****************************************************************************************')
+    logger.info('')
+    logger.info('****************************************************************************************')
+    logger.info('****************************  IDESIGNRES :: Version ' + config['IDESIGNRES']['idesignres.version'])
+    logger.info('****************************  FUNCTION   :: Building energy simulation process')
+    logger.info('****************************************************************************************')
 
     # Extract the current user from the JWT token
     user = get_jwt_identity()
@@ -688,7 +689,7 @@ def executeBuildingEnergySimulationProcess():
         # Check if the user has his/her own output directory
         if not sftp.checkUserDirectory(user, config):
             raise ValueError(properties['IDESIGNRES-EXCEPTIONS']['idesignres.exception.validation.output'])
-        logging.info('')
+        logger.info('')
         
         # Adapt the input data
         for i in range(len(body['scenario']['active_measures'])):
@@ -713,26 +714,26 @@ def executeBuildingEnergySimulationProcess():
                 fileExists = sftp.fileExists(config['IDESIGNRES-PATH']['idesignres.path.output'] +\
                     user + '/' + remFile, config)
                 if fileExists:
-                    logging.info('')
-                    logging.info('  SFTP Server/> ' +\
+                    logger.info('')
+                    logger.info('  SFTP Server/> ' +\
                         properties['IDESIGNRES-EXCEPTIONS']['idesignres.exception.result.exists'])
-                    logging.info('')
+                    logger.info('')
                     raise ValueError(properties['IDESIGNRES-EXCEPTIONS']['idesignres.exception.result.exists'])
         
             # Retrieve the dbase files from the SFTP Server
-            logging.info('')
-            logging.info('  QGIS Server/> Retrieving the dbase files from the SFTP Server...')
-            logging.info('')
+            logger.info('')
+            logger.info('  QGIS Server/> Retrieving the dbase files from the SFTP Server...')
+            logger.info('')
             dbaseFileList = sftp.retrieveDbaseFiles(config)
-            logging.info('')
+            logger.info('')
             if dbaseFileList and len(dbaseFileList) > 0:
                 # Init QGIS
                 qgisApp = qgis.init()
 
                 # Create QGIS project
-                logging.info('')
-                logging.info('  QGIS Server/> Creating project...')
-                logging.info('')
+                logger.info('')
+                logger.info('  QGIS Server/> Creating project...')
+                logger.info('')
                 qgis.createProject(io.retrieveProjectsBasePathConcatProjectName(config),
                     io.retrieveDefaultProjectName(config),
                     properties)
@@ -835,8 +836,8 @@ def executeBuildingEnergySimulationProcess():
                             
                 # Compress and upload the output file to the SFTP Server
                 if output:
-                    logging.info('  QGIS Server/> Compressing the result file...')
-                    logging.info('')
+                    logger.info('  QGIS Server/> Compressing the result file...')
+                    logger.info('')
                     fil = io.retrieveOutputBasePath(True, config) + processList[1]['uuid'] + '_' + body['nutsid'].strip() + '.zip' 
                     with zipfile.ZipFile(fil, 'w', zipfile.ZIP_DEFLATED) as zipf:
                         zipf.write(output, output[output.rfind('/') + 1:])
@@ -858,30 +859,30 @@ def executeBuildingEnergySimulationProcess():
     finally:
         # Remove all the temporary files
         if int(config['IDESIGNRES']['idesignres.persistence.layers.tmp']) != 1:
-            logging.info('  QGIS Server/> Removing al the temporary layer files...')
+            logger.info('  QGIS Server/> Removing al the temporary layer files...')
             io.removeFilesFromDirectory(io.retrieveLayersTmpPath(config))
         
         # Remove all the layer files if it is allowed
         if int(config['IDESIGNRES']['idesignres.persistence.layers']) != 1:
-            logging.info('  QGIS Server/> Removing al the layer files...')
+            logger.info('  QGIS Server/> Removing al the layer files...')
             io.removeFilesFromDirectory(io.retrieveLayersBasePath(config))
         
         # Remove all the temporary files
         if int(config['IDESIGNRES']['idesignres.persistence.files.tmp']) != 1:
-            logging.info('  QGIS Server/> Removing al the temporary files...')
+            logger.info('  QGIS Server/> Removing al the temporary files...')
             io.removeFilesFromDirectory(io.retrieveFilesTmpPath(config))
         
         # Remove all the output files if it is allowed
         if int(config['IDESIGNRES']['idesignres.persistence.output']) != 1:
-            logging.info('  QGIS Server/> Removing al the local output files...')
+            logger.info('  QGIS Server/> Removing al the local output files...')
             io.removeFilesFromDirectory(io.retrieveOutputBasePath(True, config))
         
         # Remove the project file
-        logging.info('  QGIS Server/> Removing the project...')
+        logger.info('  QGIS Server/> Removing the project...')
         qgis.removeProject(io.retrieveProjectsBasePathConcatProjectName(config))
 
     # Return the response
-    logging.info('')
+    logger.info('')
     return response
 
 

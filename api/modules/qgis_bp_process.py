@@ -12,6 +12,8 @@ import pandas as pd
 import modules.io as mio
 import modules.sftp as sftp
 
+from modules.logging_config import logger
+
 
 #####################################################################
 ############################## Process ##############################
@@ -22,20 +24,20 @@ import modules.sftp as sftp
 def bp2Step01(currentUser, nutsId, processId, config):
     ''' Build. Energy Sim. -> Process -> Step 01 : Download and load in a dataframe the previous result for the nutsId. '''
 
-    logging.info('  QGIS Server/> Build. Energy Sim. -> Process -> Step 01 -> Downloading the result file of the Buildings preprocess...')
-    logging.info('')
+    logger.info('  QGIS Server/> Build. Energy Sim. -> Process -> Step 01 -> Downloading the result file of the Buildings preprocess...')
+    logger.info('')
     df = None
     filePath = config['IDESIGNRES-PATH']['idesignres.path.output.tmp'] + currentUser + '/'
     fileName = config['IDESIGNRES-PATH']['idesignres.path.output.default.name'].replace('{1}', processId).replace('{2}', nutsId)
     download = sftp.retrieveSingleFile(filePath, fileName, config)
-    logging.info('')
+    logger.info('')
     if download:
-        logging.info('  QGIS Server/> Build. Energy Sim. -> Process -> Step 01 -> Populating the dataframe...')
+        logger.info('  QGIS Server/> Build. Energy Sim. -> Process -> Step 01 -> Populating the dataframe...')
         df = pd.read_csv(mio.retrieveFilesTmpPath(config) + '/' + fileName, sep = ';', decimal = ',', thousands = '.')
 
     # Finish    
-    logging.info('  QGIS Server/> Build. Energy Sim. -> Process -> Step 01 -> [OK]')
-    logging.info('')
+    logger.info('  QGIS Server/> Build. Energy Sim. -> Process -> Step 01 -> [OK]')
+    logger.info('')
     return df
 
 
@@ -43,7 +45,7 @@ def bp2Step01(currentUser, nutsId, processId, config):
 def bp2Step02(nutsId, year, dbase, config, properties):
     ''' Build. Energy Sim. -> Process -> Step 02 : Retrieve temperatures. '''
     
-    logging.info('  QGIS Server/> Build. Energy Sim. -> Process -> Step 02 -> Retrieving temperatures...')
+    logger.info('  QGIS Server/> Build. Energy Sim. -> Process -> Step 02 -> Retrieving temperatures...')
     output = None
     winter = float(config['IDESIGNRES-PARAMETERS']['idesignres.params.winter.temp'])
     summer = float(config['IDESIGNRES-PARAMETERS']['idesignres.params.summer.temp'])
@@ -54,10 +56,10 @@ def bp2Step02(nutsId, year, dbase, config, properties):
     # Filter for the row that contains the country code
     row = df[df['CNTR_CODE'] == nutsId[:2]]
     if not row.empty:
-        logging.info('  QGIS Server/> Build. Energy Sim. -> Process -> Step 02 -> Connecting and downloading...')
+        logger.info('  QGIS Server/> Build. Energy Sim. -> Process -> Step 02 -> Connecting and downloading...')
         response = requests.get(row['PopWgt'].values[0])
         if response.status_code == 200:
-            logging.info('  QGIS Server/> Build. Energy Sim. -> Process -> Step 02 -> Loading and filtering the downloaded data...')
+            logger.info('  QGIS Server/> Build. Energy Sim. -> Process -> Step 02 -> Loading and filtering the downloaded data...')
             downloaded_data = pd.read_csv(io.StringIO(response.text), skiprows = 3, parse_dates = ['time'])
             filtered_data = downloaded_data[downloaded_data['time'].dt.year == year][[nutsId[:4], 'time']]
             filtered_data = filtered_data[
@@ -66,7 +68,7 @@ def bp2Step02(nutsId, year, dbase, config, properties):
             filtered_data.set_index('time', inplace=True)
 
             # Calculate daily min and max, and then take their average
-            logging.info('  QGIS Server/> Build. Energy Sim. -> Process -> Step 02 -> Calculating...')
+            logger.info('  QGIS Server/> Build. Energy Sim. -> Process -> Step 02 -> Calculating...')
             daily_min = filtered_data.groupby([filtered_data.index.month, filtered_data.index.day])[nutsId[:4]].min()
             daily_max = filtered_data.groupby([filtered_data.index.month, filtered_data.index.day])[nutsId[:4]].max()
             daily_avg_temp = (daily_min + daily_max) / 2
@@ -127,16 +129,16 @@ def bp2Step02(nutsId, year, dbase, config, properties):
             del response
             filtered_data['Season'] = filtered_data['MonthlyAvgTemp'].apply(season)
         
-            logging.info('  QGIS Server/> Build. Energy Sim. -> Process -> Step 02 -> Saving...')
+            logger.info('  QGIS Server/> Build. Energy Sim. -> Process -> Step 02 -> Saving...')
             output = mio.retrieveFilesTmpPath(config) + '/' + nutsId[:4] + '_Temperatures.csv'
             filtered_data.to_csv(output, sep = ';', decimal = ',')
     else:
-        logging.error('  QGIS Server/> Build. Energy Sim. -> Process -> Step 02 -> The dataset is empty...')
+        logger.error('  QGIS Server/> Build. Energy Sim. -> Process -> Step 02 -> The dataset is empty...')
         return None
     
     # Finish    
-    logging.info('  QGIS Server/> Build. Energy Sim. -> Process -> Step 02 -> [OK]')
-    logging.info('')
+    logger.info('  QGIS Server/> Build. Energy Sim. -> Process -> Step 02 -> [OK]')
+    logger.info('')
     return output
 
 
@@ -144,7 +146,7 @@ def bp2Step02(nutsId, year, dbase, config, properties):
 def bp2Step03(nutsId, year, dbase, config, properties):
     ''' Build. Energy Sim. -> Process -> Step 03 : Retrieve radiation values. '''
 
-    logging.info('  QGIS Server/> Build. Energy Sim. -> Process -> Step 03 -> Retrieving radiation values...')
+    logger.info('  QGIS Server/> Build. Energy Sim. -> Process -> Step 03 -> Retrieving radiation values...')
     output = None
 
     # Load the CSV
@@ -163,16 +165,16 @@ def bp2Step03(nutsId, year, dbase, config, properties):
             ]
             filtered_data.set_index('time', inplace = True)
 
-            logging.info('  QGIS Server/> Build. Energy Sim. -> Process -> Step 03 -> Saving...')
+            logger.info('  QGIS Server/> Build. Energy Sim. -> Process -> Step 03 -> Saving...')
             output = mio.retrieveFilesTmpPath(config) + '/' + nutsId[:4] + '_Radiation.csv'
             filtered_data.to_csv(output, sep = ';', decimal = ',')
     else:
-        logging.error('  QGIS Server/> Build. Energy Sim. -> Process -> Step 03 -> The dataset is empty...')
+        logger.error('  QGIS Server/> Build. Energy Sim. -> Process -> Step 03 -> The dataset is empty...')
         return None
     
     # Finish    
-    logging.info('  QGIS Server/> Build. Energy Sim. -> Process -> Step 03 -> [OK]')
-    logging.info('')
+    logger.info('  QGIS Server/> Build. Energy Sim. -> Process -> Step 03 -> [OK]')
+    logger.info('')
     return output
 
 
@@ -180,7 +182,7 @@ def bp2Step03(nutsId, year, dbase, config, properties):
 def bp2Step04(dbaseFileList, body):
     ''' Build. Energy Sim. -> Process -> Step 04 : Load the database. '''
 
-    logging.info('  QGIS Server/> Build. Energy Sim. -> Process -> Step 04 -> Loading the database...')
+    logger.info('  QGIS Server/> Build. Energy Sim. -> Process -> Step 04 -> Loading the database...')
     dfDHW = pd.read_csv(dbaseFileList[7]['path'], sep = ';', decimal = ',', thousands = '.')
     dfYears = pd.read_csv(dbaseFileList[22]['path'], sep = ';')
     dfSectors = pd.read_csv(dbaseFileList[23]['path'], sep = ';')
@@ -239,8 +241,8 @@ def bp2Step04(dbaseFileList, body):
     dfTemperatures = dfTemperatures.merge(dfSeasons[['Season', 'Cooling']], on = 'Season', how = 'left')
     
     # Finish    
-    logging.info('  QGIS Server/> Build. Energy Sim. -> Process -> Step 04 -> [OK]')
-    logging.info('')
+    logger.info('  QGIS Server/> Build. Energy Sim. -> Process -> Step 04 -> [OK]')
+    logger.info('')
     return dfDHW, dfYears, dfSectors, dfSeasons, dfTemperatures, dfSchedule, dfResHHTes, dfSerHHTes,\
         dfUvalues, dfRetroUvalues, dfACH, dfBaseTemperatures, dfCalendar, dfBesCapex, dfBesOpex,\
         dfRes, dfBesCapacity, dfRetroCost, dfSolarOffice, dfSolarNoffice, dfDwellings, dfRTHHEff
@@ -250,7 +252,7 @@ def bp2Step04(dbaseFileList, body):
 def bp2Step05(dfCSV):
     ''' Build. Energy Sim. -> Process -> Step 05 : Add columns to the input dataframe. '''
 
-    logging.info('  QGIS Server/> Build. Energy Sim. -> Process -> Step 05 -> Adding new columns to the input dataframe...')
+    logger.info('  QGIS Server/> Build. Energy Sim. -> Process -> Step 05 -> Adding new columns to the input dataframe...')
     dfCSV = pd.concat([dfCSV,
         pd.DataFrame(columns = ['Opaque fachade area',
             'Window Area', 'Period', 'Net heated floor area', 'Heated Volume', 'Wall to floor ratio', 'Sector',
@@ -389,8 +391,8 @@ def bp2Step05(dfCSV):
         axis = 1)
     
     # Finish    
-    logging.info('  QGIS Server/> Build. Energy Sim. -> Process -> Step 05 -> [OK]')
-    logging.info('')
+    logger.info('  QGIS Server/> Build. Energy Sim. -> Process -> Step 05 -> [OK]')
+    logger.info('')
     return dfCSV
 
 
@@ -398,7 +400,7 @@ def bp2Step05(dfCSV):
 def bp2Step06(dfCSV, dfDHW, dfYears, dfSectors, dfDwellings, body, properties):
     ''' Build. Energy Sim. -> Process -> Step 06 : Add the input data. '''
 
-    logging.info('  QGIS Server/> Build. Energy Sim. -> Process -> Step 06 -> Updating the dataframe information...')
+    logger.info('  QGIS Server/> Build. Energy Sim. -> Process -> Step 06 -> Updating the dataframe information...')
     for index, row in dfCSV.iterrows():
         value = float(dfDHW[dfDHW['BuildingUse'] == row['Use']]['WWR'].iloc[0])
         dfCSV.at[index, 'Window Area'] = float(row['Total External Facade area']) * value
@@ -458,8 +460,8 @@ def bp2Step06(dfCSV, dfDHW, dfYears, dfSectors, dfDwellings, body, properties):
     dfCSV['Occ. Dwellings'] = dfDwellings[dfDwellings['CountryID'] == body['nutsid'].strip()[:2].upper()].values[0][4]
 
     # Finish    
-    logging.info('  QGIS Server/> Build. Energy Sim. -> Process -> Step 06 -> [OK]')
-    logging.info('')
+    logger.info('  QGIS Server/> Build. Energy Sim. -> Process -> Step 06 -> [OK]')
+    logger.info('')
     return dfCSV
 
 
@@ -471,7 +473,7 @@ def bp2Step07(dfCSV, dfReshhtes, dfSerhhtes, dfRThheff, config, body):
     dfSerhhtes = dfSerhhtes[['Energy service_Fuel', 'Energy service', body['nutsid'].strip()[:2].upper()]]
     dfRThheff = dfRThheff[['Energy service_Fuel', 'Energy service', body['nutsid'].strip()[:2].upper()]]
     
-    logging.info('  QGIS Server/> Build. Energy Sim. -> Process -> Step 07 -> Writing the Active measures...')
+    logger.info('  QGIS Server/> Build. Energy Sim. -> Process -> Step 07 -> Writing the Active measures...')
     for measure in body['scenario']['active_measures']:
         if measure['user_defined_data']:
             # Space heating
@@ -1070,7 +1072,7 @@ def bp2Step07(dfCSV, dfReshhtes, dfSerhhtes, dfRThheff, config, body):
                                     else row['L. Electricity']), axis = 1)
             )
     
-    logging.info('  QGIS Server/> Build. Energy Sim. -> Process -> Step 07 -> Writing the Active measures (baseline)...')
+    logger.info('  QGIS Server/> Build. Energy Sim. -> Process -> Step 07 -> Writing the Active measures (baseline)...')
     for measure in body['scenario']['active_measures_baseline']:
         if measure['user_defined_data']:
             # Space heating
@@ -1762,8 +1764,8 @@ def bp2Step07(dfCSV, dfReshhtes, dfSerhhtes, dfRThheff, config, body):
             dfRThheff[dfRThheff['Energy service_Fuel'] == 'Appliances_Electricity'].values[0][2]
     
     # Finish    
-    logging.info('  QGIS Server/> Build. Energy Sim. -> Process -> Step 07 -> [OK]')
-    logging.info('')
+    logger.info('  QGIS Server/> Build. Energy Sim. -> Process -> Step 07 -> [OK]')
+    logger.info('')
     return dfCSV
 
 
@@ -1771,7 +1773,7 @@ def bp2Step07(dfCSV, dfReshhtes, dfSerhhtes, dfRThheff, config, body):
 def bp2Step08(dfCSV, body):
     ''' Build. Energy Sim. -> Process -> Step 08 : Add the passive measures. '''
 
-    logging.info('  QGIS Server/> Build. Energy Sim. -> Process -> Step 08 -> Writing the Passive measures...')
+    logger.info('  QGIS Server/> Build. Energy Sim. -> Process -> Step 08 -> Writing the Passive measures...')
     for measure in body['scenario']['passive_measures']:
         dfCSV.loc[dfCSV['Use'] == measure['building_use'], 'Ref Level'] = measure['ref_level']
         dfCSV.loc[(dfCSV['Use'] == measure['building_use']) & (dfCSV['Period'] == 'Pre-1945'), 'Ref%'] =\
@@ -1790,8 +1792,8 @@ def bp2Step08(dfCSV, body):
             measure['percentages_by_periods']['Post-2010']
     
     # Finish    
-    logging.info('  QGIS Server/> Build. Energy Sim. -> Process -> Step 08 -> [OK]')
-    logging.info('')
+    logger.info('  QGIS Server/> Build. Energy Sim. -> Process -> Step 08 -> [OK]')
+    logger.info('')
     return dfCSV
 
 
@@ -1799,7 +1801,7 @@ def bp2Step08(dfCSV, body):
 def bp2Step09(dfCSV, dfDHW, dfUValues, dfRUValues, dfACH, body):
     ''' Build. Energy Sim. -> Process -> Step 09 : Write the U-Values and the Internal Gains. '''
 
-    logging.info('  QGIS Server/> Build. Energy Sim. -> Process -> Step 09 -> Writing the U-Values and the Internal Gains...')
+    logger.info('  QGIS Server/> Build. Energy Sim. -> Process -> Step 09 -> Writing the U-Values and the Internal Gains...')
     country = body['nutsid'].strip()[:2].upper()
     for index, row in dfCSV.iterrows():
         # U-Values
@@ -1834,8 +1836,8 @@ def bp2Step09(dfCSV, dfDHW, dfUValues, dfRUValues, dfACH, body):
     dfCSV['ARL-Factor'] = 0.33 * dfCSV['Air renovation losses'] * dfCSV['Heated Volume']
     
     # Finish    
-    logging.info('  QGIS Server/> Build. Energy Sim. -> Process -> Step 09 -> [OK]')
-    logging.info('')
+    logger.info('  QGIS Server/> Build. Energy Sim. -> Process -> Step 09 -> [OK]')
+    logger.info('')
     return dfCSV
 
 
@@ -1843,7 +1845,7 @@ def bp2Step09(dfCSV, dfDHW, dfUValues, dfRUValues, dfACH, body):
 def bp2Step10(dfCSV, dfBesCapex):
     ''' Build. Energy Sim. -> Process -> Step 10 : Add the CAPEX dataframe. '''
 
-    logging.info('  QGIS Server/> Build. Energy Sim. -> Process -> Step 10 -> Adding the CAPEX dataframe...')
+    logger.info('  QGIS Server/> Build. Energy Sim. -> Process -> Step 10 -> Adding the CAPEX dataframe...')
     
     # Space heating
     dfCSV = dfCSV.assign(
@@ -2074,8 +2076,8 @@ def bp2Step10(dfCSV, dfBesCapex):
     )
     
     # Finish
-    logging.info('  QGIS Server/> Build. Energy Sim. -> Process -> Step 10 -> [OK]')
-    logging.info('')
+    logger.info('  QGIS Server/> Build. Energy Sim. -> Process -> Step 10 -> [OK]')
+    logger.info('')
     return dfCSV
 
 
@@ -2083,7 +2085,7 @@ def bp2Step10(dfCSV, dfBesCapex):
 def bp2Step11(dfCSV, dfBesOpex):
     ''' Build. Energy Sim. -> Process -> Step 11 : Add the OPEX dataframe. '''
 
-    logging.info('  QGIS Server/> Build. Energy Sim. -> Process -> Step 11 -> Adding the OPEX dataframe...')
+    logger.info('  QGIS Server/> Build. Energy Sim. -> Process -> Step 11 -> Adding the OPEX dataframe...')
     
     # Fixed cost
     dfCSV = dfCSV.assign(
@@ -2170,8 +2172,8 @@ def bp2Step11(dfCSV, dfBesOpex):
     )
     
     # Finish
-    logging.info('  QGIS Server/> Build. Energy Sim. -> Process -> Step 11 -> [OK]')
-    logging.info('')
+    logger.info('  QGIS Server/> Build. Energy Sim. -> Process -> Step 11 -> [OK]')
+    logger.info('')
     return dfCSV
 
 
@@ -2179,7 +2181,7 @@ def bp2Step11(dfCSV, dfBesOpex):
 def bp2Step12(dfCSV, dfRetroCost):
     ''' Build. Energy Sim. -> Process -> Step 12 : Add the Retrofitting Cost dataframe. '''
 
-    logging.info('  QGIS Server/> Build. Energy Sim. -> Process -> Step 12 -> Adding the Retrofitting Cost dataframe...')
+    logger.info('  QGIS Server/> Build. Energy Sim. -> Process -> Step 12 -> Adding the Retrofitting Cost dataframe...')
     dfCSV = dfCSV.assign(
     **{
         'RFC Cost Low Wall': dfRetroCost.loc[dfRetroCost['Level'] == 'Low', 'Wall'].iloc[0],
@@ -2195,8 +2197,8 @@ def bp2Step12(dfCSV, dfRetroCost):
     )
     
     # Finish
-    logging.info('  QGIS Server/> Build. Energy Sim. -> Process -> Step 12 -> [OK]')
-    logging.info('')
+    logger.info('  QGIS Server/> Build. Energy Sim. -> Process -> Step 12 -> [OK]')
+    logger.info('')
     return dfCSV
 
 
@@ -2204,7 +2206,7 @@ def bp2Step12(dfCSV, dfRetroCost):
 def bp2Step13(dfCSV, dfRes):
     ''' Build. Energy Sim. -> Process -> Step 13 : Add the Renewable Energy Systems dataframe. '''
 
-    logging.info('  QGIS Server/> Build. Energy Sim. -> Process -> Step 13 -> Adding the Renewable Energy Systems (RES) dataframe...')
+    logger.info('  QGIS Server/> Build. Energy Sim. -> Process -> Step 13 -> Adding the Renewable Energy Systems (RES) dataframe...')
     dfCSV = dfCSV.assign(
     **{
         'RES ST. Cost': dfRes.loc[dfRes['RES'] == 'Solar Thermal', 'Cost (E/m2)'].iloc[0],
@@ -2227,8 +2229,8 @@ def bp2Step13(dfCSV, dfRes):
     )
     
     # Finish
-    logging.info('  QGIS Server/> Build. Energy Sim. -> Process -> Step 13 -> [OK]')
-    logging.info('')
+    logger.info('  QGIS Server/> Build. Energy Sim. -> Process -> Step 13 -> [OK]')
+    logger.info('')
     return dfCSV
 
 
@@ -2236,7 +2238,7 @@ def bp2Step13(dfCSV, dfRes):
 def bp2Step14(dfCSV, dfCapacity, config):
     ''' Build. Energy Sim. -> Process -> Step 14 : Add the Capacity dataframe. '''
 
-    logging.info('  QGIS Server/> Build. Energy Sim. -> Process -> Step 14 -> Adding the Capacity dataframe...')
+    logger.info('  QGIS Server/> Build. Energy Sim. -> Process -> Step 14 -> Adding the Capacity dataframe...')
     archetypes = [arch.strip() for arch in config['IDESIGNRES-PARAMETERS']['idesignres.params.archetypes'].split(',')]
     for arch in archetypes:
         dfCSV.loc[dfCSV['Use'] == arch, 'Central HP (SH)'] = dfCapacity.loc[(dfCapacity['Energy Service'] == 'Space heating')\
@@ -2259,8 +2261,8 @@ def bp2Step14(dfCSV, dfCapacity, config):
             & (dfCapacity['Capacity KW/m2'] == 'Individual HP 8KW'), arch].iloc[0]
 
     # Finish
-    logging.info('  QGIS Server/> Build. Energy Sim. -> Process -> Step 14 -> [OK]')
-    logging.info('')
+    logger.info('  QGIS Server/> Build. Energy Sim. -> Process -> Step 14 -> [OK]')
+    logger.info('')
     return dfCSV
 
 
@@ -2268,7 +2270,7 @@ def bp2Step14(dfCSV, dfCapacity, config):
 def bp2Step15(dfCSV):
     ''' Build. Energy Sim. -> Process -> Step 15 : Add the Equivalent Power dataframe. '''
 
-    logging.info('  QGIS Server/> Build. Energy Sim. -> Process -> Step 15 -> Adding the Equivalent Power dataframe...')
+    logger.info('  QGIS Server/> Build. Energy Sim. -> Process -> Step 15 -> Adding the Equivalent Power dataframe...')
 
     centralHPColumns = ['EP. Gas heat pumps', 'EP. Advanced electric heating']
     centralBoilerColumns = ['EP. LPG', 'EP. Diesel oil', 'EP. Natural gas',
@@ -2306,8 +2308,8 @@ def bp2Step15(dfCSV):
             dfCSV.at[index, col + ' (WH)'] = round(centralHP[2], 6)
 
     # Finish
-    logging.info('  QGIS Server/> Build. Energy Sim. -> Process -> Step 15 -> [OK]')
-    logging.info('')
+    logger.info('  QGIS Server/> Build. Energy Sim. -> Process -> Step 15 -> [OK]')
+    logger.info('')
     return dfCSV
 
 
@@ -2315,7 +2317,7 @@ def bp2Step15(dfCSV):
 def bp2Step16(dfCSV):
     ''' Build. Energy Sim. -> Process -> Step 16 : Calculate the costs. '''
 
-    logging.info('  QGIS Server/> Build. Energy Sim. -> Process -> Step 16 -> Calculating the costs...')
+    logger.info('  QGIS Server/> Build. Energy Sim. -> Process -> Step 16 -> Calculating the costs...')
     dfDwellings = dfCSV[['Sector', 'Occ. Dwellings']]
     dfDwellings.loc[dfDwellings['Sector'] != 'Residential', 'Occ. Dwellings'] = 1
     for index, row in dfCSV.iterrows():
@@ -2479,8 +2481,8 @@ def bp2Step16(dfCSV):
         dfCSV.at[index, 'WH. Cost Electricity'] = 0 if val < 0 else val
 
     # Finish
-    logging.info('  QGIS Server/> Build. Energy Sim. -> Process -> Step 16 -> [OK]')
-    logging.info('')
+    logger.info('  QGIS Server/> Build. Energy Sim. -> Process -> Step 16 -> [OK]')
+    logger.info('')
     return dfCSV
 
 
@@ -2489,7 +2491,7 @@ def bp2Step17(dfCSV, dfSched, dfTemperatures, dfBaseTemperatures, dfSolarOffice,
     ''' Build. Energy Sim. -> Process -> Step 17 : Calculate the General Schedule for each archetype. '''
 
     # Divide the Schedule dataframe by column value
-    logging.info('  QGIS Server/> Build. Energy Sim. -> Process -> Step 17 -> Dividing the Schedule dataframe by archetypes...')
+    logger.info('  QGIS Server/> Build. Energy Sim. -> Process -> Step 17 -> Dividing the Schedule dataframe by archetypes...')
     dfSchedGroups = dfSched.groupby('Use')
     
     # Archetype: Apartment block
@@ -2583,7 +2585,7 @@ def bp2Step17(dfCSV, dfSched, dfTemperatures, dfBaseTemperatures, dfSolarOffice,
     dfGenSchedSport['Hourly Temp'] = dfTemperatures['HourlyTemperature']
     dfGenSchedSport['Solar'] = dfSolarNOffice[body['nutsid'].strip()[:2].upper()]
     
-    logging.info('  QGIS Server/> Build. Energy Sim. -> Process -> Step 17 -> Building the final schedule...')
+    logger.info('  QGIS Server/> Build. Energy Sim. -> Process -> Step 17 -> Building the final schedule...')
     dictSchedule = {}
     for index, row in dfCSV.iterrows():
         schedule = None
@@ -2611,8 +2613,8 @@ def bp2Step17(dfCSV, dfSched, dfTemperatures, dfBaseTemperatures, dfSolarOffice,
         }
 
     # Finish
-    logging.info('  QGIS Server/> Build. Energy Sim. -> Process -> Step 17 -> [OK]')
-    logging.info('')
+    logger.info('  QGIS Server/> Build. Energy Sim. -> Process -> Step 17 -> [OK]')
+    logger.info('')
     return dictSchedule
 
 
@@ -2620,7 +2622,7 @@ def bp2Step17(dfCSV, dfSched, dfTemperatures, dfBaseTemperatures, dfSolarOffice,
 def bp2Step18(dfCSV, dictSchedule, config, body):
     ''' Build. Energy Sim. -> Process -> Step 18 : Calculate the Scenario. '''
 
-    logging.info('  QGIS Server/> Build. Energy Sim. -> Process -> Step 18 -> Calculating the Scenario...')
+    logger.info('  QGIS Server/> Build. Energy Sim. -> Process -> Step 18 -> Calculating the Scenario...')
 
     for key, dictValue in dictSchedule.items():
         # Concatenate the necessary columns and extract the CSV row to do the calculations
@@ -2895,8 +2897,8 @@ def bp2Step18(dfCSV, dictSchedule, config, body):
             dictSchedule[key]['schedule']['FC-Appliances (Electricity)-Electricity'].apply(lambda x: 0 if (x < 0 or pd.isna(x)) else x)
         
     # Finish    
-    logging.info('  QGIS Server/> Build. Energy Sim. -> Process -> Step 18 -> [OK]')
-    logging.info('')
+    logger.info('  QGIS Server/> Build. Energy Sim. -> Process -> Step 18 -> [OK]')
+    logger.info('')
     return dictSchedule
 
 
@@ -2905,7 +2907,7 @@ def bp2Step19(dfCSV, dictSchedule):
     ''' Build. Energy Sim. -> Process -> Step 19 : Calculate the Anual Results. '''
 
     # Create the Anual Results dataframe
-    logging.info('  QGIS Server/> Build. Energy Sim. -> Process -> Step 19 -> Building the Anual Results dataframe...')
+    logger.info('  QGIS Server/> Build. Energy Sim. -> Process -> Step 19 -> Building the Anual Results dataframe...')
     dfAnualResults = dfCSV[['Building ID', 'Use', 'Age', 'Period', 'Sector',
         'Ref%', 'Ref Level', 'Footprint Area', 'Opaque fachade area', 'Window Area',
         'RFC Cost Low Wall', 'RFC Cost Medium Wall', 'RFC Cost High Wall',
@@ -2997,7 +2999,7 @@ def bp2Step19(dfCSV, dictSchedule):
             row['WH. Cost Electricity']
     
     # Remove extra columns
-    logging.info('  QGIS Server/> Build. Energy Sim. -> Process -> Step 19 -> Cleaning the Anual Results dataframe...')
+    logger.info('  QGIS Server/> Build. Energy Sim. -> Process -> Step 19 -> Cleaning the Anual Results dataframe...')
     dfAnualResults = dfAnualResults.drop(columns = ['Ref%', 'Ref Level', 'Footprint Area',
         'Opaque fachade area', 'Window Area', 'RFC Cost Low Wall', 'RFC Cost Medium Wall', 'RFC Cost High Wall', 'RFC Cost Low Roof',
         'RFC Cost Medium Roof', 'RFC Cost High Roof', 'RFC Cost Low Window', 'RFC Cost Medium Window', 'RFC Cost High Window',
@@ -3013,8 +3015,8 @@ def bp2Step19(dfCSV, dictSchedule):
         'WH. Cost Hydrogen', 'WH. Cost Solar', 'WH. Cost Electric space cooling', 'WH. Cost Electricity'])
 
     # Finish
-    logging.info('  QGIS Server/> Build. Energy Sim. -> Process -> Step 19 -> [OK]')
-    logging.info('')
+    logger.info('  QGIS Server/> Build. Energy Sim. -> Process -> Step 19 -> [OK]')
+    logger.info('')
     return dfAnualResults
 
 
@@ -3023,7 +3025,7 @@ def bp2Step20(dfCSV, dictSchedule, archetype):
     ''' Build. Energy Sim. -> Process -> Step 20 : Calculate the Consolidate. '''
 
     # Create the Consolidated dataframe
-    logging.info('  QGIS Server/> Build. Energy Sim. -> Process -> Step 20 -> Building the Consolidated (' + archetype + ') dataframe...')
+    logger.info('  QGIS Server/> Build. Energy Sim. -> Process -> Step 20 -> Building the Consolidated (' + archetype + ') dataframe...')
     dfConsolidated = pd.DataFrame(0.0, columns = ['Solids|Coal (Space Heating)', 'Liquids|Gas (Space Heating)',
         'Liquids|Oil (Space Heating)', 'Gases|Gas (Space Heating)', 'Solids|Biomass (Space Heating)',
             'Electricity (Space Heating)', 'Heat (Space Heating)', 'Liquids|Biomass (Space Heating)',
@@ -3097,8 +3099,8 @@ def bp2Step20(dfCSV, dictSchedule, archetype):
             dfConsolidated['Electricity (Cooking)'] += dictValue['schedule']['FC-Cooking (Electricity)-Electricity']
 
     # Finish
-    logging.info('  QGIS Server/> Build. Energy Sim. -> Process -> Step 20 -> [OK]')
-    logging.info('')
+    logger.info('  QGIS Server/> Build. Energy Sim. -> Process -> Step 20 -> [OK]')
+    logger.info('')
     return dfConsolidated
 
 
@@ -3107,7 +3109,7 @@ def bp2Step21(dfCSV, dictSchedule, archetype):
     ''' Build. Energy Sim. -> Process -> Step 21 : Calculate the Hourly Results. '''
 
     # Create the Hourly Results dataframe
-    logging.info('  QGIS Server/> Build. Energy Sim. -> Process -> Step 21 -> Building the Hourly Results (' + archetype + ') dataframe...')
+    logger.info('  QGIS Server/> Build. Energy Sim. -> Process -> Step 21 -> Building the Hourly Results (' + archetype + ') dataframe...')
     dfHourlyResults = pd.DataFrame(0.0, columns = ['Solids|Coal', 'Liquids|Gas', 'Liquids|Oil',
         'Gases|Gas', 'Solids|Biomass', 'Electricity', 'Heat', 'Liquids|Biomass', 'Gases|Biomass', 'Hydrogen',
         'Heat|Solar', 'Variable cost [€/KWh]', 'Emissions [kgCO2/KWh]'], index = range(8760))
@@ -3208,8 +3210,8 @@ def bp2Step21(dfCSV, dictSchedule, archetype):
                 (hydrogen * csv['OPEX Emissions Hydrogen']) + (heatSolar * csv['OPEX Emissions Heat|Solar'])
 
     # Finish
-    logging.info('  QGIS Server/> Build. Energy Sim. -> Process -> Step 21 -> [OK]')
-    logging.info('')
+    logger.info('  QGIS Server/> Build. Energy Sim. -> Process -> Step 21 -> [OK]')
+    logger.info('')
     return dfHourlyResults
 
 
@@ -3222,7 +3224,7 @@ def bp2Step22(dfCSV, dfAnualResults, dictConsolidated, dictHourlyResults, config
     archetypesCodes = [arch.strip() for arch in config['IDESIGNRES-PARAMETERS']['idesignres.params.archetypes.codes'].split(',')]
     
     # Create the Excel file
-    logging.info('  QGIS Server/> Build. Energy Sim. -> Process -> Step 22 -> Saving the Excel file (can take quite a while)...')
+    logger.info('  QGIS Server/> Build. Energy Sim. -> Process -> Step 22 -> Saving the Excel file (can take quite a while)...')
     fileName = mio.retrieveOutputBasePath(True, config) + config['IDESIGNRES-PATH']['idesignres.path.bp.default.result.name']
     with pd.ExcelWriter(fileName) as writer:
         # Tab: Anual Results
@@ -3256,8 +3258,8 @@ def bp2Step22(dfCSV, dfAnualResults, dictConsolidated, dictHourlyResults, config
         workbook.save(fileName)
 
     # Finish
-    logging.info('  QGIS Server/> Build. Energy Sim. -> Process -> Step 22 -> [OK]')
-    logging.info('')
+    logger.info('  QGIS Server/> Build. Energy Sim. -> Process -> Step 22 -> [OK]')
+    logger.info('')
     return fileName
 
 

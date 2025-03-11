@@ -3,6 +3,8 @@ import paramiko
 
 import modules.io as io
 
+from modules.logging_config import logger
+
 
 ########## SFTP functions ##########
 
@@ -27,8 +29,8 @@ def checkUserDirectory(username, config):
     try:
         # Build the path
         userDirectoryPath = io.retrieveOutputBasePath(False, config).replace('{1}', username)
-        logging.info('  SFTP Server/> Checking if the user is authorized to execute the process...')
-        logging.info('')
+        logger.info('  SFTP Server/> Checking if the user is authorized to execute the process...')
+        logger.info('')
             
         # Retrieve the connection parameters
         conn = buildConnectionParameters(config)
@@ -47,16 +49,16 @@ def checkUserDirectory(username, config):
 
         # Check the directory
         sftp.stat(userDirectoryPath)
-        logging.info('')
-        logging.info('  SFTP Server/> Authorized!')
+        logger.info('')
+        logger.info('  SFTP Server/> Authorized!')
         return True
     except FileNotFoundError as fnfError:
-        logging.info('')
-        logging.info('  SFTP Server/> Not authorized!')
+        logger.info('')
+        logger.info('  SFTP Server/> Not authorized!')
         return False
     except IOError as ioError:
-        logging.info('')
-        logging.info('  SFTP Server/> Not authorized!')
+        logger.info('')
+        logger.info('  SFTP Server/> Not authorized!')
         return False
     except Exception as error:
         raise
@@ -87,14 +89,14 @@ def retrieveLayerFiles(layerList, config):
             sftp = client.open_sftp()
 
             # Retrieve the files
-            logging.info('')
+            logger.info('')
             for layer in layerList:
                 if io.fileExists(basePath + layer['path']):
-                    logging.info('  SFTP Server/> The file "' + layer['name'] + '" is already locally stored.')
+                    logger.info('  SFTP Server/> The file "' + layer['name'] + '" is already locally stored.')
                 else:
-                    logging.info('  SFTP Server/> Downloading the file "' + layer['name'] + '"...')
+                    logger.info('  SFTP Server/> Downloading the file "' + layer['name'] + '"...')
                     sftp.get(layer['path'], basePath + layer['path'])
-            logging.info('')
+            logger.info('')
         
             # Close the SSH client and return
             client.close()
@@ -129,14 +131,14 @@ def retrieveDataFiles(fileList, config):
             sftp = client.open_sftp()
 
             # Retrieve the files
-            logging.info('')
+            logger.info('')
             for fil in fileList:
                 if io.fileExists(basePath + fil['path']):
-                    logging.info('  SFTP Server/> The file "' + fil['name'] + '" is already locally stored.')
+                    logger.info('  SFTP Server/> The file "' + fil['name'] + '" is already locally stored.')
                 else:
-                    logging.info('  SFTP Server/> Downloading the file "' + fil['name'] + '"...')
+                    logger.info('  SFTP Server/> Downloading the file "' + fil['name'] + '"...')
                     sftp.get(fil['path'], basePath + fil['path'])
-            logging.info('')
+            logger.info('')
         
             # Close the SSH client and return
             client.close()
@@ -170,15 +172,15 @@ def retrieveDbaseFiles(config):
         sftp = client.open_sftp()
         
         # List all files in the remote folder
-        logging.info('')
+        logger.info('')
         fileList = sftp.listdir(config['IDESIGNRES-SFTP']['idesignres.sftp.path.dbase'])
         fileList.sort()
         result = []
         for fil in fileList:
             if io.fileExists(basePath + config['IDESIGNRES-SFTP']['idesignres.sftp.path.dbase'] + fil):
-                logging.info('  SFTP Server/> The file "' + fil + '" is already locally stored.')
+                logger.info('  SFTP Server/> The file "' + fil + '" is already locally stored.')
             else:
-                logging.info('  SFTP Server/> Downloading the file "' + (config['IDESIGNRES-SFTP']['idesignres.sftp.path.dbase'] + fil) + '"...')
+                logger.info('  SFTP Server/> Downloading the file "' + (config['IDESIGNRES-SFTP']['idesignres.sftp.path.dbase'] + fil) + '"...')
                 sftp.get(config['IDESIGNRES-SFTP']['idesignres.sftp.path.dbase'] + fil,
                     basePath + config['IDESIGNRES-SFTP']['idesignres.sftp.path.dbase'] + fil)
             result.append({'name': fil, 'path': basePath + config['IDESIGNRES-SFTP']['idesignres.sftp.path.dbase'] + fil})
@@ -211,8 +213,8 @@ def retrieveSingleFile(filePath, fileName, config):
         sftp = client.open_sftp()
         
         # Download the file
-        logging.info('')
-        logging.info('  SFTP Server/> Downloading the file "' + (filePath + fileName) + '"...')
+        logger.info('')
+        logger.info('  SFTP Server/> Downloading the file "' + (filePath + fileName) + '"...')
         sftp.get(filePath + fileName, io.retrieveFilesTmpPath(config) + '/' + fileName)
         
         # Close the SSH client and return
@@ -244,11 +246,11 @@ def downloadResource(resource, config):
             sftp = client.open_sftp()
 
             # Retrieve the files
-            logging.info('')
-            logging.info('  SFTP Server/> Downloading the file "' + resource['name'] + '"...')
+            logger.info('')
+            logger.info('  SFTP Server/> Downloading the file "' + resource['name'] + '"...')
             local_path = io.retrieveFilesTmpPath(config) + '/' + resource['name']
             sftp.get(resource['sftp'], local_path)
-            logging.info('')
+            logger.info('')
         
             # Close the SSH client and return
             client.close()
@@ -287,13 +289,13 @@ def fileExists(remoteFilePath, config):
             return True
         return False
     except FileNotFoundError as fnfError:
-        logging.error(str(fnfError))
+        logger.error(str(fnfError))
         return False
     except IOError as ioError:
-        logging.error(str(ioError))
+        logger.error(str(ioError))
         return False
     except Exception as error:
-        logging.error(str(error))
+        logger.error(str(error))
         raise
  
  
@@ -319,18 +321,18 @@ def uploadOutputFile(localFilePath, remoteFilePath, config):
             sftp = client.open_sftp()
 
             # Upload the file
-            logging.info('')
+            logger.info('')
             if io.fileExists(localFilePath):
-                logging.info('  SFTP Server/> Uploading the output file...')
+                logger.info('  SFTP Server/> Uploading the output file...')
                 sftp.put(localFilePath, remoteFilePath)
-            logging.info('')
+            logger.info('')
         
             # Close the SSH client and return
             client.close()
             return True
         return False
     except Exception as error:
-        logging.error(str(error))
+        logger.error(str(error))
         raise
 
 

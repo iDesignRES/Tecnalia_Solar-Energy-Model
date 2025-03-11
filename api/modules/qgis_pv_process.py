@@ -11,6 +11,8 @@ from typing import Union
 import modules.sftp as sftp
 import modules.io as mio
 
+from modules.logging_config import logger
+
 
 #####################################################################
 ############################## Process ##############################
@@ -21,7 +23,7 @@ import modules.io as mio
 def pv2Step01(config):
     ''' PV Power Plants -> Process -> Step 01 : Load the specific configuration. '''
 
-    logging.info('  QGIS Server/> PV Power Plants -> Process -> Step 01 -> Loading the specific configuration...')
+    logger.info('  QGIS Server/> PV Power Plants -> Process -> Step 01 -> Loading the specific configuration...')
     with open(config['IDESIGNRES-PATH']['idesignres.path.pv.config'], 'r') as configFile:
         configuration = json.load(configFile)
         if not configuration:
@@ -51,8 +53,8 @@ def pv2Step01(config):
         opexPV = int(configuration['system']['opex_pv'])  # in €/W
     
     # Finish
-    logging.info('  QGIS Server/> PV Power Plants -> Process -> Step 01 -> [OK]')
-    logging.info('')
+    logger.info('  QGIS Server/> PV Power Plants -> Process -> Step 01 -> [OK]')
+    logger.info('')
     return listParametersTH, listParametersPV, systemCost, landUseTH, landUsePV,\
         minGhiTH, minGhiPV, effTH, effOp, aperture, tCoord, year, tilt, azimuth,\
         tracking, loss, opexTH, opexPV
@@ -62,25 +64,25 @@ def pv2Step01(config):
 def pv2Step02(currentUser, nutsId, processId, config):
     ''' PV Power Plants -> Process -> Step 02 : Download the previous result. '''
 
-    logging.info('  QGIS Server/> PV Power Plants -> Process -> Step 02 -> Downloading the result file of the Solar preprocess...')
-    logging.info('')
+    logger.info('  QGIS Server/> PV Power Plants -> Process -> Step 02 -> Downloading the result file of the Solar preprocess...')
+    logger.info('')
     dfScadaTH, dfScadaPV = None, None
     filePath = config['IDESIGNRES-PATH']['idesignres.path.output.tmp'] + currentUser + '/'
     fileName = config['IDESIGNRES-PATH']['idesignres.path.output.default.name'].replace('{1}', processId).replace('{2}', nutsId)
     download = sftp.retrieveSingleFile(filePath, fileName, config)
-    logging.info('')
+    logger.info('')
     if download:
-        logging.info('  QGIS Server/> PV Power Plants -> Process -> Step 02 -> Loading the thermal data...')
+        logger.info('  QGIS Server/> PV Power Plants -> Process -> Step 02 -> Loading the thermal data...')
         dfScadaTH = pd.read_csv(mio.retrieveFilesTmpPath(config) + '/' + fileName, header = 0, encoding = "ISO-8859-1",
             delimiter = ",", decimal = ".").sort_values(by = 'Median_Radiation', ascending = False)
 
-        logging.info('  QGIS Server/> PV Power Plants -> Process -> Step 02 -> Loading the photovoltaic data...')
+        logger.info('  QGIS Server/> PV Power Plants -> Process -> Step 02 -> Loading the photovoltaic data...')
         dfScadaPV = pd.read_csv(mio.retrieveFilesTmpPath(config) + '/' + fileName, header = 0, encoding = "ISO-8859-1",
             delimiter = ",", decimal = ".").sort_values(by = 'Median_Radiation', ascending = False)
 
     # Finish    
-    logging.info('  QGIS Server/> PV Power Plants -> Process -> Step 02 -> [OK]')
-    logging.info('')
+    logger.info('  QGIS Server/> PV Power Plants -> Process -> Step 02 -> [OK]')
+    logger.info('')
     return dfScadaTH, dfScadaPV
 
 
@@ -88,17 +90,17 @@ def pv2Step02(currentUser, nutsId, processId, config):
 def pv2Step03(listParametersTH, systemCost, landUseTH):
     ''' PV Power Plants -> Process -> Step 03 : Calculate the available thermal area. '''
 
-    logging.info('  QGIS Server/> PV Power Plants -> Process -> Step 03 -> Calculating the available thermal area...')
+    logger.info('  QGIS Server/> PV Power Plants -> Process -> Step 03 -> Calculating the available thermal area...')
     areaTH, powerTH, capexTH = getAvailableArea(
     	parameters = listParametersTH, cost = systemCost, landUse = landUseTH)
 
-    logging.info('  QGIS Server/> PV Power Plants -> Process -> Step 03 -> Area -> ' + str(areaTH))
-    logging.info('  QGIS Server/> PV Power Plants -> Process -> Step 03 -> Power -> ' + str(powerTH))
-    logging.info('  QGIS Server/> PV Power Plants -> Process -> Step 03 -> Capex -> ' + str(capexTH))
+    logger.info('  QGIS Server/> PV Power Plants -> Process -> Step 03 -> Area -> ' + str(areaTH))
+    logger.info('  QGIS Server/> PV Power Plants -> Process -> Step 03 -> Power -> ' + str(powerTH))
+    logger.info('  QGIS Server/> PV Power Plants -> Process -> Step 03 -> Capex -> ' + str(capexTH))
     
     # Finish
-    logging.info('  QGIS Server/> PV Power Plants -> Process -> Step 03 -> [OK]')
-    logging.info('')
+    logger.info('  QGIS Server/> PV Power Plants -> Process -> Step 03 -> [OK]')
+    logger.info('')
     return areaTH, powerTH, capexTH
 
 
@@ -106,17 +108,17 @@ def pv2Step03(listParametersTH, systemCost, landUseTH):
 def pv2Step04(listParametersPV, systemCost, landUsePV):
     ''' PV Power Plants -> Process -> Step 04 : Calculate the available PV area. '''
 
-    logging.info('  QGIS Server/> PV Power Plants -> Process -> Step 04 -> Calculating the available PV area...')
+    logger.info('  QGIS Server/> PV Power Plants -> Process -> Step 04 -> Calculating the available PV area...')
     areaPV, powerPV, capexPV = getAvailableArea(
     	parameters = listParametersPV, cost = systemCost, landUse = landUsePV)
 
-    logging.info('  QGIS Server/> PV Power Plants -> Process -> Step 04 -> Area -> ' + str(areaPV))
-    logging.info('  QGIS Server/> PV Power Plants -> Process -> Step 04 -> Power -> ' + str(powerPV))
-    logging.info('  QGIS Server/> PV Power Plants -> Process -> Step 04 -> Capex -> ' + str(capexPV))
+    logger.info('  QGIS Server/> PV Power Plants -> Process -> Step 04 -> Area -> ' + str(areaPV))
+    logger.info('  QGIS Server/> PV Power Plants -> Process -> Step 04 -> Power -> ' + str(powerPV))
+    logger.info('  QGIS Server/> PV Power Plants -> Process -> Step 04 -> Capex -> ' + str(capexPV))
     
     # Finish
-    logging.info('  QGIS Server/> PV Power Plants -> Process -> Step 04 -> [OK]')
-    logging.info('')
+    logger.info('  QGIS Server/> PV Power Plants -> Process -> Step 04 -> [OK]')
+    logger.info('')
     return areaPV, powerPV, capexPV
 
 
@@ -125,23 +127,23 @@ def pv2Step05(scadaTH, areaTH, minGhiTH, landUseTH, effTH, effOp, aperture, tCoo
     ''' PV Power Plants -> Process -> Step 03 : Calculate the thermal production. '''
 
     # Get the regions
-    logging.info('  QGIS Server/> PV Power Plants -> Process -> Step 05 -> Obtaining the regions...')
+    logger.info('  QGIS Server/> PV Power Plants -> Process -> Step 05 -> Obtaining the regions...')
     rowsTH, nameNuts2 = getRegions(scada = scadaTH, area = areaTH, minGHI = minGhiTH)
     
     # Get the thermal production
-    logging.info('  QGIS Server/> PV Power Plants -> Process -> Step 05 -> Obtaining the thermal production...')
+    logger.info('  QGIS Server/> PV Power Plants -> Process -> Step 05 -> Obtaining the thermal production...')
     prodTH = getThermalProduction(rows = rowsTH, landUse = landUseTH, effTH = effTH,
         effOp = effOp, aperture = areaTH * aperture, tCoord = tCoord, year = year)
-    logging.info('  QGIS Server/> PV Power Plants -> Process -> Step 05 -> Saving the thermal production in a DataFrame...')
+    logger.info('  QGIS Server/> PV Power Plants -> Process -> Step 05 -> Saving the thermal production in a DataFrame...')
     dfTH = (pd.DataFrame(prodTH).sum(axis = 0))
     
     # Get the distribution
-    logging.info('  QGIS Server/> PV Power Plants -> Process -> Step 05 -> Obtaining the distribution...')
+    logger.info('  QGIS Server/> PV Power Plants -> Process -> Step 05 -> Obtaining the distribution...')
     nuts2TH, potDistTH, areasDistTH = getDistribution(rows = rowsTH, label = 'thermal_power')
     
     # Finish
-    logging.info('  QGIS Server/> PV Power Plants -> Process -> Step 05 -> [OK]')
-    logging.info('')
+    logger.info('  QGIS Server/> PV Power Plants -> Process -> Step 05 -> [OK]')
+    logger.info('')
     return nuts2TH, rowsTH, potDistTH, dfTH
 
 
@@ -149,30 +151,30 @@ def pv2Step05(scadaTH, areaTH, minGhiTH, landUseTH, effTH, effOp, aperture, tCoo
 def pv2Step06(rowsTH, scadaPV, areaPV, minGhiPV, landUsePV, tilt, azimuth, tracking, loss, tCoord, year):
     ''' PV Power Plants -> Process -> Step 06 : Calculate the PV production. '''
 
-    logging.info('  QGIS Server/> PV Power Plants -> Process -> Step 06 -> Removing areas used with thermal power...')
+    logger.info('  QGIS Server/> PV Power Plants -> Process -> Step 06 -> Removing areas used with thermal power...')
     for region in rowsTH:
         df = scadaPV.loc[(scadaPV['Region'] == region['Region']) & (scadaPV['Threshold'] == region['Threshold'])]
         df['Area_m2'] -= region['Area_m2']
         scadaPV.loc[(scadaPV['Region'] == region['Region']) & (scadaPV['Threshold'] == region['Threshold'])] = df
     
     # Get the regions
-    logging.info('  QGIS Server/> PV Power Plants -> Process -> Step 06 -> Obtaining the regions...')
+    logger.info('  QGIS Server/> PV Power Plants -> Process -> Step 06 -> Obtaining the regions...')
     rowsPV, nameNuts2 = getRegions(scada = scadaPV, area = areaPV, minGHI = minGhiPV)
     
     # Get the PV production
-    logging.info('  QGIS Server/> PV Power Plants -> Process -> Step 06 -> Obtaining the PV production...')
+    logger.info('  QGIS Server/> PV Power Plants -> Process -> Step 06 -> Obtaining the PV production...')
     prodPV = getPVProduction(rows = rowsPV, landUse = landUsePV, tilt = tilt, azimuth = azimuth,
         tracking = tracking, loss = loss, tCoord = tCoord, year = year)
-    logging.info('  QGIS Server/> PV Power Plants -> Process -> Step 06 -> Saving the PV production in a DataFrame...')
+    logger.info('  QGIS Server/> PV Power Plants -> Process -> Step 06 -> Saving the PV production in a DataFrame...')
     dfPV = (pd.DataFrame(prodPV).sum(axis = 0))
     
     # Get the distribution
-    logging.info('  QGIS Server/> PV Power Plants -> Process -> Step 06 -> Obtaining the distribution...')
+    logger.info('  QGIS Server/> PV Power Plants -> Process -> Step 06 -> Obtaining the distribution...')
     nuts2PV, potDistPV, areasDistPV = getDistribution(rows = rowsPV, label = 'pv_power')
     
     # Finish
-    logging.info('  QGIS Server/> PV Power Plants -> Process -> Step 06 -> [OK]')
-    logging.info('')
+    logger.info('  QGIS Server/> PV Power Plants -> Process -> Step 06 -> [OK]')
+    logger.info('')
     return nameNuts2, nuts2PV, potDistPV, dfPV
 
 
@@ -180,7 +182,7 @@ def pv2Step06(rowsTH, scadaPV, areaPV, minGhiPV, landUsePV, tilt, azimuth, track
 def pv2Step07(dfTH, dfPV, nameNuts2):
     ''' PV Power Plants -> Process -> Step 07 : Calculate the aggregated production. '''
 
-    logging.info('  QGIS Server/> PV Power Plants -> Process -> Step 07 -> Calculating the aggregated production...')
+    logger.info('  QGIS Server/> PV Power Plants -> Process -> Step 07 -> Calculating the aggregated production...')
     prodAgreggated = pd.concat([dfTH.reset_index(), dfPV.reset_index()], ignore_index = False, axis = 1)
     prodAgreggated = prodAgreggated.drop(columns = ['time'])
     prodAgreggated = prodAgreggated.set_index('time(UTC)')
@@ -188,8 +190,8 @@ def pv2Step07(dfTH, dfPV, nameNuts2):
     prodAgreggated.index = prodAgreggated.index.strftime('%Y-%m-%d %H:%M:%S')
     
     # Finish
-    logging.info('  QGIS Server/> PV Power Plants -> Process -> Step 07 -> [OK]')
-    logging.info('')
+    logger.info('  QGIS Server/> PV Power Plants -> Process -> Step 07 -> [OK]')
+    logger.info('')
     return prodAgreggated
 
 
@@ -197,7 +199,7 @@ def pv2Step07(dfTH, dfPV, nameNuts2):
 def pv2Step08(nuts2TH, nuts2PV):
     ''' PV Power Plants -> Process -> Step 08 : Calculate the distribution production. '''
 
-    logging.info('  QGIS Server/> PV Power Plants -> Process -> Step 08 -> Calculating the distribution production...')
+    logger.info('  QGIS Server/> PV Power Plants -> Process -> Step 08 -> Calculating the distribution production...')
     nuts2TH = nuts2TH.add_suffix('_Pthermal')
     nuts2PV = nuts2PV.add_suffix('_Ppv')
     nuts2Dist = pd.concat([nuts2TH.reset_index(), nuts2PV.reset_index()], ignore_index = False, axis = 1)
@@ -205,8 +207,8 @@ def pv2Step08(nuts2TH, nuts2PV):
     nuts2Dist = nuts2Dist.set_index('time(UTC)')
     
     # Finish
-    logging.info('  QGIS Server/> PV Power Plants -> Process -> Step 08 -> [OK]')
-    logging.info('')
+    logger.info('  QGIS Server/> PV Power Plants -> Process -> Step 08 -> [OK]')
+    logger.info('')
     return nuts2Dist
 
 
@@ -214,7 +216,7 @@ def pv2Step08(nuts2TH, nuts2PV):
 def pv2Step09(prodAgreggated, nuts2Dist, nameNuts2, potDistTH, potDistPV, opexTH, opexPV, config):
     ''' PV Power Plants -> Process -> Step 09 : Save the results. '''
 
-    logging.info('  QGIS Server/> PV Power Plants -> Process -> Step 09 -> Saving the results...')
+    logger.info('  QGIS Server/> PV Power Plants -> Process -> Step 09 -> Saving the results...')
     outputs = [mio.retrieveOutputBasePath(True, config) + nameNuts2 + '.csv']
     toCsv(prodAgreggated.reset_index(), outputs[0])
     
@@ -230,7 +232,7 @@ def pv2Step09(prodAgreggated, nuts2Dist, nameNuts2, potDistTH, potDistPV, opexTH
         outputs.append(output)
         toCsv(dfNuts3.reset_index(), output)
       
-    logging.info('  QGIS Server/> PV Power Plants -> Process -> Step 09 -> Combining the dictionaries...')
+    logger.info('  QGIS Server/> PV Power Plants -> Process -> Step 09 -> Combining the dictionaries...')
     potTH = {f'{k}_thermal': v for k, v in potDistTH.items()}
     potPV = {f'{k}_pv': v for k, v in potDistPV.items()}
     combinedDict = {**potTH, **potPV}
@@ -243,8 +245,8 @@ def pv2Step09(prodAgreggated, nuts2Dist, nameNuts2, potDistTH, potDistPV, opexTH
     dictToJson(combinedDict, Path(output), replace = True)
      
     # Finish
-    logging.info('  QGIS Server/> PV Power Plants -> Process -> Step 09 -> [OK]')
-    logging.info('')
+    logger.info('  QGIS Server/> PV Power Plants -> Process -> Step 09 -> [OK]')
+    logger.info('')
     return outputs
 
 

@@ -2,6 +2,8 @@ import logging
 import os
 import requests
 
+from modules.logging_config import logger
+
 from pathlib import Path
 
 
@@ -276,7 +278,7 @@ def downloadRemoteFile(remote_url, local_file_path, chunk_size, timeout, propert
     ''' Function to download a remote file. '''
 
     try:
-        logging.info(remote_url)
+        logger.info(remote_url)
         with requests.get(remote_url, stream=True, timeout=timeout) as response:
             response.raise_for_status()
             total_size = int(response.headers.get(properties['IDESIGNRES-REST']['idesignres.rest.content.length.header'], 0))
@@ -288,7 +290,7 @@ def downloadRemoteFile(remote_url, local_file_path, chunk_size, timeout, propert
                         downloaded_size += len(chunk)
                         if total_size:
                             percent_downloaded = (downloaded_size / total_size) * 100
-                            logging.info(f'{percent_downloaded:.2f}% ({downloaded_size}/{total_size} bytes)')
+                            logger.info(f'{percent_downloaded:.2f}% ({downloaded_size}/{total_size} bytes)')
     except Exception as error:
         raise
 

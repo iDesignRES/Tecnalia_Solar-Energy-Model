@@ -1,6 +1,8 @@
 import logging
 import pymysql
 
+from modules.logging_config import logger
+
 
 ########## Database functions ##########
 
@@ -28,14 +30,14 @@ def retrieveAllProcesses(config):
         conn = buildConnectionParameters(config)
 
         # Connect to the database
-        logging.info('  DATA Server/> Connecting to the database...')
+        logger.info('  DATA Server/> Connecting to the database...')
         conn = pymysql.connect(host = conn['host'], user = conn['user'], password = conn['pwd'], db = conn['db'])
 
         # Declare the custom cursor
         cursor = conn.cursor()
         
         # Declare and execute the query
-        logging.info('  DATA Server/> Executing the query to retrieve the processes...')
+        logger.info('  DATA Server/> Executing the query to retrieve the processes...')
         query = """
             SELECT
                 uuid,
@@ -48,7 +50,7 @@ def retrieveAllProcesses(config):
         processes = cursor.fetchall()
         if processes and len(processes) > 0:
             for process in processes:
-                logging.info('  DATA Server/> ' + process[0] + ' -> ' + process[1])
+                logger.info('  DATA Server/> ' + process[0] + ' -> ' + process[1])
                 result.append({ 'uuid': process[0], 'name': process[1] })
         return result
     except Exception as error:
@@ -70,14 +72,14 @@ def retrieveAllLayersByProcess(process, config):
         conn = buildConnectionParameters(config)
 
         # Connect to the database
-        logging.info('  DATA Server/> Connecting to the database...')
+        logger.info('  DATA Server/> Connecting to the database...')
         conn = pymysql.connect(host = conn['host'], user = conn['user'], password = conn['pwd'], db = conn['db'])
 
         # Declare the custom cursor
         cursor = conn.cursor()
         
         # Declare and execute the query
-        logging.info('  DATA Server/> Executing the query to retrieve the layers...')
+        logger.info('  DATA Server/> Executing the query to retrieve the layers...')
         query = """
             SELECT
                 layer_uuid,
@@ -93,7 +95,7 @@ def retrieveAllLayersByProcess(process, config):
         layers = cursor.fetchall()
         if layers and len(layers) > 0:
             for layer in layers:
-                logging.info('  DATA Server/> ' + layer[0] + ' -> ' + layer[1])
+                logger.info('  DATA Server/> ' + layer[0] + ' -> ' + layer[1])
                 result.append({ 'uuid': layer[0], 'name': layer[1], 'path': layer[2], 'format': layer[3] })
         return result
     except Exception as error:
@@ -115,14 +117,14 @@ def retrieveAllFilesByProcess(process, config):
         conn = buildConnectionParameters(config)
 
         # Connect to the database
-        logging.info('  DATA Server/> Connecting to the database...')
+        logger.info('  DATA Server/> Connecting to the database...')
         conn = pymysql.connect(host = conn['host'], user = conn['user'], password = conn['pwd'], db = conn['db'])
 
         # Declare the custom cursor
         cursor = conn.cursor()
         
         # Declare and execute the query
-        logging.info('  DATA Server/> Executing the query to retrieve the files...')
+        logger.info('  DATA Server/> Executing the query to retrieve the files...')
         query = """
             SELECT
                 file_uuid,
@@ -137,7 +139,7 @@ def retrieveAllFilesByProcess(process, config):
         files = cursor.fetchall()
         if files and len(files) > 0:
             for fil in files:
-                logging.info('  DATA Server/> ' + fil[0] + ' -> ' + fil[1])
+                logger.info('  DATA Server/> ' + fil[0] + ' -> ' + fil[1])
                 result.append({ 'uuid': fil[0], 'name': fil[1], 'path': fil[2] })
         return result
     except Exception as error:
@@ -159,14 +161,14 @@ def retrieveAllResources(process, config):
         conn = buildConnectionParameters(config)
 
         # Connect to the database
-        logging.info('  DATA Server/> Connecting to the database...')
+        logger.info('  DATA Server/> Connecting to the database...')
         conn = pymysql.connect(host = conn['host'], user = conn['user'], password = conn['pwd'], db = conn['db'])
 
         # Declare the custom cursor
         cursor = conn.cursor()
         
         # Declare and execute the query
-        logging.info('  DATA Server/> Executing the query to retrieve the resources...')
+        logger.info('  DATA Server/> Executing the query to retrieve the resources...')
         query = """
             SELECT
                 resource_uuid,
@@ -182,7 +184,7 @@ def retrieveAllResources(process, config):
         resources = cursor.fetchall()
         if resources and len(resources) > 0:
             for resource in resources:
-                logging.info('  DATA Server/> ' + resource[1])
+                logger.info('  DATA Server/> ' + resource[1])
                 result.append({ 'uuid': resource[0], 'name': resource[1], 'web': resource[2], 'sftp': resource[3], 'local': None })
         return result
     except Exception as error:

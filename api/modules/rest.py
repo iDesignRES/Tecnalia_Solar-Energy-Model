@@ -1,6 +1,8 @@
 from flask import jsonify
 from flask import make_response
 
+from modules.logging_config import logger
+
 
 ########## REST functions ##########
 
