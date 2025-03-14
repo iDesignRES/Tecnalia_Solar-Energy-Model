@@ -5,7 +5,6 @@ import logging
 import math
 import requests
 import resource
-import time
 import zipfile
 from datetime import timedelta
 
@@ -52,9 +51,6 @@ properties.read('/home/qgis/api/properties/api.properties')
 app.config['JWT_SECRET_KEY'] = '837cecf276fc4195a7c69d4436fc8552'
 app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(hours = 96)
 jwt = JWTManager(app)
-
-# Init logging
-#logging.basicConfig(level = logger.info)
 
 # Configure Pandas
 pd.options.mode.chained_assignment = None
@@ -363,7 +359,7 @@ def executeBuildingPreprocess(process, nutsid, user):
                             remOutput = remOutput.replace('{1}', user)
                             sftp.uploadOutputFile(outCsvFile, remOutput, config)
 
-        result = output_csv_file
+        result = outCsvFile
     except ValueError as valueError:
         raise
     except ValidationError as validationError:

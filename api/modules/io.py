@@ -234,7 +234,7 @@ def buildOutputPathsBPStep02(layer, nuts_id, config, properties):
 
     path01 = retrieveLayersTmpPath(config) + '/' + layer['name'] + '_' + nuts_id + '.' + layer['format']
     path02 = retrieveLayersTmpPath(config) + '/' + layer['name'] + '_' + nuts_id +\
-        properties['IDESIGNRES-QGIS']['idesignres.qgis.layer.repro.54009'] + '.' + layer['format']
+        '_repro54009.' + layer['format']
     return path01, path02
 
 

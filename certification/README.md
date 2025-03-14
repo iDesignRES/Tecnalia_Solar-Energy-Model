@@ -110,7 +110,35 @@ Finally, it should be noted that most of the validations have been carried out u
 <br>
 
 (5) **Automated testing**:
-Work in progress.
+Various tests have been carried out on the functions defined in the REST API. They are located in the */api/tests/* directory, and they are described as:
+
+- Test 01: the only test that checks whether the application is correctly started and running.
+- Test 02: performs three authentication checks:
+	+ (a): authentication attempt with missing parameters.
+	+ (b): authentication with incorrect credentials.
+	+ (c): authentication with correct credentials.
+- Test 03: performs checks on the execution of the PV Power Plants process:
+	+ (a): attempt to launch process with missing input parameters.
+	+ (b): attempt to launch process with wrong input parameters.
+	+ (c): attempt to launch process with correct input parameters.
+- Test 04: performs checks on the execution of the Building Energy Simulation process:
+	+ (a): attempt to launch process with missing input parameters. Due to the long input length of the function, checking each parameter can be considered a stress test for practical purposes.
+	+ (b): attempt to launch process with wrong input parameters. Due to the long input length of the function, checking each parameter can be considered a stress test for practical purposes.
+	+ (c): attempt to launch process with correct input parameters.
+	
+All defined tests has been executed successfully, using the "PyTest" Python library. The command used inside the Docker container is the following:
+
+```
+export PYTHONPATH=/home/qgis/api:$PYTHONPATH && cd /home/qgis && pytest -s --cov=api --cov-report=term-missing /home/qgis/api/tests/
+```
+
+And the command used outside the Docker container is the following:
+
+```
+sudo docker exec -it ideignres.qgis.dck bash -c "export PYTHONPATH=/home/qgis/api:$PYTHONPATH && cd /home/qgis && pytest -s --cov=api --cov-report=term-missing /home/qgis/api/tests/"
+```
+
+Code coverage was also analyzed, with an overall result of **87%**. The result can be consulted in this directory (file *Step2__Automated testing__Result.png*). Most of the uncovered code relates to handling unthrown exceptions. Throwing them would require changes to the API configuration file, which greatly complicates test definition.
 
 <br>
 

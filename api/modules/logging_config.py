@@ -1,5 +1,6 @@
 import logging
+import sys
 
 # Global configuration
-logging.basicConfig(level = logging.INFO)
-logger = logging.getLogger('idesignres_logger')
+logging.basicConfig(level = logging.INFO, format='%(asctime)s - %(message)s', stream = sys.stdout)
+logger = logging.getLogger()

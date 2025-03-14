@@ -20,7 +20,7 @@ def executePVPowerPlantsProcess():
         
         # Authenticate
         print('Process/>  Authenticating...')
-        response = requests.post(config['URL']['url.auth'], json = authPayload)
+        response = requests.post(config['URL']['url.auth'], json = authPayload, timeout = 10)
         if response.status_code != 200:
             raise Exception('Process/>  Authentication error!')
         print('Process/>  Authentication [OK]')
@@ -43,10 +43,12 @@ def executePVPowerPlantsProcess():
 
             # Execute the process
             print('Process/>  Executing the PV Power Plants process (please wait)...')
-            response = requests.post(config['URL']['url.pv'], json = processPayload, headers = headers)
+            response = requests.post(config['URL']['url.pv'], json = processPayload, headers = headers, timeout = 10)
             if response.status_code != 200:
                 raise Exception('Process/>  An error occurred executing the PV Power Plants process!')
             print('Process/>  [Process OK]')
+    except requests.exceptions.Timeout:
+        print('The remote connection could not be established!')
     except Exception as error:
         print(error)
     

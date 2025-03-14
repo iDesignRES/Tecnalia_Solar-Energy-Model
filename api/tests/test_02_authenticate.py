@@ -1,14 +1,21 @@
 import json
-import requests
+import logging
+import pytest
 
+from flask import current_app, request
 from api.api import app
 
 
-TEST_URL = 'http://localhost:5010/api/qgis/authenticate'
+@pytest.fixture
+def client():
+    ''' Define the test_client '''
+
+    with app.app_context():
+        yield app.test_client()
 
 
 # Test 02 (a) -> Missing input parameters
-def testMissingInputParameters():
+def testMissingInputParameters(client, caplog):
     ''' Test 02 (a) -> Missing input parameters. '''
     
     # Load the authentication payload
@@ -20,19 +27,21 @@ def testMissingInputParameters():
 
     # Call the API function (POST)
     for payload in testPayloads:
-        response = requests.post(TEST_URL, json = payload)
+        response = client.post('/api/qgis/authenticate',
+                               data = json.dumps(payload),
+                               content_type = 'application/json')
 
         # Check the status code: 400
         assert response.status_code == 400
 
         # Check the 'value' property
-        assert 'value' in response.json() and\
-            not response.json()['value'] is None and\
-            response.json()['value'] == False
+        assert 'value' in response.get_json() and\
+            not response.get_json()['value'] is None and\
+            response.get_json()['value'] == False
 
 
 # Test 02 (b) -> Authentication failure
-def testtestAuthenticationFailure():
+def testAuthenticationFailure(client, caplog):
     ''' Test 02 (b) -> Authentication failure. '''
 
     # Load the authentication payload
@@ -46,19 +55,21 @@ def testtestAuthenticationFailure():
 
     # Call the API function (POST)
     for payload in testPayloads:
-        response = requests.post(TEST_URL, json = payload)
+        response = client.post('/api/qgis/authenticate',
+                               data = json.dumps(payload),
+                               content_type = 'application/json')
 
         # Check the status code: 401
         assert response.status_code == 401
 
         # Check the 'value' property
-        assert 'value' in response.json() and\
-            not response.json()['value'] is None and\
-            response.json()['value'] == False
+        assert 'value' in response.get_json() and\
+            not response.get_json()['value'] is None and\
+            response.get_json()['value'] == False
 
 
 # Test 02 (c) -> Authentication successful
-def testAuthenticationSuccessful():
+def testAuthenticationSuccessful(client, caplog):
     ''' Test 02 (c) -> Authentication successful. '''
 
     # Load the authentication payload
@@ -66,10 +77,12 @@ def testAuthenticationSuccessful():
         authPayload = json.load(payloadFile)
 
     # Call the API function (POST)
-    response = requests.post(TEST_URL, json = authPayload)
+    response = client.post('/api/qgis/authenticate',
+                           data = json.dumps(authPayload),
+                           content_type = 'application/json')
 
     # Check the status code: 200
     assert response.status_code == 200
 
     # Check the 'value' property
-    assert 'value' in response.json() and response.json()['value']
+    assert 'value' in response.get_json() and response.get_json()['value']

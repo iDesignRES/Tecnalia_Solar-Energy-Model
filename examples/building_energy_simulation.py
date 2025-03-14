@@ -20,7 +20,7 @@ def executeBuildingEnergySimulationProcess():
         
         # Authenticate
         print('Process/>  Authenticating...')
-        response = requests.post(config['URL']['url.auth'], json = authPayload)
+        response = requests.post(config['URL']['url.auth'], json = authPayload, timeout = 10)
         if response.status_code != 200:
             raise Exception('Process/>  Authentication error!')
         print('Process/>  Authentication [OK]')
@@ -43,10 +43,12 @@ def executeBuildingEnergySimulationProcess():
 
             # Execute the process
             print('Process/>  Executing the Building Energy Simulation process (please wait about 8-10 minutes)...')
-            response = requests.post(config['URL']['url.bes'], json = processPayload, headers = headers)
+            response = requests.post(config['URL']['url.bes'], json = processPayload, headers = headers, timeout = 10)
             if response.status_code != 200:
                 raise Exception('Process/>  An error occurred executing the Building Energy Simulation process!')
             print('Process/>  [Process OK]')
+    except requests.exceptions.Timeout:
+        print('The remote connection could not be established!')
     except Exception as error:
         print(error)
     
