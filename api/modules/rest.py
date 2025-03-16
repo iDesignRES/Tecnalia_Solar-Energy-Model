@@ -56,6 +56,20 @@ def buildResponse200Value(value, properties):
     return response
 
 
+# Function: Build a 200-OK response with time series
+def buildResponse200TimeSeries(value, properties):
+    ''' Function to build an OK response, including a time series. '''
+
+    # Build the header
+    headerTypeHeader = properties['IDESIGNRES-REST']['idesignres.rest.content.type.header']
+    headerTypeValue = properties['IDESIGNRES-REST']['idesignres.rest.content.type.value']
+    
+    # Build and return the response
+    response = make_response(jsonify(value), int(properties['IDESIGNRES-REST']['idesignres.rest.ok.code']))
+    response.headers[headerTypeHeader] = headerTypeValue
+    return response
+
+
 # Function: Build a 400-Bad request response
 def buildResponse400(errorMessage, properties):
     ''' Function to build a Bad Request response. '''

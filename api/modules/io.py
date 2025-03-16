@@ -6,6 +6,8 @@ from modules.logging_config import logger
 
 from pathlib import Path
 
+import pandas as pd
+
 
 ########## Path functions ##########
 
@@ -294,3 +296,13 @@ def downloadRemoteFile(remote_url, local_file_path, chunk_size, timeout, propert
     except Exception as error:
         raise
 
+
+########## Other I/O functions ##########
+# Function: Build a dictionary from PV output file
+def buildDictionaryFromPVOutputFile(filePath):
+    dictResult = []
+    with open(filePath, 'r') as fil:
+        dfResult = pd.read_csv(filePath, sep = ';')
+        for index, row in dfResult.iterrows():
+            dictResult.append({'time(UTC)': row[0], 'Pthermal': row[1], 'Ppv': row[2]})
+    return dictResult

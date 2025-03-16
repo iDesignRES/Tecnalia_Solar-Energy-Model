@@ -501,6 +501,8 @@ def executePVPowerPlantsProcess():
 
         # Create the OK response
         response = rest.buildResponse200Value(properties['IDESIGNRES-REST']['idesignres.rest.result.download'], properties)
+        if not request.headers.get('X-Julia') is None and bool(request.headers.get('X-Julia')):
+            response = rest.buildResponse200TimeSeries(io.buildDictionaryFromPVOutputFile(outputs[0]), properties)
     except ValueError as valueError:
         # Create a Bad Request response
         response = rest.buildResponse400(str(valueError), properties)
