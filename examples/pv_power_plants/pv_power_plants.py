@@ -3,6 +3,9 @@ import os
 import requests
 import sys
 
+import pandas as pd
+import numpy as np
+
 
 URL_AUTH = 'https://idesignres.digital.tecnalia.dev/api/qgis/authenticate'
 URL_PROCESS  = 'https://idesignres.digital.tecnalia.dev/api/qgis/pv-power-plants-process'
@@ -46,7 +49,14 @@ def executePVPowerPlantsProcess(processPayloadFilePath):
             if response.status_code != 200:
                 raise Exception('Process/>  An error occurred executing the PV Power Plants process!')
             print('Process/>  [Process OK]')
-            print(response.text)
+
+            # Return the result
+            data = pd.DataFrame(response.json())
+            Ppv = data['Ppv'].to_numpy()
+            numeric_Ppv = np.array([float(x.replace(',', '.')) for x in Ppv])
+            Pthermal = data['Pthermal'].to_numpy()
+            numeric_Pthermal = np.array([float(x.replace(',', '.')) for x in Pthermal])
+            return numeric_Ppv, numeric_Pthermal
     except Exception as error:
         print('Process/>  An error occurred executing the PV Power Plants process!')
         print(error)
