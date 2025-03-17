@@ -4,8 +4,8 @@ import requests
 import sys
 
 
-URL_AUTH = 'http://10.100.0.120:5010/api/qgis/authenticate'
-URL_PROCESS  = 'http://10.100.0.120:5010/api/qgis/pv-power-plants-process'
+URL_AUTH = 'https://idesignres.digital.tecnalia.dev/api/qgis/authenticate'
+URL_PROCESS  = 'https://idesignres.digital.tecnalia.dev/api/qgis/pv-power-plants-process'
 
 
 # Function: Execute the PV Power Plants process
