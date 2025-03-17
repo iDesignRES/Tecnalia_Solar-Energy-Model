@@ -14,36 +14,26 @@ poetry install
 
 Once installed, proceed with the execution:
 ```
-poetry run python pv_power_plants.py process.json
+poetry run python pv_power_plants.py process.json <start_time> <end_time>
 ```
 
-The client program has a single input parameter: *process.json*, which contains the payload to be sent to the centralized REST API.
+The client program has the following input parameters:
 
-When the execution ends, the process returns as output a time series similar to the following:
+- *process.json*, which contains the payload to be sent to the centralized REST API.
+- *<start_time>*, which represents the date **from** which the results are to be obtained, with the format *yyyy-MM-ddTHH:mm:ss*.
+- *<end_time>*, which represents the date **until** which the results are to be obtained, with the format *yyyy-MM-ddTHH:mm:ss*.
+
+When the execution ends, the process returns as output a filtered time series similar to the following (for example, between *2019-01-01 01:00:00* and *2019-01-31 23:00:00*):
 ```
 [
-    { "Ppv": "0,0", "Pthermal": "0,0", "time(UTC)": "2019-01-01 00:00:00" },
     { "Ppv": "0,0", "Pthermal": "0,0", "time(UTC)": "2019-01-01 01:00:00" },
     { "Ppv": "0,0", "Pthermal": "0,0", "time(UTC)": "2019-01-01 02:00:00" },
     { "Ppv": "0,0", "Pthermal": "0,0", "time(UTC)": "2019-01-01 03:00:00" },
     { "Ppv": "0,0", "Pthermal": "0,0", "time(UTC)": "2019-01-01 04:00:00" },
-    { "Ppv": "0,0", "Pthermal": "0,0", "time(UTC)": "2019-01-01 05:00:00" },
-    { "Ppv": "0,0", "Pthermal": "0,0", "time(UTC)": "2019-01-01 06:00:00" },
-    { "Ppv": "0,0", "Pthermal": "0,0", "time(UTC)": "2019-01-01 07:00:00" },
-    { "Ppv": "10802,436960619998", "Pthermal": "16770,4875", "time(UTC)": "2019-01-01 08:00:00" },
-    { "Ppv": "52280,47640937", "Pthermal": "145662,075", "time(UTC)": "2019-01-01 09:00:00" },
-    { "Ppv": "49919,20137375", "Pthermal": "164349,9", "time(UTC)": "2019-01-01 10:00:00" },
-    { "Ppv": "43312,7553725", "Pthermal": "139829,625", "time(UTC)": "2019-01-01 11:00:00" },
-    { "Ppv": "38147,73946937", "Pthermal": "159838,0875", "time(UTC)": "2019-01-01 12:00:00" },
-    { "Ppv": "39763,918840620005", "Pthermal": "115772,9625", "time(UTC)": "2019-01-01 13:00:00" },
-    { "Ppv": "46548,423876880006", "Pthermal": "123481,8", "time(UTC)": "2019-01-01 14:00:00" },
-    { "Ppv": "50649,60551562", "Pthermal": "86754,0375", "time(UTC)": "2019-01-01 15:00:00" },
-    { "Ppv": "22610,06340437", "Pthermal": "40335,75", "time(UTC)": "2019-01-01 16:00:00" },
-    { "Ppv": "0,0", "Pthermal": "0,0", "time(UTC)": "2019-01-01 17:00:00" },
     . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
     . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
     . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
-    { "Ppv": "0,0", "Pthermal": "0,0", "time(UTC)": "2019-12-31 23:00:00" }
+    { "Ppv": "0,0", "Pthermal": "0,0", "time(UTC)": "2019-01-31 23:00:00" }
 ]
 ```
 

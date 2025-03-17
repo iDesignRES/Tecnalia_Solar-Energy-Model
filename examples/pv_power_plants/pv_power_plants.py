@@ -6,13 +6,15 @@ import sys
 import pandas as pd
 import numpy as np
 
+from datetime import datetime
 
-URL_AUTH = 'https://idesignres.digital.tecnalia.dev/api/qgis/authenticate'
-URL_PROCESS  = 'https://idesignres.digital.tecnalia.dev/api/qgis/pv-power-plants-process'
+
+URL_AUTH = 'http://10.100.0.120:5010/api/qgis/authenticate'
+URL_PROCESS  = 'http://10.100.0.120:5010/api/qgis/pv-power-plants-process'
 
 
 # Function: Execute the PV Power Plants process
-def executePVPowerPlantsProcess(processPayloadFilePath):
+def executePVPowerPlantsProcess(processPayload, startTime, endTime):
     ''' Function to execute the PV Power Plants process. '''
 
     try:
@@ -37,12 +39,6 @@ def executePVPowerPlantsProcess(processPayloadFilePath):
                         'X-Julia': 'True'
             }
 
-            # Load the process payload
-            with open(processPayloadFilePath, 'r') as payloadFile:
-                processPayload = json.load(payloadFile)
-            if not processPayload or processPayload is None:
-                raise Exception('Process/>  Could not load the process payload!')
-
             # Execute the process
             print('Process/>  Executing the PV Power Plants process (please wait)...')
             response = requests.post(URL_PROCESS, json = processPayload, headers = headers)
@@ -50,11 +46,15 @@ def executePVPowerPlantsProcess(processPayloadFilePath):
                 raise Exception('Process/>  An error occurred executing the PV Power Plants process!')
             print('Process/>  [Process OK]')
 
-            # Return the result
+            # Return the result (filtered)
             data = pd.DataFrame(response.json())
-            Ppv = data['Ppv'].to_numpy()
+            data['time(UTC)'] = pd.to_datetime(data['time(UTC)'])
+            start = pd.to_datetime(startTime.strftime("%Y-%m-%d %H:%M:%S"))
+            end = pd.to_datetime(endTime.strftime("%Y-%m-%d %H:%M:%S"))
+            dataFiltered = data[(data['time(UTC)'] >= start) & (data['time(UTC)'] <= end)]
+            Ppv = dataFiltered['Ppv'].to_numpy()
             numeric_Ppv = np.array([float(x.replace(',', '.')) for x in Ppv])
-            Pthermal = data['Pthermal'].to_numpy()
+            Pthermal = dataFiltered['Pthermal'].to_numpy()
             numeric_Pthermal = np.array([float(x.replace(',', '.')) for x in Pthermal])
             return numeric_Ppv, numeric_Pthermal
     except Exception as error:
@@ -66,17 +66,41 @@ def executePVPowerPlantsProcess(processPayloadFilePath):
 def main():
     ''' Main function '''
 
-    # Read input parameters:
-    # [0]: file name
-    # [1]: input data file path
-    if len(sys.argv) > 1:
+    try:
+        # Read input parameters:
+        # [0]: file name
+        # [1]: input data file path
+        # [2]: start datetime (yyyy-MM-ddTHH:mm:ss)
+        # [3]: end datetime (yyyy-MM-ddTHH:mm:ss)
+        if len(sys.argv) < 4:
+            raise Exception('The number of input parameters is incorrect!')
         if not os.path.exists(sys.argv[1].strip()):
-            print('Process/>  The input data file does not exist!')
-        else:
-            executePVPowerPlantsProcess(sys.argv[1].strip())
-    else:
-        print('Process/>  No input parameters were provided!')
+            raise Exception('The input data file does not exist!')
 
+        # Load the process payload
+        with open(sys.argv[1].strip(), 'r') as payloadFile:
+            processPayload = json.load(payloadFile)
+        if not processPayload or processPayload is None:
+            raise Exception('Could not load the process payload!')
+        
+        # Validate the datetime objects
+        try:
+            startTime = datetime.strptime(sys.argv[2], "%Y-%m-%dT%H:%M:%S")
+        except ValueError:
+            raise Exception('The second input parameter (start datetime) has an incorrect format (yyyy-MM-ddTHH:mm:ss)')
+        try:
+            endTime = datetime.strptime(sys.argv[3], "%Y-%m-%dT%H:%M:%S")
+        except ValueError:
+            raise Exception('The third input parameter (end datetime) has an incorrect format (yyyy-MM-ddTHH:mm:ss)')
+        if (endTime <= startTime):
+            raise Exception('The end time cannot be less than the start time!')
+
+        # Execute the processs
+        executePVPowerPlantsProcess(processPayload, startTime, endTime)
+    except Exception as exception:
+        print(f'Process/>  {exception}') 
+    
+    
 
 if __name__ == "__main__":
     main()
