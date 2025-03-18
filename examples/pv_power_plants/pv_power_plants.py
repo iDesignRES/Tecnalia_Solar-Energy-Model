@@ -14,16 +14,10 @@ URL_PROCESS  = 'https://idesignres.digital.tecnalia.dev/api/qgis/pv-power-plants
 
 
 # Function: Execute the PV Power Plants process
-def executePVPowerPlantsProcess(processPayload, startTime, endTime):
+def executePVPowerPlantsProcess(authPayload, processPayload, startTime, endTime, capexTH, capexPV):
     ''' Function to execute the PV Power Plants process. '''
 
     try:
-        # Load the authentication payload
-        with open('auth.json', 'r') as payloadFile:
-            authPayload = json.load(payloadFile)
-        if not authPayload or authPayload is None:
-            raise Exception('Process/>  Could not load the authentication payload!')
-        
         # Authenticate
         print('Process/>  Authenticating...')
         response = requests.post(URL_AUTH, json = authPayload)
@@ -39,11 +33,15 @@ def executePVPowerPlantsProcess(processPayload, startTime, endTime):
                         'X-Julia': 'True'
             }
 
+            # Modify the process payload
+            processPayload['system_cost_thermal'] = float(capexTH)
+            processPayload['system_cost_pv'] = float(capexPV)
+
             # Execute the process
             print('Process/>  Executing the PV Power Plants process (please wait)...')
             response = requests.post(URL_PROCESS, json = processPayload, headers = headers)
             if response.status_code != 200:
-                raise Exception('Process/>  An error occurred executing the PV Power Plants process!')
+                raise Exception()
             print('Process/>  [Process OK]')
 
             # Return the result (filtered)
@@ -68,35 +66,53 @@ def main():
 
     try:
         # Read input parameters:
-        # [0]: file name
-        # [1]: input data file path
-        # [2]: start datetime (yyyy-MM-ddTHH:mm:ss)
-        # [3]: end datetime (yyyy-MM-ddTHH:mm:ss)
-        if len(sys.argv) < 4:
-            raise Exception('The number of input parameters is incorrect!')
+        # [0]: auth file name
+        # [1]: input file name
+        # [2]: input data file path
+        # [3]: start datetime (yyyy-MM-ddTHH:mm:ss)
+        # [4]: end datetime (yyyy-MM-ddTHH:mm:ss)
+        # [5]: capex Thermal
+        # [6]: capex PV
+        if len(sys.argv) < 7:
+            raise Exception('The number of input parameters is incorrect! (7)')
         if not os.path.exists(sys.argv[1].strip()):
+            raise Exception('The authorization file does not exist!')
+        if not os.path.exists(sys.argv[2].strip()):
             raise Exception('The input data file does not exist!')
+        
+        # Load the authorization payload
+        with open(sys.argv[1].strip(), 'r') as authPayloadFile:
+            authPayload = json.load(authPayloadFile)
+        if not authPayload or authPayload is None:
+            raise Exception('Could not load the authorization payload!')
 
         # Load the process payload
-        with open(sys.argv[1].strip(), 'r') as payloadFile:
+        with open(sys.argv[2].strip(), 'r') as payloadFile:
             processPayload = json.load(payloadFile)
         if not processPayload or processPayload is None:
             raise Exception('Could not load the process payload!')
         
         # Validate the datetime objects
         try:
-            startTime = datetime.strptime(sys.argv[2], "%Y-%m-%dT%H:%M:%S")
+            startTime = datetime.strptime(sys.argv[3], "%Y-%m-%dT%H:%M:%S")
         except ValueError:
-            raise Exception('The second input parameter (start datetime) has an incorrect format (yyyy-MM-ddTHH:mm:ss)')
+            raise Exception('The third input parameter (start datetime) has an incorrect format (yyyy-MM-ddTHH:mm:ss)')
         try:
-            endTime = datetime.strptime(sys.argv[3], "%Y-%m-%dT%H:%M:%S")
+            endTime = datetime.strptime(sys.argv[4], "%Y-%m-%dT%H:%M:%S")
         except ValueError:
-            raise Exception('The third input parameter (end datetime) has an incorrect format (yyyy-MM-ddTHH:mm:ss)')
+            raise Exception('The fourth input parameter (end datetime) has an incorrect format (yyyy-MM-ddTHH:mm:ss)')
         if (endTime <= startTime):
             raise Exception('The end time cannot be less than the start time!')
+        
+        # Validate the capex parameters
+        try:
+            float(sys.argv[5])
+            float(sys.argv[6])
+        except ValueError:
+            raise Exception('The "CAPEX Thermal" and "CAPEX PV" input parameters must be float numbers!')
 
         # Execute the processs
-        executePVPowerPlantsProcess(processPayload, startTime, endTime)
+        executePVPowerPlantsProcess(authPayload, processPayload, startTime, endTime, sys.argv[5], sys.argv[6])
     except Exception as exception:
         print(f'Process/>  {exception}') 
     

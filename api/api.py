@@ -404,8 +404,6 @@ def executePVPowerPlantsProcess():
     try:
         # Validate if the input corresponds to the schema
         validate(instance = body, schema = jsonSchema.pvPowerPlantsProcessSchema)
-        if not body['nutsid'].strip() or not body['slope_angle'] or not user.strip():
-            raise ValueError(properties['IDESIGNRES-EXCEPTIONS']['idesignres.exception.validation.json.empty.property'])
         
         # Perform other validations (Valid NUTSID)
         nutsids = [nutsid.strip() for nutsid in config['IDESIGNRES-PARAMETERS']['idesignres.params.nutsids'].split(',')]
@@ -417,7 +415,7 @@ def executePVPowerPlantsProcess():
             raise ValueError(properties['IDESIGNRES-EXCEPTIONS']['idesignres.exception.validation.output'])
         logger.info('')
         
-        # Retrieve the processess from the database
+        # Retrieve the processes from the database
         processList = db.retrieveAllProcesses(config)
         if processList and len(processList) > 0 and processList[0]:
             # Check if the result already exists
@@ -453,9 +451,9 @@ def executePVPowerPlantsProcess():
                     raise ValueError(properties['IDESIGNRES-EXCEPTIONS']['idesignres.exception.no.input.data.preprocess'])
             
             # Step 01 -> Load the specific configuration
-            listParametersTH, listParametersPV, systemCost, landUseTH, landUsePV, minGhiTH, minGhiPV,\
-            effTH, effOp, aperture, tCoord, year, tilt, azimuth, tracking, loss, opexTH, opexPV =\
-                qgisPV2.pv2Step01(config)
+            listParametersTH, listParametersPV, systemCostTH, systemCostPV, landUseTH, landUsePV, minGhiTH,\
+                minGhiPV, effTH, effOp, aperture, convertCoord, year, tilt, azimuth, tracking, loss, opexTH, opexPV =\
+                    qgisPV2.pv2Step01(body, config)
             
             # Step 02 -> Download the result of the Solar preprocess and load the data
             scadaTH, scadaPV = qgisPV2.pv2Step02(user, body['nutsid'].strip(), processList[0]['uuid'], config)
@@ -463,27 +461,27 @@ def executePVPowerPlantsProcess():
                 raise ValueError(properties['IDESIGNRES-EXCEPTIONS']['idesignres.exception.no.input.data.preprocess'])
                 
             # Step 03 -> Calculate the available thermal area
-            areaTH, powerTH, capexTH = qgisPV2.pv2Step03(listParametersTH, systemCost, landUseTH)
+            areaTH, powerTH, capexTH = qgisPV2.pv2Step03(listParametersTH, systemCostTH, landUseTH)
                 
             # Step 04 -> Calculate the available PV area
-            areaPV, powerPV, capexPV = qgisPV2.pv2Step04(listParametersPV, systemCost, landUsePV)
+            areaPV, powerPV, capexPV = qgisPV2.pv2Step04(listParametersPV, systemCostPV, landUsePV)
                 
             # Step 05 -> Thermal production
-            nuts2TH, rowsTH, potDistTH, dfTH = qgisPV2.pv2Step05(scadaTH, areaTH, minGhiTH,
-                landUseTH, effTH, effOp, aperture, tCoord, year)
+            nuts2TH, rowsTH, potDistTH, dfTH, scadaPV = qgisPV2.pv2Step05(scadaTH, scadaPV, areaTH, minGhiTH,
+                landUseTH, effTH, effOp, aperture, convertCoord, year)
                 
             # Step 06 -> PV production
             nameNuts2, nuts2PV, potDistPV, dfPV = qgisPV2.pv2Step06(rowsTH, scadaPV,
-                areaPV, minGhiPV, landUsePV, tilt, azimuth, tracking, loss, tCoord, year)
+                areaPV, minGhiPV, landUsePV, tilt, azimuth, tracking, loss, convertCoord, year)
               
             # Step 07 -> Calculate the aggregated production
             prodAggregated = qgisPV2.pv2Step07(dfTH, dfPV, nameNuts2)
                 
-            # Step 08 -> Calculate the distribution production
-            nuts2Distrib = qgisPV2.pv2Step08(nuts2TH, nuts2PV)
+            # Step 08 -> Calculate the distributed production
+            nuts2Distrib = qgisPV2.pv2Step08(dfTH, nuts2TH, nuts2PV)
             
             # Step 09 -> Save the results
-            outputs = qgisPV2.pv2Step09(prodAggregated, nuts2Distrib, nameNuts2, potDistTH,
+            outputs = qgisPV2.pv2Step09(prodAggregated, nuts2Distrib, nameNuts2, dfTH, potDistTH,
                 potDistPV, opexTH, opexPV, config)
                         
             # Compress and upload the output files to the SFTP Server
@@ -830,7 +828,7 @@ def executeBuildingEnergySimulationProcess():
                            
                 # Step 22 -> Save the final result
                 output = qgisBP2.bp2Step22(dfInput, dfAnualResults, dictConsolidated, dictHourlyResults, config)
-                del dfInput, dfAnualResults, dictConsolidated, dictHourlyResults
+                del dfInput, dfAnualResults, dictConsolidated
                             
                 # Compress and upload the output file to the SFTP Server
                 if output:
@@ -845,6 +843,8 @@ def executeBuildingEnergySimulationProcess():
 
         # Create the OK response
         response = rest.buildResponse200Value(properties['IDESIGNRES-REST']['idesignres.rest.result.download'], properties)
+        #if not request.headers.get('X-Julia') is None and bool(request.headers.get('X-Julia')):
+        #    response = rest.buildResponse200TimeSeries(io.buildDictionaryFromBESHourlyResults(dictHourlyResults), properties)
     except ValueError as valueError:
         # Create a Bad Request response
         response = rest.buildResponse400(str(valueError), properties)

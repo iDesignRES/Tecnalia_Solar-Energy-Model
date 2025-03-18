@@ -17,11 +17,87 @@ pvPowerPlantsProcessSchema = {
   "type": "object",
   "properties": {
     "nutsid": {"type": "string"},
-    "slope_angle": {"type": "integer", "minimum": 0, "maximum": 360}
+    "slope_angle": {"type": "integer", "minimum": 0, "maximum": 360},
+    "area_total_thermal": {
+        "anyOf": [
+            {"type": "null"},
+            {"type": "integer", "minimum": 0, "maximum": 10000000000}
+        ]
+    },
+    "area_total_pv": {
+        "anyOf": [
+            {"type": "null"},
+            {"type": "integer", "minimum": 0, "maximum": 10000000000}
+        ]
+    },
+    "power_thermal": {
+        "anyOf": [
+            {"type": "null"},
+            {"type": "integer", "minimum": 0, "maximum": 1000000000000}
+        ]
+    },
+    "power_pv": {
+        "anyOf": [
+            {"type": "null"},
+            {"type": "integer", "minimum": 0, "maximum": 1000000000000}
+        ]
+    },
+    "capex_thermal": {
+        "anyOf": [
+            {"type": "null"},
+            {"type": "number", "minimum": 0, "maximum": 500000000000}
+        ]
+    },
+    "capex_pv": {
+        "anyOf": [
+            {"type": "null"},
+            {"type": "number", "minimum": 0, "maximum": 500000000000}
+        ]
+    },
+    "tilt": {"type": "integer", "minimum": 0, "maximum": 90},
+    "azimuth": {"type": "integer", "minimum": 0, "maximum": 360},
+    "tracking_percentage": {"type": "integer", "minimum": 0, "maximum": 100},
+    "loss": {"type": "number", "minimum": 8, "maximum": 20},
+    "efficiency_thermal": {"type": "number", "minimum": 25, "maximum": 65},
+    "efficiency_optical": {"type": "number", "minimum": 45, "maximum": 85},
+    "aperture": {"type": "number", "minimum": 25, "maximum": 75},
+    "system_cost_thermal": {"type": "number", "minimum": 1, "maximum": 10},
+    "system_cost_pv": {"type": "number", "minimum": 0.2, "maximum": 1},
+    "opex_thermal": {"type": "integer", "minimum": 0, "maximum": 40000},
+    "opex_pv": {"type": "integer", "minimum": 0, "maximum": 30000},
+    "min_ghi_thermal": {"type": "integer", "minimum": 1500, "maximum": 2500},
+    "min_ghi_pv": {"type": "integer", "minimum": 500, "maximum": 2000},
+    "land_use_thermal": {"type": "integer", "minimum": 25, "maximum": 100},
+    "land_use_pv": {"type": "integer", "minimum": 50, "maximum": 200},
+    "convert_coord": {"type": "integer", "enum": [0, 1]},
+    "pvgis_year": {"type": "integer", "minimum": 1900, "maximum": 2025}
   },
   "required": [
     "nutsid",
-    "slope_angle"
+    "slope_angle",
+    "area_total_thermal",
+    "area_total_pv",
+    "power_thermal",
+    "power_pv",
+    "capex_thermal",
+    "capex_pv",
+    "tilt",
+    "azimuth",
+    "tracking_percentage",
+    "loss",
+    "efficiency_thermal",
+    "efficiency_optical",
+    "aperture",
+    "system_cost_thermal",
+    "system_cost_pv",
+    "opex_pv",
+    "opex_thermal",
+    "min_ghi_thermal",
+    "min_ghi_pv",
+    "land_use_thermal",
+    "land_use_pv",
+    "convert_coord",
+    "pvgis_year"
   ]
 }
 

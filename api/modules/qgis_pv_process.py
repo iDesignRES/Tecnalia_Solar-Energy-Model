@@ -20,43 +20,50 @@ from modules.logging_config import logger
 
 
 # Function: PV Power Plants -> Process -> Step 01 -> Load the specific configuration
-def pv2Step01(config):
+def pv2Step01(body, config):
     ''' PV Power Plants -> Process -> Step 01 : Load the specific configuration. '''
-
-    logger.info('  QGIS Server/> PV Power Plants -> Process -> Step 01 -> Loading the specific configuration...')
-    with open(config['IDESIGNRES-PATH']['idesignres.path.pv.config'], 'r') as configFile:
-        configuration = json.load(configFile)
-        if not configuration:
-            raise ValueError(properties['IDESIGNRES-EXCEPTIONS']['idesignres.exception.configuration.not.loaded'])
-            
-        listParametersTH = [configuration['system']['area_total_thermal'],
-            configuration['system']['power_thermal'],
-            configuration['system']['capex_thermal']]
-        listParametersPV = [configuration['system']['area_total_pv'],
-            configuration['system']['power_pv'],
-            configuration['system']['capex_pv']]
-        systemCost = int(configuration['system']['system_cost']) # in €
-        landUseTH = int(configuration['system']['land_use_thermal'])  # in W/m2
-        landUsePV = int(configuration['system']['land_use_pv'])  # in W/m2
-        minGhiTH = int(configuration['system']['min_ghi_thermal'])  # in W/m2
-        minGhiPV = int(configuration['system']['min_ghi_pv'])  # in W/m2
-        effTH = float(configuration['system']['efficiency_thermal'] / 100)
-        effOp = float(configuration['system']['efficiency_optical'] / 100)
-        aperture = float(configuration['system']['aperture'] / 100)
-        tCoord = True if int(configuration['system']['type_coord']) == 1 else False
-        year = int(configuration['system']['pvgis_year'])
-        tilt = int(configuration['system']['tilt'])
-        azimuth = int(configuration['system']['azimuth'])
-        tracking = int(configuration['system']['tracking'])
-        loss = float(configuration['system']['loss'])  # in %
-        opexTH = int(configuration['system']['opex_thermal'])  # in €/W
-        opexPV = int(configuration['system']['opex_pv'])  # in €/W
+    
+    logger.info('  QGIS Server/> PV Power Plants -> Process -> Step 01 -> Building the specific configuration...')
+    areaAvailableTH = checkLimits(body, 'area_total_thermal', 0, 10 ** 10, 0) if 'area_total_thermal' in body else None
+    powerTH = checkLimits(body, 'power_thermal', 0, 10 ** 12, 0) if 'power_thermal' in body else None
+    capexTH = checkLimits(body, 'capex_thermal', 0, 5 * 10 ** 11, 0) if 'capex_thermal' in body else None
+    if areaAvailableTH is None and powerTH is None and capexTH is None:
+        areaAvailableTH = 0
+        powerTH, capexTH = None, None
+        logger.info('  QGIS Server/> PV Power Plants -> Process -> Step 01 -> Default value area TH is ' + str(areaAvailableTH))
+    areaAvailablePV = checkLimits(body, 'area_total_pv', 0, 10 ** 10, 0) if 'area_total_pv' in body else None
+    powerPV = checkLimits(body, 'power_pv', 0, 10 ** 12, 0) if 'power_pv' in body else None
+    capexPV = checkLimits(body, 'capex_pv', 0, 5 * 10 ** 11, 0) if 'capex_pv' in body else None
+    if areaAvailablePV is None and powerPV is None and capexPV is None:
+        areaAvailablePV = 0
+        powerPV, capexPV = None, None
+        logger.info('  QGIS Server/> PV Power Plants -> Process -> Step 01 -> Default value area PV is ' + str(areaAvailablePV))
+    
+    listParametersTH = [areaAvailableTH, powerTH, capexTH]
+    listParametersPV = [areaAvailablePV, powerPV, capexPV]
+    systemCostTH = checkLimits(body, 'system_cost_thermal', 1, 10, 5)  # in €
+    systemCostPV = checkLimits(body, 'system_cost_pv', 0.2, 1, 0.5)    # in €
+    loss = checkLimits(body, 'loss', 8, 20, 14)  # in %
+    effTH = checkLimits(body, 'efficiency_thermal', 25, 65, 45) / 100
+    effOp = checkLimits(body, 'efficiency_optical', 45, 85, 65) / 100
+    aperture = checkLimits(body, 'aperture', 25, 75, 50) / 100
+    tilt = checkLimits(body, 'tilt', 0, 90, 30)
+    azimuth = checkLimits(body, 'azimuth', 0, 360, 180)
+    tracking = checkLimits(body, 'tracking_percentage', 0, 100, 60) / 100
+    opexTH = checkLimits(body, 'opex_thermal', 0, 40000, 20000)  # in €/W
+    opexPV = checkLimits(body, 'opex_pv', 0, 30000, 15000)       # in €/W
+    minGhiTH = checkLimits(body, 'min_ghi_thermal', 1500, 2500, 2000)  # in W/m2
+    minGhiPV = checkLimits(body, 'min_ghi_pv', 500, 2000, 1000)        # in W/m2
+    landUseTH = checkLimits(body, 'land_use_thermal', 25, 100, 50)  # in W/m2
+    landUsePV = checkLimits(body, 'land_use_pv', 50, 200, 100)      # in W/m2
+    convertCoord = True if int(body['convert_coord']) == 1 else False
+    year = int(body['pvgis_year'])
     
     # Finish
     logger.info('  QGIS Server/> PV Power Plants -> Process -> Step 01 -> [OK]')
     logger.info('')
-    return listParametersTH, listParametersPV, systemCost, landUseTH, landUsePV,\
-        minGhiTH, minGhiPV, effTH, effOp, aperture, tCoord, year, tilt, azimuth,\
+    return listParametersTH, listParametersPV, systemCostTH, systemCostPV, landUseTH, landUsePV,\
+        minGhiTH, minGhiPV, effTH, effOp, aperture, convertCoord, year, tilt, azimuth,\
         tracking, loss, opexTH, opexPV
 
 
@@ -87,12 +94,12 @@ def pv2Step02(currentUser, nutsId, processId, config):
 
 
 # Function: PV Power Plants -> Process -> Step 03 -> Calculate the available thermal area
-def pv2Step03(listParametersTH, systemCost, landUseTH):
+def pv2Step03(listParametersTH, systemCostTH, landUseTH):
     ''' PV Power Plants -> Process -> Step 03 : Calculate the available thermal area. '''
 
     logger.info('  QGIS Server/> PV Power Plants -> Process -> Step 03 -> Calculating the available thermal area...')
     areaTH, powerTH, capexTH = getAvailableArea(
-    	parameters = listParametersTH, cost = systemCost, landUse = landUseTH)
+    	parameters = listParametersTH, cost = systemCostTH, landUse = landUseTH)
 
     logger.info('  QGIS Server/> PV Power Plants -> Process -> Step 03 -> Area -> ' + str(areaTH))
     logger.info('  QGIS Server/> PV Power Plants -> Process -> Step 03 -> Power -> ' + str(powerTH))
@@ -105,12 +112,12 @@ def pv2Step03(listParametersTH, systemCost, landUseTH):
 
 
 # Function: PV Power Plants -> Process -> Step 04 -> Calculate the available PV area
-def pv2Step04(listParametersPV, systemCost, landUsePV):
+def pv2Step04(listParametersPV, systemCostPV, landUsePV):
     ''' PV Power Plants -> Process -> Step 04 : Calculate the available PV area. '''
 
     logger.info('  QGIS Server/> PV Power Plants -> Process -> Step 04 -> Calculating the available PV area...')
     areaPV, powerPV, capexPV = getAvailableArea(
-    	parameters = listParametersPV, cost = systemCost, landUse = landUsePV)
+    	parameters = listParametersPV, cost = systemCostPV, landUse = landUsePV)
 
     logger.info('  QGIS Server/> PV Power Plants -> Process -> Step 04 -> Area -> ' + str(areaPV))
     logger.info('  QGIS Server/> PV Power Plants -> Process -> Step 04 -> Power -> ' + str(powerPV))
@@ -123,48 +130,53 @@ def pv2Step04(listParametersPV, systemCost, landUsePV):
 
 
 # Function: PV Power Plants -> Process -> Step 05 -> Thermal production
-def pv2Step05(scadaTH, areaTH, minGhiTH, landUseTH, effTH, effOp, aperture, tCoord, year):
+def pv2Step05(scadaTH, scadaPV, areaTH, minGhiTH, landUseTH, effTH, effOp, aperture, convertCoord, year):
     ''' PV Power Plants -> Process -> Step 03 : Calculate the thermal production. '''
 
     # Get the regions
     logger.info('  QGIS Server/> PV Power Plants -> Process -> Step 05 -> Obtaining the regions...')
     rowsTH, nameNuts2 = getRegions(scada = scadaTH, area = areaTH, minGHI = minGhiTH)
     
-    # Get the thermal production
+    # Get the thermal production and save it to a dataframe
     logger.info('  QGIS Server/> PV Power Plants -> Process -> Step 05 -> Obtaining the thermal production...')
     prodTH = getThermalProduction(rows = rowsTH, landUse = landUseTH, effTH = effTH,
-        effOp = effOp, aperture = areaTH * aperture, tCoord = tCoord, year = year)
+        effOp = effOp, aperture = areaTH * aperture, convertCoord = convertCoord, year = year)
     logger.info('  QGIS Server/> PV Power Plants -> Process -> Step 05 -> Saving the thermal production in a DataFrame...')
     dfTH = (pd.DataFrame(prodTH).sum(axis = 0))
     
     # Get the distribution
     logger.info('  QGIS Server/> PV Power Plants -> Process -> Step 05 -> Obtaining the distribution...')
-    nuts2TH, potDistTH, areasDistTH = getDistribution(rows = rowsTH, label = 'thermal_power')
+    if not dfTH.empty:
+        nuts2TH, potDistTH, areasDistTH = getDistribution(rows = rowsTH, label = 'thermal_power')
+
+        # Remove areas used with TH
+        logger.info('  QGIS Server/> PV Power Plants -> Process -> Step 05 -> Removing areas used with thermal power...')
+        for region in rowsTH:
+            df = scadaPV.loc[(scadaPV['Region'] == region['Region']) & (scadaPV['Threshold'] == region['Threshold'])]
+            df['Area_m2'] -= region['Area_m2']
+            scadaPV.loc[(scadaPV['Region'] == region['Region']) & (scadaPV['Threshold'] == region['Threshold'])] = df
     
     # Finish
     logger.info('  QGIS Server/> PV Power Plants -> Process -> Step 05 -> [OK]')
     logger.info('')
-    return nuts2TH, rowsTH, potDistTH, dfTH
+    return nuts2TH, rowsTH, potDistTH, dfTH, scadaPV
 
 
 # Function: PV Power Plants -> Process -> Step 06 -> PV production
-def pv2Step06(rowsTH, scadaPV, areaPV, minGhiPV, landUsePV, tilt, azimuth, tracking, loss, tCoord, year):
+def pv2Step06(rowsTH, scadaPV, areaPV, minGhiPV, landUsePV, tilt, azimuth, tracking, loss, convertCoord, year):
     ''' PV Power Plants -> Process -> Step 06 : Calculate the PV production. '''
 
-    logger.info('  QGIS Server/> PV Power Plants -> Process -> Step 06 -> Removing areas used with thermal power...')
-    for region in rowsTH:
-        df = scadaPV.loc[(scadaPV['Region'] == region['Region']) & (scadaPV['Threshold'] == region['Threshold'])]
-        df['Area_m2'] -= region['Area_m2']
-        scadaPV.loc[(scadaPV['Region'] == region['Region']) & (scadaPV['Threshold'] == region['Threshold'])] = df
-    
     # Get the regions
     logger.info('  QGIS Server/> PV Power Plants -> Process -> Step 06 -> Obtaining the regions...')
     rowsPV, nameNuts2 = getRegions(scada = scadaPV, area = areaPV, minGHI = minGhiPV)
     
     # Get the PV production
     logger.info('  QGIS Server/> PV Power Plants -> Process -> Step 06 -> Obtaining the PV production...')
-    prodPV = getPVProduction(rows = rowsPV, landUse = landUsePV, tilt = tilt, azimuth = azimuth,
-        tracking = tracking, loss = loss, tCoord = tCoord, year = year)
+    prodPVTracking = getPVProduction(rows = rowsPV, landUse = landUsePV, tilt = tilt, azimuth = azimuth,
+        tracking = 1, loss = loss, convertCoord = convertCoord, year = year)
+    prodPVFixed = getPVProduction(rows = rowsPV, landUse = landUsePV, tilt = tilt, azimuth = azimuth,
+        tracking = 0, loss = loss, convertCoord = convertCoord, year = year)
+    prodPV = list(map(sum, zip(map(lambda x: x * tracking, prodPVTracking), map(lambda x: x * (1 - tracking), prodPVFixed))))
     logger.info('  QGIS Server/> PV Power Plants -> Process -> Step 06 -> Saving the PV production in a DataFrame...')
     dfPV = (pd.DataFrame(prodPV).sum(axis = 0))
     
@@ -183,11 +195,15 @@ def pv2Step07(dfTH, dfPV, nameNuts2):
     ''' PV Power Plants -> Process -> Step 07 : Calculate the aggregated production. '''
 
     logger.info('  QGIS Server/> PV Power Plants -> Process -> Step 07 -> Calculating the aggregated production...')
-    prodAgreggated = pd.concat([dfTH.reset_index(), dfPV.reset_index()], ignore_index = False, axis = 1)
-    prodAgreggated = prodAgreggated.drop(columns = ['time'])
-    prodAgreggated = prodAgreggated.set_index('time(UTC)')
-    prodAgreggated.columns = ['Pthermal_' + str(nameNuts2), 'Ppv_' + str(nameNuts2)]
-    prodAgreggated.index = prodAgreggated.index.strftime('%Y-%m-%d %H:%M:%S')
+    if not dfTH.empty:
+        prodAgreggated = pd.concat([dfTH.reset_index(), dfPV.reset_index()], ignore_index = False, axis = 1)
+        prodAgreggated = prodAgreggated.drop(columns = ['time'])
+        prodAgreggated = prodAgreggated.set_index('time(UTC)')
+        prodAgreggated.columns = ['Pthermal_' + str(nameNuts2), 'Ppv_' + str(nameNuts2)]
+        prodAgreggated.index = pd.to_datetime(prodAgreggated.index, format = '%Y-%m-%d %H:%M:%S').round('H').strftime('%Y-%m-%d %H:%M:%S')
+    else:
+        prodAgreggated = pd.DataFrame(dfPV, columns = ['Ppv_' + str(nameNuts2)])
+        prodAgreggated.index = pd.to_datetime(prodAgreggated.index).round('H').strftime('%Y-%m-%d %H:%M:%S')
     
     # Finish
     logger.info('  QGIS Server/> PV Power Plants -> Process -> Step 07 -> [OK]')
@@ -195,16 +211,21 @@ def pv2Step07(dfTH, dfPV, nameNuts2):
     return prodAgreggated
 
 
-# Function: PV Power Plants -> Process -> Step 08 -> Calculate the distribution production
-def pv2Step08(nuts2TH, nuts2PV):
-    ''' PV Power Plants -> Process -> Step 08 : Calculate the distribution production. '''
+# Function: PV Power Plants -> Process -> Step 08 -> Calculate the distributed production
+def pv2Step08(dfTH, nuts2TH, nuts2PV):
+    ''' PV Power Plants -> Process -> Step 08 : Calculate the distributed production. '''
 
-    logger.info('  QGIS Server/> PV Power Plants -> Process -> Step 08 -> Calculating the distribution production...')
-    nuts2TH = nuts2TH.add_suffix('_Pthermal')
-    nuts2PV = nuts2PV.add_suffix('_Ppv')
-    nuts2Dist = pd.concat([nuts2TH.reset_index(), nuts2PV.reset_index()], ignore_index = False, axis = 1)
-    nuts2Dist = nuts2Dist.drop(columns = ['time'])
-    nuts2Dist = nuts2Dist.set_index('time(UTC)')
+    logger.info('  QGIS Server/> PV Power Plants -> Process -> Step 08 -> Calculating the distributed production...')
+    if not dfTH.empty:
+        nuts2TH = nuts2TH.add_suffix('_Pthermal')
+        nuts2PV = nuts2PV.add_suffix('_Ppv')
+        nuts2Dist = pd.concat([nuts2TH.reset_index(), nuts2PV.reset_index()], ignore_index = False, axis = 1)
+        nuts2Dist = nuts2Dist.drop(columns = ['time'])
+        nuts2Dist = nuts2Dist.set_index('time(UTC)')
+    else:
+        nuts2PV = nuts2PV.add_suffix('_Ppv')
+        nuts2Dist = nuts2PV
+        nuts2Dist = nuts2Dist.rename_axis('time(UTC)')
     
     # Finish
     logger.info('  QGIS Server/> PV Power Plants -> Process -> Step 08 -> [OK]')
@@ -213,7 +234,7 @@ def pv2Step08(nuts2TH, nuts2PV):
 
 
 # Function: PV Power Plants -> Process -> Step 09 -> Save the results
-def pv2Step09(prodAgreggated, nuts2Dist, nameNuts2, potDistTH, potDistPV, opexTH, opexPV, config):
+def pv2Step09(prodAgreggated, nuts2Dist, nameNuts2, dfTH, potDistTH, potDistPV, opexTH, opexPV, config):
     ''' PV Power Plants -> Process -> Step 09 : Save the results. '''
 
     logger.info('  QGIS Server/> PV Power Plants -> Process -> Step 09 -> Saving the results...')
@@ -222,7 +243,6 @@ def pv2Step09(prodAgreggated, nuts2Dist, nameNuts2, potDistTH, potDistPV, opexTH
     
     namesNuts3 = list(
         dict.fromkeys([nuts2Dist.columns[col].rsplit('_')[0] for col in range(len(nuts2Dist.columns))]))
-    
     for i in range(len(namesNuts3)):
         dfNuts3 = pd.DataFrame()
         nuts3Cols = [x for x in nuts2Dist if (x.startswith(namesNuts3[i]))]
@@ -233,13 +253,19 @@ def pv2Step09(prodAgreggated, nuts2Dist, nameNuts2, potDistTH, potDistPV, opexTH
         toCsv(dfNuts3.reset_index(), output)
       
     logger.info('  QGIS Server/> PV Power Plants -> Process -> Step 09 -> Combining the dictionaries...')
-    potTH = {f'{k}_thermal': v for k, v in potDistTH.items()}
     potPV = {f'{k}_pv': v for k, v in potDistPV.items()}
-    combinedDict = {**potTH, **potPV}
+    if not dfTH.empty:
+        potTH = {f'{k}_thermal': v for k, v in potDistTH.items()}
+        combinedDict = {**potTH, **potPV}
+    else:
+        combinedDict = {**potPV}
+    
+    logger.info('  QGIS Server/> PV Power Plants -> Process -> Step 09 -> Calculating the OPEX...')
     opexTotTH, opexTotPV = opexCalc(dictData = combinedDict, opexTH = opexTH, opexPV = opexPV)
     combinedDict['opex_thermal'] = opexTotTH  # In €
     combinedDict['opex_pv'] = opexTotPV  # In €
     
+    logger.info('  QGIS Server/> PV Power Plants -> Process -> Step 09 -> Saving...')
     output = mio.retrieveOutputBasePath(True, config) + nameNuts2 + '.json'
     outputs.append(output)
     dictToJson(combinedDict, Path(output), replace = True)
@@ -256,15 +282,27 @@ def pv2Step09(prodAgreggated, nuts2Dist, nameNuts2, potDistTH, potDistPV, opexTH
 #####################################################################
 
 
+# Auxiliary function: Check limits
+def checkLimits(dictToEvaluate, name, limitDown, limitUp, defaultValue):
+    if name in dictToEvaluate:
+        value = dictToEvaluate[name]
+        if value is not None:
+            if limitDown <= value <= limitUp:
+                return value
+            return defaultValue
+        return value
+    return defaultValue
+
+
 # Auxiliary function: Get coord
 def getCoord(df: pd.DataFrame) -> tuple:
     ''' Function to get the coordinates. '''
 
-    sample_x = df['Median_Radiation_X']
-    sample_y = df['Median_Radiation_Y']
+    sampleX = df['Median_Radiation_X']
+    sampleY = df['Median_Radiation_Y']
 
     transformer = Transformer.from_crs("EPSG:3035", "EPSG:4326", always_xy = True)
-    xy = transformer.transform(sample_x, sample_y)
+    xy = transformer.transform(sampleX, sampleY)
     return xy[0], xy[1]
 
 
@@ -317,19 +355,19 @@ def getAvailableArea(parameters: list, cost: float, landUse: float) -> tuple:
 def getRegions(scada: dict, area: float, minGHI: float) -> tuple:
     ''' Function to get the regions. '''
 
-    current_sum = 0
+    currentSum = 0
     nameNuts2 = None
     rows = []
     for index, row in scada.iterrows():
         if nameNuts2 is None:
             nameNuts2 = row['Region'][:-1]
         if row['Area_m2'] > 0 and row['Region'] != nameNuts2 and row['Threshold'] >= minGHI:
-            if current_sum + row['Area_m2'] > area:
-                row['Area_m2'] = area - current_sum
-                current_sum += row['Area_m2']
+            if currentSum + row['Area_m2'] > area:
+                row['Area_m2'] = area - currentSum
+                currentSum += row['Area_m2']
                 rows.append(row)
                 break
-            current_sum += row['Area_m2']
+            currentSum += row['Area_m2']
             rows.append(row)
 
     return rows, nameNuts2
@@ -337,13 +375,13 @@ def getRegions(scada: dict, area: float, minGHI: float) -> tuple:
 
 # Auxiliary function: Get thermal production
 def getThermalProduction(rows: list, landUse: float,
-    effTH: float, effOp: float, aperture: float, tCoord: bool, year: int) -> list:
+    effTH: float, effOp: float, aperture: float, convertCoord: bool, year: int) -> list:
     ''' Function to get the thermal production. '''
 
     production = []
     for region in rows:
         lon, lat = region['Median_Radiation_X'], region['Median_Radiation_Y']
-        if tCoord:
+        if convertCoord or lat > 180:
             lon, lat = getCoord(region)
 
         factor = 1
@@ -351,13 +389,12 @@ def getThermalProduction(rows: list, landUse: float,
             latitude = lat, longitude = lon, outputformat = 'json',
             usehorizon = True, userhorizon = None, startyear = None,
             endyear = None, map_variables = True,
-            timeout = 15)
+            timeout = 30)
         
         data.index = data.index.map(lambda x: x.replace(year = year))
         region['radiation'] = data['dni']
         region['temperature'] = data['temp_air']
-        pot_MW = (region['Area_m2'] * landUse) / 1000000
-        region['power_installed(kW)'] = pot_MW
+        region['power_installed(kW)'] = (region['Area_m2'] * landUse) / 1000000
 
         region['thermal_power'] = thermalModel(
             radiation = data['dni'], effTH = effTH, effOp = effOp, aperture = aperture) * factor
@@ -367,13 +404,13 @@ def getThermalProduction(rows: list, landUse: float,
 
 # Auxiliary function: Get PV production
 def getPVProduction(rows: list, landUse: float, tilt: float, azimuth: float,
-    tracking: int, loss: float, tCoord: bool, year: int) -> list:
+    tracking: int, loss: float, convertCoord: bool, year: int) -> list:
     ''' Function to get the PV production. '''
 
     production = []
     for region in rows:
         lon, lat = region['Median_Radiation_X'], region['Median_Radiation_Y']
-        if tCoord:
+        if convertCoord:
             lon, lat = getCoord(region)
 
         pot_MW = (region['Area_m2'] * landUse) / 1000000
@@ -408,22 +445,22 @@ def getDistribution(rows: list, label: str) -> tuple:
             res.append(i['Region'])
 
     df = pd.DataFrame(rows)
-    suma_nuts = []
-    suma_areas = []
-    suma_pots = []
+    sumNuts = []
+    sumAreas = []
+    sumPots = []
     for i in res:
         nuts = df.loc[i == df['Region']][label]
-        df_nuts = pd.DataFrame(nuts.tolist())
-        suma_nuts.append(df_nuts.sum())
-        areas_nuts3 = df.loc[i == df['Region']]['Area_m2']
-        pot_nuts3 = df.loc[i == df['Region']]['power_installed(kW)']
-        suma_areas.append(pd.DataFrame(areas_nuts3.tolist()).sum())
-        suma_pots.append(pd.DataFrame(pot_nuts3.tolist()).sum())
+        dfNuts = pd.DataFrame(nuts.tolist())
+        sumNuts.append(dfNuts.sum())
+        areasNuts3 = df.loc[i == df['Region']]['Area_m2']
+        potNuts3 = df.loc[i == df['Region']]['power_installed(kW)']
+        sumAreas.append(pd.DataFrame(areasNuts3.tolist()).sum())
+        sumPots.append(pd.DataFrame(potNuts3.tolist()).sum())
 
-    areas = dict(zip(res, [x[0] for x in suma_areas]))
-    pots = dict(zip(res, [x[0] for x in suma_pots]))
+    areas = dict(zip(res, [x[0] for x in sumAreas]))
+    pots = dict(zip(res, [x[0] for x in sumPots]))
 
-    nuts2 = pd.DataFrame(suma_nuts, index = res).transpose()
+    nuts2 = pd.DataFrame(sumNuts, index = res).transpose()
     nuts2 = nuts2.dropna(axis = 1)
     nuts2.index = nuts2.index.strftime('%Y-%m-%d %H:%M:%S')
     return nuts2, pots, areas
@@ -433,12 +470,12 @@ def getDistribution(rows: list, label: str) -> tuple:
 def opexCalc(dictData: dict, opexTH: float, opexPV: float) -> tuple:
     ''' Function to calculate the OPEX. '''
 
-    total_th = 0
-    total_pv = 0
-    for d_key, d_value in dictData.items():
-        if 'pv' in d_key:
-            total_pv += d_value
-        elif 'thermal' in d_key:
-            total_th += d_value
-    return total_th * opexTH, total_pv * opexPV
+    totalTH = 0
+    totalPV = 0
+    for dKey, dValue in dictData.items():
+        if 'thermal' in dKey:
+            totalTH += dValue
+        elif 'pv' in dKey:
+            totalPV += dValue
+    return totalTH * opexTH, totalPV * opexPV
 

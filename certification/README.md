@@ -61,11 +61,34 @@ The code does not include circular references or any other expressions that woul
 It also includes exhaustive validations of input data. For the following input example:
 ```
 {
-	"nutsid": "ES21",
-	"slope_angle": 10
+	"nutsid": "ES41",
+	"slope_angle": 10,
+	"area_total_thermal":  null,
+	"area_total_pv": null,
+	"power_thermal": 10,
+	"power_pv": 200,
+	"capex_thermal": null,
+	"capex_pv": null,
+	"tilt": 30,
+	"azimuth": 180,
+	"loss": 14,
+	"tracking_percentage": 60,
+	"efficiency_thermal": 45,
+	"efficiency_optical": 65,
+	"aperture":50,
+	"system_cost_thermal": 5,
+	"system_cost_pv": 0.5,
+	"opex_thermal": 20000,
+	"opex_pv": 15000,
+	"min_ghi_thermal": 1700,
+	"min_ghi_pv": 1000,
+	"land_use_thermal": 50,
+	"land_use_pv": 100,
+	"convert_coord": 1,
+	"pvgis_year": 2019
 }
 ```
-The component is validating that both *nutsid* and *slope_angle* have a value, and *slope_angle* is also an integer between 0 and 360.
+The component is validating that all properties have a value (which may even be null in some cases).
 
 It is also being validated that all percentage values ​​are decimal numbers between 0 and 1. And also that some text values ​​are included in a fixed list, For example:
 ```
@@ -243,8 +266,31 @@ URL: https://idesignres.digital.tecnalia.dev/api/qgis/pv-power-plants-process
 Verb: POST
 Body:
 {
-  "nutsid": "XXXX"
-  "slope_angle": YY
+	"nutsid": "XXXX",
+	"slope_angle": YY,
+	"area_total_thermal":  YYYYYYYY,
+	"area_total_pv": YYYYYYYY,
+	"power_thermal": YY,
+	"power_pv": YYY,
+	"capex_thermal": YYYYYY,
+	"capex_pv": YYYYYY,
+	"tilt": YY,
+	"azimuth": YYY,
+	"loss": YY,
+	"tracking_percentage": YY,
+	"efficiency_thermal": YY,
+	"efficiency_optical": YY,
+	"aperture": YY,
+	"system_cost_thermal": Y,
+	"system_cost_pv": Y,
+	"opex_thermal": YYYYY,
+	"opex_pv": YYYYY,
+	"min_ghi_thermal": YYYY,
+	"min_ghi_pv": YYYY,
+	"land_use_thermal": YY,
+	"land_use_pv": YY,
+	"convert_coord": 0/1,
+	"pvgis_year": YYYY
 }
 Authentication:
 Use the JWT token as a "Bearer" token.
@@ -252,6 +298,29 @@ Use the JWT token as a "Bearer" token.
 Data dictionary:
 - nutsid: text
 - slope_angle: integer between 0 and 360.
+- area_total_thermal: null, or integer between 0 and 10000000000.
+- area_total_pv: null, or integer between 0 and 10000000000.
+- power_thermal: null, or integer between 0 and 1000000000000.
+- power_pv: null, or integer between 0 and 1000000000000.
+- capex_thermal: null, or integer between 0 and 500000000000.
+- capex_pv: null, or integer between 0 and 500000000000.
+- tilt: integer between 0 and 90.
+- azimuth: integer between 0 and 360.
+- tracking_percentage: integer between 0 and 100.
+- loss: integer between 8 and 20.
+- efficiency_thermal: integer between 25 and 65.
+- efficiency_optical: integer between 45 and 85.
+- aperture: integer between 25 and 75.
+- system_cost_thermal: decimal number between 1 and 10.
+- system_cost_pv: decimal number between 0.2 and 1.
+- opex_thermal: decimal number between 0 and 40000.
+- opex_pv: decimal number between 0 and 30000.
+- min_ghi_thermal: integer between 1500 and 2500.
+- min_ghi_pv: integer between 500 and 2000.
+- land_use_thermal: integer between 25 and 100.
+- land_use_pv: integer between 50 and 200.
+- convert_coord: integer with the value 0 (False) or 1 (True).
+- pvgis_year: integer between 1900 and 2025.
 ```
 
 
