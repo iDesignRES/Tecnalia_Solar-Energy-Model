@@ -14,7 +14,7 @@ URL_PROCESS  = 'https://idesignres.digital.tecnalia.dev/api/qgis/pv-power-plants
 
 
 # Function: Execute the PV Power Plants process
-def executePVPowerPlantsProcess(authPayload, processPayload, startTime, endTime, capexTH, capexPV):
+def executePVPowerPlantsProcess(authPayload: dict, processPayload: dict, startTime: str, endTime: str):
     ''' Function to execute the PV Power Plants process. '''
 
     try:
@@ -43,8 +43,8 @@ def executePVPowerPlantsProcess(authPayload, processPayload, startTime, endTime,
             # Return the result (filtered)
             data = pd.DataFrame(response.json())
             data['time(UTC)'] = pd.to_datetime(data['time(UTC)'])
-            start = pd.to_datetime(startTime.strftime("%Y-%m-%d %H:%M:%S"))
-            end = pd.to_datetime(endTime.strftime("%Y-%m-%d %H:%M:%S"))
+            start = pd.to_datetime(datetime.strptime(startTime, '%Y-%m-%dT%H:%M:%S'))
+            end = pd.to_datetime(datetime.strptime(endTime, '%Y-%m-%dT%H:%M:%S'))
             dataFiltered = data[(data['time(UTC)'] >= start) & (data['time(UTC)'] <= end)]
             Ppv = dataFiltered['Ppv'].to_numpy()
             numeric_Ppv = np.array([float(x.replace(',', '.')) for x in Ppv])
