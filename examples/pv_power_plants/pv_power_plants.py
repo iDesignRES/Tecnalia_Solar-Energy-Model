@@ -33,10 +33,6 @@ def executePVPowerPlantsProcess(authPayload, processPayload, startTime, endTime,
                         'X-Julia': 'True'
             }
 
-            # Modify the process payload
-            processPayload['system_cost_thermal'] = float(capexTH)
-            processPayload['system_cost_pv'] = float(capexPV)
-
             # Execute the process
             print('Process/>  Executing the PV Power Plants process (please wait)...')
             response = requests.post(URL_PROCESS, json = processPayload, headers = headers)
@@ -71,10 +67,8 @@ def main():
         # [2]: input data file path
         # [3]: start datetime (yyyy-MM-ddTHH:mm:ss)
         # [4]: end datetime (yyyy-MM-ddTHH:mm:ss)
-        # [5]: capex Thermal
-        # [6]: capex PV
-        if len(sys.argv) < 7:
-            raise Exception('The number of input parameters is incorrect! (7)')
+        if len(sys.argv) < 5:
+            raise Exception('The number of input parameters is incorrect! (5)')
         if not os.path.exists(sys.argv[1].strip()):
             raise Exception('The authorization file does not exist!')
         if not os.path.exists(sys.argv[2].strip()):
@@ -103,16 +97,9 @@ def main():
             raise Exception('The fourth input parameter (end datetime) has an incorrect format (yyyy-MM-ddTHH:mm:ss)')
         if (endTime <= startTime):
             raise Exception('The end time cannot be less than the start time!')
-        
-        # Validate the capex parameters
-        try:
-            float(sys.argv[5])
-            float(sys.argv[6])
-        except ValueError:
-            raise Exception('The "CAPEX Thermal" and "CAPEX PV" input parameters must be float numbers!')
 
         # Execute the processs
-        executePVPowerPlantsProcess(authPayload, processPayload, startTime, endTime, sys.argv[5], sys.argv[6])
+        executePVPowerPlantsProcess(authPayload, processPayload, sys.argv[3], sys.argv[4])
     except Exception as exception:
         print(f'Process/>  {exception}') 
     
