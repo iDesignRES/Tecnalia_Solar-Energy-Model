@@ -2,7 +2,7 @@
 
 &nbsp;
 
-This directory contains a client program to execute the *PV Power Plants process* in *standalone* mode. This is, the code can be downloaded, installed and executed in any local terminal.
+This directory contains a client program to execute the *PV Power Plants process* and *Building Stock Energy Model process* in *standalone* mode. This is, the code can be downloaded, installed and executed in any local terminal.
 
 The steps to follow are:
 
@@ -12,9 +12,9 @@ The steps to follow are:
 poetry --version
 ```
 
-- Download the client program, located at */examples/pv_power_plants/* directory.
-- The *README.md* file in the */examples/pv_power_plants/* directory details how to install and run the client program.
+- Download the client programs, located at */examples/pv_power_plants/* and */examples/building_energy_process/* directories.
+- The *README.md* files in the */examples/pv_power_plants/* and */examples/building_energy_process/* directories details how to install and run the client programs.
 
-It is necessary to clarify that the client program calls the global REST API of the component from the local location, since, due to the design of its architecture oriented towards integration and scalability and reusability, it is deployed on a server as a single instance.
+It is necessary to clarify that the client programs calls the global REST API of the component from the local location, since, due to the design of its architecture oriented towards integration and scalability and reusability, it is deployed on a server as a single instance.
 
 For any questions, please consult the component owner.

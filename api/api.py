@@ -817,8 +817,9 @@ def executeBuildingEnergySimulationProcess():
                             
                 # Step 20 -> Calculate the Consolidate
                 dictConsolidated = {}
-                for arch in archetypes:
-                    dictConsolidated[arch] = qgisBP2.bp2Step20(dfInput, dictSchedule, arch)
+                if int(config['IDESIGNRES']['idesignres.build.consolidated.data']) == 1:
+                    for arch in archetypes:
+                        dictConsolidated[arch] = qgisBP2.bp2Step20(dfInput, dictSchedule, arch)
                             
                 # Step 21 -> Calculate the Hourly Results
                 dictHourlyResults = {}
@@ -827,11 +828,13 @@ def executeBuildingEnergySimulationProcess():
                 del dictSchedule
                            
                 # Step 22 -> Save the final result
-                output = qgisBP2.bp2Step22(dfInput, dfAnualResults, dictConsolidated, dictHourlyResults, config)
+                output = None
+                if int(config['IDESIGNRES']['idesignres.build.excel.file']) == 1:
+                    output = qgisBP2.bp2Step22(dfInput, dfAnualResults, dictConsolidated, dictHourlyResults, config)
                 del dfInput, dfAnualResults, dictConsolidated
                             
                 # Compress and upload the output file to the SFTP Server
-                if output:
+                if int(config['IDESIGNRES']['idesignres.build.excel.file']) == 1 and output:
                     logger.info('  QGIS Server/> Compressing the result file...')
                     logger.info('')
                     fil = io.retrieveOutputBasePath(True, config) + processList[1]['uuid'] + '_' + body['nutsid'].strip() + '.zip' 
@@ -843,8 +846,8 @@ def executeBuildingEnergySimulationProcess():
 
         # Create the OK response
         response = rest.buildResponse200Value(properties['IDESIGNRES-REST']['idesignres.rest.result.download'], properties)
-        #if not request.headers.get('X-Julia') is None and bool(request.headers.get('X-Julia')):
-        #    response = rest.buildResponse200TimeSeries(io.buildDictionaryFromBESHourlyResults(dictHourlyResults), properties)
+        if not request.headers.get('X-Julia') is None and bool(request.headers.get('X-Julia')):
+            response = rest.buildResponse200TimeSeries(io.buildDictionaryFromBESOutput(dictHourlyResults, config), properties)
     except ValueError as valueError:
         # Create a Bad Request response
         response = rest.buildResponse400(str(valueError), properties)

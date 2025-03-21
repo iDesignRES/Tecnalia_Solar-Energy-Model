@@ -4,6 +4,7 @@ import requests
 
 from modules.logging_config import logger
 
+from datetime import datetime
 from pathlib import Path
 
 import pandas as pd
@@ -298,11 +299,46 @@ def downloadRemoteFile(remote_url, local_file_path, chunk_size, timeout, propert
 
 
 ########## Other I/O functions ##########
+
+
 # Function: Build a dictionary from PV output file
 def buildDictionaryFromPVOutputFile(filePath):
+    ''' Function to build a dictionary from PV output file. '''
+
     dictResult = []
     with open(filePath, 'r') as fil:
         dfResult = pd.read_csv(filePath, sep = ';')
         for index, row in dfResult.iterrows():
             dictResult.append({'time(UTC)': row[0], 'Pthermal': row[1], 'Ppv': row[2]})
     return dictResult
+
+
+# Function: Build a dictionary from BES output dataframe
+def buildDictionaryFromBESOutput(dictResult, config):
+    ''' Function to build a dictionary from BES output dataframe. '''
+    
+    dictOutput = {}
+    archetypes = [arch.strip() for arch in config['IDESIGNRES-PARAMETERS']['idesignres.params.archetypes'].split(',')]
+    for arch in archetypes:
+        dictOutput[arch] = []
+        df = dictResult[arch]
+        for index, row in df.iterrows():
+            datetimeConverted = datetime.strptime(row['Datetime'], '%d/%m/%Y %H:%M')
+            dictConverted = {
+                'Datetime': datetimeConverted.strftime('%Y-%m-%d %H:%M'),
+                'Solids|Coal': row['Solids|Coal'],
+                'Liquids|Gas': row['Liquids|Gas'],
+                'Liquids|Oil': row['Liquids|Oil'],
+                'Gases|Gas': row['Gases|Gas'],
+                'Solids|Biomass': row['Solids|Biomass'],
+                'Electricity': row['Electricity'],
+                'Heat': row['Heat'],
+                'Liquids|Biomass': row['Liquids|Biomass'],
+                'Gases|Biomass': row['Gases|Biomass'],
+                'Hydrogen': row['Hydrogen'],
+                'Heat|Solar': row['Heat|Solar'],
+                'Variable cost [€/KWh]': row['Variable cost [€/KWh]'],
+                'Emissions [KgCO2/KWh]': row['Emissions [kgCO2/KWh]']
+            }
+            dictOutput[arch].append(dictConverted)
+    return dictOutput
