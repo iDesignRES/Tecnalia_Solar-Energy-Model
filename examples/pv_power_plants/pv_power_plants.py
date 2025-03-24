@@ -9,8 +9,8 @@ import numpy as np
 from datetime import datetime
 
 
-URL_AUTH = 'http://10.100.0.120:5010/api/qgis/authenticate'
-URL_PROCESS  = 'http://10.100.0.120:5010/api/qgis/pv-power-plants-process'
+URL_AUTH = 'https://idesignres.digital.tecnalia.dev/api/qgis/authenticate'
+URL_PROCESS  = 'https://idesignres.digital.tecnalia.dev/api/qgis/pv-power-plants-process'
 
 
 # Function: Execute the PV Power Plants process
@@ -46,11 +46,12 @@ def executePVPowerPlantsProcess(authPayload: dict, processPayload: dict, startTi
             start = pd.to_datetime(datetime.strptime(startTime, '%Y-%m-%dT%H:%M:%S'))
             end = pd.to_datetime(datetime.strptime(endTime, '%Y-%m-%dT%H:%M:%S'))
             dataFiltered = data[(data['time(UTC)'] >= start) & (data['time(UTC)'] <= end)]
-            Ppv = dataFiltered['Ppv'].to_numpy()
-            numeric_Ppv = np.array([float(x.replace(',', '.')) for x in Ppv])
-            Pthermal = dataFiltered['Pthermal'].to_numpy()
-            numeric_Pthermal = np.array([float(x.replace(',', '.')) for x in Pthermal])
-            return numeric_Ppv, numeric_Pthermal
+            return dataFiltered.to_dict(orient = 'list')
+            #Ppv = dataFiltered['Ppv'].to_numpy()
+            #numeric_Ppv = np.array([float(x.replace(',', '.')) for x in Ppv])
+            #Pthermal = dataFiltered['Pthermal'].to_numpy()
+            #numeric_Pthermal = np.array([float(x.replace(',', '.')) for x in Pthermal])
+            #return numeric_Ppv, numeric_Pthermal
     except Exception as error:
         print('Process/>  An error occurred executing the PV Power Plants process!')
         print(error)

@@ -55,22 +55,23 @@ def executeBuildingEnergySimulationProcess(authPayload: dict, processPayload: di
             start = pd.to_datetime(datetime.strptime(startTime, '%Y-%m-%dT%H:%M:%S'))
             end = pd.to_datetime(datetime.strptime(endTime, '%Y-%m-%dT%H:%M:%S'))
             dataFiltered = data[(data['Datetime'] >= start) & (data['Datetime'] <= end)]
-            solidsCoal = dataFiltered['Solids|Coal'].to_numpy()
-            liquidsGas = dataFiltered['Liquids|Gas'].to_numpy()
-            liquidsOil = dataFiltered['Liquids|Oil'].to_numpy()
-            gasesGas = dataFiltered['Gases|Gas'].to_numpy()
-            solidsBiomass = dataFiltered['Solids|Biomass'].to_numpy()
-            electricity = dataFiltered['Electricity'].to_numpy()
-            heat = dataFiltered['Heat'].to_numpy()
-            liquidsBiomass = dataFiltered['Liquids|Biomass'].to_numpy()
-            gasesBiomass = dataFiltered['Gases|Biomass'].to_numpy()
-            hydrogen = dataFiltered['Hydrogen'].to_numpy()
-            heatSolar = dataFiltered['Heat|Solar'].to_numpy()
-            variableCost = dataFiltered['Variable cost [€/KWh]'].to_numpy()
-            emissions = dataFiltered['Emissions [KgCO2/KWh]'].to_numpy()
-            return solidsCoal, liquidsGas, liquidsOil,gasesGas, solidsBiomass,\
-                electricity, heat, liquidsBiomass, gasesBiomass, hydrogen,\
-                heatSolar, variableCost, emissions
+            return dataFiltered.to_dict(orient = 'list')
+            #solidsCoal = dataFiltered['Solids|Coal'].to_numpy()
+            #liquidsGas = dataFiltered['Liquids|Gas'].to_numpy()
+            #liquidsOil = dataFiltered['Liquids|Oil'].to_numpy()
+            #gasesGas = dataFiltered['Gases|Gas'].to_numpy()
+            #solidsBiomass = dataFiltered['Solids|Biomass'].to_numpy()
+            #electricity = dataFiltered['Electricity'].to_numpy()
+            #heat = dataFiltered['Heat'].to_numpy()
+            #liquidsBiomass = dataFiltered['Liquids|Biomass'].to_numpy()
+            #gasesBiomass = dataFiltered['Gases|Biomass'].to_numpy()
+            #hydrogen = dataFiltered['Hydrogen'].to_numpy()
+            #heatSolar = dataFiltered['Heat|Solar'].to_numpy()
+            #variableCost = dataFiltered['Variable cost [€/KWh]'].to_numpy()
+            #emissions = dataFiltered['Emissions [KgCO2/KWh]'].to_numpy()
+            #return solidsCoal, liquidsGas, liquidsOil,gasesGas, solidsBiomass,\
+            #    electricity, heat, liquidsBiomass, gasesBiomass, hydrogen,\
+            #    heatSolar, variableCost, emissions
     except Exception as error:
         print('Process/>  An error occurred executing the Building Energy Simulation process!')
         print(error)
