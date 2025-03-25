@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "pv_power_plants"
-version = "0.8.4"
+version = "0.8.5"
 description = "PV Power Plants process client"
 authors = ["Alberto Molinuevo Martin <alberto.molinuevo@tecnalia.com>"]
 license = "GPLv2"

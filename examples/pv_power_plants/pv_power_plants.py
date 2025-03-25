@@ -45,13 +45,10 @@ def executePVPowerPlantsProcess(authPayload: dict, processPayload: dict, startTi
             data['time(UTC)'] = pd.to_datetime(data['time(UTC)'])
             start = pd.to_datetime(datetime.strptime(startTime, '%Y-%m-%dT%H:%M:%S'))
             end = pd.to_datetime(datetime.strptime(endTime, '%Y-%m-%dT%H:%M:%S'))
-            dataFiltered = data[(data['time(UTC)'] >= start) & (data['time(UTC)'] <= end)]
+            dataFiltered = data[(data['time(UTC)'] >= start) & (data['time(UTC)'] <= end)].copy()
+            dataFiltered['Ppv'] = dataFiltered['Ppv'].apply(lambda x: float(x.replace(',', '.')))
+            dataFiltered['Pthermal'] = dataFiltered['Pthermal'].apply(lambda x: float(x.replace(',', '.')))
             return dataFiltered.to_dict(orient = 'list')
-            #Ppv = dataFiltered['Ppv'].to_numpy()
-            #numeric_Ppv = np.array([float(x.replace(',', '.')) for x in Ppv])
-            #Pthermal = dataFiltered['Pthermal'].to_numpy()
-            #numeric_Pthermal = np.array([float(x.replace(',', '.')) for x in Pthermal])
-            #return numeric_Ppv, numeric_Pthermal
     except Exception as error:
         print('Process/>  An error occurred executing the PV Power Plants process!')
         print(error)
