@@ -28,6 +28,7 @@ jobs:
       - name: Install dependencies
         run: |
           export PATH="$HOME/.local/bin:$PATH"
+          cd examples/pv_power_plants
           poetry install
       
       - name: Run tests PV Power Plants
