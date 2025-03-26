@@ -296,31 +296,31 @@ Authentication:
 Use the JWT token as a "Bearer" token.
 
 Data dictionary:
-- nutsid: text
-- slope_angle: integer between 0 and 360.
-- area_total_thermal: null, or integer between 0 and 10000000000.
-- area_total_pv: null, or integer between 0 and 10000000000.
-- power_thermal: null, or integer between 0 and 1000000000000.
-- power_pv: null, or integer between 0 and 1000000000000.
-- capex_thermal: null, or integer between 0 and 500000000000.
-- capex_pv: null, or integer between 0 and 500000000000.
-- tilt: integer between 0 and 90.
-- azimuth: integer between 0 and 360.
-- tracking_percentage: integer between 0 and 100.
-- loss: integer between 8 and 20.
-- efficiency_thermal: integer between 25 and 65.
-- efficiency_optical: integer between 45 and 85.
-- aperture: integer between 25 and 75.
-- system_cost_thermal: decimal number between 1 and 10.
-- system_cost_pv: decimal number between 0.2 and 1.
-- opex_thermal: decimal number between 0 and 40000.
-- opex_pv: decimal number between 0 and 30000.
-- min_ghi_thermal: integer between 1500 and 2500.
-- min_ghi_pv: integer between 500 and 2000.
-- land_use_thermal: integer between 25 and 100.
-- land_use_pv: integer between 50 and 200.
-- convert_coord: integer with the value 0 (False) or 1 (True).
-- pvgis_year: integer between 1900 and 2025.
+- nutsid: text -> Identifier of NUTS2 region for which the analysis will be carried out.
+- slope_angle: integer between 0 and 360 -> Maximum slope angle in º with which a land area can be considered suitable for PV.
+- area_total_thermal: null, or integer between 0 and 10000000000 -> Area in m2 to deploy CSP technology. 
+- area_total_pv: null, or integer between 0 and 10000000000 -> Area in m2 to deploy PV technology.
+- power_thermal: null, or integer between 0 and 1000000000000 -> CSP power capacity in MW to be deployed.
+- power_pv: null, or integer between 0 and 1000000000000 -> PV power capacity in MW to be deployed.
+- capex_thermal: null, or integer between 0 and 500000000000 -> Investment in € to deploy CSP technology.
+- capex_pv: null, or integer between 0 and 500000000000 -> Investment in € to deploy PV technology.
+- tilt: integer between 0 and 90 -> Tilt angle in º from horizontal plane.
+- azimuth: integer between 0 and 360 -> Orientation (azimuth angle) of the (fixed) plane of array. Clockwise from north.
+- tracking_percentage: integer between 0 and 100 -> Percentage in % of single-axis tracking systems from the total PV capacity. The rest is considered fixed mounted systems.
+- loss: integer between 8 and 20 -> Percentage in % of power losses of PV systems. Please read the documentation to understand which other losses are already included in the model.
+- efficiency_thermal: integer between 25 and 65 -> Thermal efficiency in % of collectors of CSP systems.
+- efficiency_optical: integer between 45 and 85 -> Amount of incoming solar radiation in % captured in the collectors of CSP systems.
+- aperture: integer between 25 and 75 -> Aperture area in % of solar field of CSP systems.
+- system_cost_thermal: decimal number between 1 and 10 -> CAPEX in €/W of CSP technology to compute CSP power capacity to be installed from a given investment.
+- system_cost_pv: decimal number between 0.2 and 1 -> CAPEX in €/W of PV technology to compute PV power capacity to be installed from a given investment.
+- opex_thermal: decimal number between 0 and 40000 -> Annual Operational Expenditures in €/MW for CSP technology.
+- opex_pv: decimal number between 0 and 30000 -> Annual Operational Expenditures in €/MW for PV technology.
+- min_ghi_thermal: integer between 1500 and 2500 -> Minimum annual Global Horizontal Irradiance in kWh/m2 in a land area to install CSP systems.
+- min_ghi_pv: integer between 500 and 2000 -> Minimum annual Global Horizontal Irradiance in kWh/m2 in a land area to install PV systems.
+- land_use_thermal: integer between 25 and 100 -> Land use ratio of CSP technology in W/m2 to compute required area for a given CSP power capacity.
+- land_use_pv: integer between 50 and 200 -> Land use ratio of PV technology in W/m2 to compute required area for a given PV power capacity.
+- convert_coord: integer with the value 0 (False) or 1 (True) -> Convert coordinates expressed into EPSG:3035 to EPSG:4326.
+- pvgis_year: integer between 1900 and 2020 -> Year for calculate time-series hourly production.
 ```
 
 
@@ -1511,15 +1511,18 @@ Authentication:
 Use the JWT token as a "Bearer" token.
 
 Data dictionary:
-- nutsid: text
-- year: integer between 1900 and 2025.
-- increase_residential_built_area: decimal number as percentage, between 0 and 1.
-- increase_service_built_area: decimal number as percentage, between 0 and 1.
-- hdd_reduction: decimal number as percentage, between 0 and 1.
-- cdd_reduction: decimal number as percentage, between 0 and 1.
-- building_use: text.
-- user_defined_data: boolean.
-- pct_build_equipped: decimal number as percentage, between 0 and 1.
+- nutsid: text -> Region over which the model will be generated.
+- year: integer between 1900 and 2050 -> Year of the modeled scenario.
+- increase_residential_built_area: decimal number as percentage, between 0 and 1 -> % increase in residential built area compared to the base year. It represents the construction of new residential buildings.
+- increase_service_built_area: decimal number as percentage, between 0 and 1 -> % increase in tertiary built area compared to the base year. It represents the construction of new tertiary buildings.
+- hdd_reduction: decimal number as percentage, between -1 and 1 -> Reduction in heating degree days for future scenario.
+- cdd_reduction: decimal number as percentage, between -1 and 1 -> Reduction in cooling degree days for future scenarios. The value represents the reduction. If the value is negative, it will imply an increase.
+- building_use: text -> Input values are defined for each of the building uses.
+- user_defined_data: boolean -> Indicates whether the values used are user defined or those from the database are taken.
+- pct_build_equipped: decimal number as percentage, between 0 and 1 -> Represents the % of buildings equipped with the technology.
+
+% of buildings supplied by each type of fuel:
+
 - solids: decimal number as percentage, between 0 and 1.
 - lpg: decimal number as percentage, between 0 and 1.
 - diesel_oil: decimal number as percentage, between 0 and 1.
@@ -1537,14 +1540,15 @@ Data dictionary:
 - electric_space_cooling: decimal number as percentage, between 0 and 1.
 - solar: decimal number as percentage, between 0 and 1.
 - electricity: decimal number as percentage, between 0 and 1.
-- ref_level: text.
-- Pre-1945: decimal number as percentage, between 0 and 1.
-- 1945-1969: decimal number as percentage, between 0 and 1.
-- 1970-1979: decimal number as percentage, between 0 and 1.
-- 1980-1989: decimal number as percentage, between 0 and 1.
-- 1990-1999: decimal number as percentage, between 0 and 1.
-- 2000-2010: decimal number as percentage, between 0 and 1.
-- Post-2010: decimal number as percentage, between 0 and 1.
+
+- ref_level: text -> Type of renovation implemented: Low, Medium, or High level.
+- Pre-1945: decimal number as percentage, between 0 and 1 -> % of buildings from the construction period that are renovated.
+- 1945-1969: decimal number as percentage, between 0 and 1 -> % of buildings from the construction period that are renovated.
+- 1970-1979: decimal number as percentage, between 0 and 1 -> % of buildings from the construction period that are renovated.
+- 1980-1989: decimal number as percentage, between 0 and 1 -> % of buildings from the construction period that are renovated.
+- 1990-1999: decimal number as percentage, between 0 and 1 -> % of buildings from the construction period that are renovated.
+- 2000-2010: decimal number as percentage, between 0 and 1 -> % of buildings from the construction period that are renovated.
+- Post-2010: decimal number as percentage, between 0 and 1 -> % of buildings from the construction period that are renovated.
 
 Clarifications:
 1) The fields "building_use" can only have the values:

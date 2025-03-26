@@ -1,0 +1,41 @@
+name: CI Pipeline for iDesignRES
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+      
+      - name: Install Poetry
+        run: |
+          curl -sSL https://install.python-poetry.org | python3 -
+      
+      - name: Install dependencies
+        run: |
+          export PATH="$HOME/.local/bin:$PATH"
+          poetry install
+      
+      - name: Run tests PV Power Plants
+        run: |
+          cd examples/pv_power_plants
+          poetry run pytest
+
+      - name: Run tests Building Energy Stock
+        run: |
+          cd examples/building_energy_process
+          poetry run pytest

@@ -70,7 +70,7 @@ pvPowerPlantsProcessSchema = {
     "land_use_thermal": {"type": "integer", "minimum": 25, "maximum": 100},
     "land_use_pv": {"type": "integer", "minimum": 50, "maximum": 200},
     "convert_coord": {"type": "integer", "enum": [0, 1]},
-    "pvgis_year": {"type": "integer", "minimum": 1900, "maximum": 2025}
+    "pvgis_year": {"type": "integer", "minimum": 1900, "maximum": 2020}
   },
   "required": [
     "nutsid",
@@ -106,14 +106,14 @@ buildingEnergySimulationProcessSchema = {
   "type": "object",
   "properties": {
     "nutsid": {"type": "string"},
-    "year": {"type": "integer", "minimum": 1900, "maximum": 2025},
+    "year": {"type": "integer", "minimum": 1900, "maximum": 2050},
     "scenario": {
       "type": "object",
       "properties": {
         "increase_residential_built_area": {"type": "number", "minimum": 0, "maximum": 1},
         "increase_service_built_area": {"type": "number", "minimum": 0, "maximum": 1},
-        "hdd_reduction": {"type": "number", "minimum": 0, "maximum": 1},
-        "cdd_reduction": {"type": "number", "minimum": 0, "maximum": 1},
+        "hdd_reduction": {"type": "number", "minimum": -1, "maximum": 1},
+        "cdd_reduction": {"type": "number", "minimum": -1, "maximum": 1},
         "active_measures": {
           "type": "array",
           "minItems": 9,
