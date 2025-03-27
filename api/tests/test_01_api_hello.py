@@ -7,7 +7,11 @@ from api.api import app
 
 @pytest.fixture
 def client():
-    ''' Define the test_client '''
+    '''
+    Define the test_client.
+    Input parameters:
+        None.
+    '''
 
     with app.app_context():
         yield app.test_client()
@@ -15,7 +19,12 @@ def client():
 
 # Test 01 -> The API is online and healthy
 def testHello(client, caplog):
-    ''' Test 01 -> The API is online and healthy. '''
+    '''
+    Test 01 -> The API is online and healthy.
+    Input parameters:
+        client: object -> The PyTest client object.
+        caplog: object -> The PyTest object to capture the logs.
+    '''
 
     # Call the API function using 'test_client'
     with app.app_context():  # Application context

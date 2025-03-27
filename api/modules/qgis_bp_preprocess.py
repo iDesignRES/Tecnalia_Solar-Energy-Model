@@ -31,7 +31,15 @@ from sklearn.preprocessing import StandardScaler
 
 # Function: Build. Energy Sim. -> Preprocess -> Step 01 -> Obtain the ZIP file
 def bp1Step01(nutsId, fileList, resourceList, config, properties):
-    ''' Build. Energy Sim. -> Preprocess -> Step 01 : Obtain the ZIP file. '''
+    '''
+    Build. Energy Sim. -> Preprocess -> Step 01 : Obtain the ZIP file.
+    Input parameters:
+        nutsId: text -> Identifier of NUTS2 region for which the analysis will be carried out.
+        fileList: list -> The list of files to be used.
+        resourceList: list -> The list of resources to be used.
+        config: ConfigParser -> The data in the configuration file.
+        properties: ConfigParser -> The data in the properties file.
+    '''
 
     logger.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 01 -> Preparing the data...')
     if not (4 <= len(nutsId) <= 5 and nutsId[:2].isalpha()):
@@ -79,7 +87,14 @@ def bp1Step01(nutsId, fileList, resourceList, config, properties):
 
 # Function: Build. Energy Sim. -> Preprocess -> Step 02 -> Export the selected NUTS
 def bp1Step02(layer, nutsId, config, properties):
-    ''' Build. Energy Sim. -> Preprocess -> Step 02 : Export the selected NUTS. '''
+    '''
+    Build. Energy Sim. -> Preprocess -> Step 02 : Export the selected NUTS.
+    Input parameters:
+        layer: dict -> The complete layer object.
+        nutsId: text -> Identifier of NUTS2 region for which the analysis will be carried out.
+        config: ConfigParser -> The data in the configuration file.
+        properties: ConfigParser -> The data in the properties file.
+    '''
     
     logger.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 02 -> Exporting the selected NUTS...')
     
@@ -109,7 +124,7 @@ def bp1Step02(layer, nutsId, config, properties):
     
     # Save
     logger.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 02 -> Saving...')
-    outputNutsPath, outputNutsPathMoll54009 = io.buildOutputPathsBPStep02(layer, nutsId, config, properties)
+    outputNutsPath, outputNutsPathMoll54009 = io.buildOutputPathsBPStep02(layer, nutsId, config)
     nutsFilteredCrs.to_file(outputNutsPath, driver = layer['format'].upper())
     nutsFilteredMoll54009.to_file(outputNutsPathMoll54009, driver = layer['format'].upper())
     
@@ -121,7 +136,12 @@ def bp1Step02(layer, nutsId, config, properties):
 
 # Function: Build. Energy Sim. -> Preprocess -> Step 03 -> Clip and save the vector layers
 def bp1Step03(destinationDir, nutsFilteredCrs):
-    ''' Build. Energy Sim. -> Preprocess -> Step 03 : Clip and save the vector layers. '''
+    '''
+    Build. Energy Sim. -> Preprocess -> Step 03 : Clip and save the vector layers.
+    Input parameters:
+        destinationDir: text -> The target directory.
+        nutsFilteredCrs: text -> The nuts filtered by CRS.
+    '''
     
     logger.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 03 -> Clipping the layer(s) (can take quite a while)...')
     
@@ -152,7 +172,13 @@ def bp1Step03(destinationDir, nutsFilteredCrs):
 
 # Function: Build. Energy Sim. -> Preprocess -> Step 04 -> Load the buildings layer
 def bp1Step04(clippedLayers, isTest, config):
-    ''' Build. Energy Sim. -> Preprocess -> Step 04 : Load the buildings layer. '''
+    '''
+    Build. Energy Sim. -> Preprocess -> Step 04 : Load the buildings layer.
+    Input parameters:
+        clippedLayers: list -> The list of clipped layers.
+        isTest: boolean -> Indicates if it is a test.
+        config: ConfigParser -> The data in the configuration file.
+    '''
 
     logger.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 04 -> Loading the buildings layer...')
     buildingsPath = config['IDESIGNRES-PATH']['idesignres.path.bp.test']\
@@ -167,7 +193,11 @@ def bp1Step04(clippedLayers, isTest, config):
     
 # Function: Build. Energy Sim. -> Preprocess -> Step 05 -> Load the NUTS layer
 def bp1Step05(nutsPathMoll54009):
-    ''' Build. Energy Sim. -> Preprocess -> Step 05 : Load the NUTS layer. '''
+    '''
+    Build. Energy Sim. -> Preprocess -> Step 05 : Load the NUTS layer.
+    Input parameters:
+        nutsPathMoll54009: object -> The layer to work with.
+    '''
 
     logger.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 05 -> Loading the NUTS layer...')
     layer = qgis.loadVectorLayer(nutsPathMoll54009, 'NUTS', 'ogr')
@@ -180,7 +210,12 @@ def bp1Step05(nutsPathMoll54009):
 
 # Function: Build. Energy Sim. -> Preprocess -> Step 06 -> Load the land use layer
 def bp1Step06(clippedLayers):
-    ''' Build. Energy Sim. -> Preprocess -> Step 06 : Load the land use layer. '''
+    '''
+    Build. Energy Sim. -> Preprocess -> Step 06 : Load the land use layer.
+    Input parameters:
+        clippedLayers: list -> The list of clipped layers.
+    '''
+
 
     logger.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 06 -> loading the land use layer...')
     layer = qgis.loadVectorLayer([path for path in clippedLayers if 'landuse' in path][0], 'Land Use', 'ogr')
@@ -193,7 +228,12 @@ def bp1Step06(clippedLayers):
 
 # Function: Build. Energy Sim. -> Preprocess -> Step 07 -> Load the Raster Use layer
 def bp1Step07(layerObj, config):
-    ''' Build. Energy Sim. -> Preprocess -> Step 07 : Load the raster use layer. '''
+    '''
+    Build. Energy Sim. -> Preprocess -> Step 07 : Load the raster use layer.
+    Input parameters:
+        layerObj: dict -> The full layer object.
+        config: ConfigParser -> The data in the configuration file.
+    '''
 
     logger.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 07 -> Loading the Raster Use layer...')
     layer = qgis.loadRasterLayerWithProvider(io.retrieveLayersBasePath(config) + '/' +\
@@ -207,7 +247,12 @@ def bp1Step07(layerObj, config):
 
 # Function: Build. Energy Sim. -> Preprocess -> Step 08 -> Load the Raster Height layer
 def bp1Step08(layerObj, config):
-    ''' Build. Energy Sim. -> Preprocess -> Step 08 : Load the raster height layer. '''
+    '''
+    Build. Energy Sim. -> Preprocess -> Step 08 : Load the raster height layer.
+    Input parameters:
+        layerObj: dict -> The full  layer object.
+        config: ConfigParser -> The data in the configuration file.
+    '''
 
     logger.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 08 -> Loading the Raster Height layer...')
     layer = qgis.loadRasterLayerWithProvider(io.retrieveLayersBasePath(config) + '/' +\
@@ -226,6 +271,10 @@ def bp1Step09(buildingsLayer, nutsLayer, nutsId):
     This function assigns NUTS3, NUTS2 and BuildingFP_area to each building in a given layer (buildingsLayer).
     If the building's area is less than 30 m², the building is removed from the layer.
     If a building does not have a 'NUTS3' value, it is also removed.
+    Input parameters:
+        buildingsLayer: object -> The buildings layer to work with.
+        nutsLayer: object -> The NUTS layer to work with.
+        nutsId: text -> Identifier of NUTS2 region for which the analysis will be carried out.
     '''
 
     logger.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> ##### Start building preprocessing #####')
@@ -322,6 +371,9 @@ def bp1Step10(buildingsLayer, rasterHeightLayer):
     layer based on the'GHS_Heightmean' attribute.
     If a building doesn't have 'GHS_Heightmean' (height), the value is calculated from a raster
     layer with height data ('raster_height').
+    Input parameters:
+        buildingsLayer: object -> The buildings layer to work with.
+        rasterHeightLayer: object -> The raster layer to work with.
     '''
 
     logger.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 10 -> Calculating heights and volumes...')
@@ -384,6 +436,12 @@ def bp1Step11(buildingsLayer, rasterUseLayer, landUseLayer, mappingCsvObj, confi
     a vector layer with classified land use data ('land_use').
     The function also maps the use to defined groups, sub-sectors, and sectors according to a mapping
     table stored in a CSV file ('MappingCsvPath').
+    Input parameters:
+        buildingsLayer: object -> The buildings layer to work with.
+        rasterUseLayer: object -> The raster layer to work with.
+        landUseLayer: object -> The land use layer to work with.
+        mappingCsvObj: object -> The CSV file to work with.
+        config: ConfigParser -> The data in the configuration file.
     '''
     
     logger.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 11 -> Calculating statistics and mapping...')
@@ -476,6 +534,9 @@ def bp1Step12(isTest, config):
     This function calculates the length of the adjoining perimeter (facade) and the ratio of this length to the total
     perimeter of each building. Buildings with a ratio equal to or above 1 are removed, and the calculations are performed
     again for the buildings affected by these removals. The results are stored in a new GeoDataFrame returned by the function.
+    Input parameters:
+        isTest: boolean -> Indicates if it is a test.
+        config: ConfigParser -> The data in the configuration file.
     '''
     
     logger.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 12 -> Adjoining facade calculations...')
@@ -593,7 +654,12 @@ def bp1Step12(isTest, config):
 
 # Function: Build. Energy Sim. -> Preprocess -> Step 13 -> Mask raster layers
 def bp1Step13(layerList, config):
-    ''' Build. Energy Sim. -> Preprocess -> Step 13 : Mask raster layers. '''
+    '''
+    Build. Energy Sim. -> Preprocess -> Step 13 : Mask raster layers.
+    Input parameters:
+        layerList: list -> The list of layers.
+        config: ConfigParser -> The data in the configuration file.
+    '''
 
     logger.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 13 -> Masking raster layers (can take quite a while)...')
     
@@ -641,7 +707,15 @@ def bp1Step13(layerList, config):
 
 # Function: Build. Energy Sim. -> Preprocess -> Step 14 -> Process clipped layers
 def bp1Step14(nutsId, clipped, excelFile, downloadFolder, config):
-    ''' Build. Energy Sim. -> Preprocess -> Step 14 : Process clipped layers. '''
+    '''
+    Build. Energy Sim. -> Preprocess -> Step 14 : Process clipped layers.
+    Input parameters:
+        nutsId: text -> Identifier of NUTS2 region for which the analysis will be carried out.
+        clipped: object -> The clipped layer to work with.
+        excelFile: object -> The Excel file to work with.
+        downloadFolder: text -> The downloads directory.
+        config: ConfigParser -> The data in the configuration file.
+    '''
 
     # CSV file with the percentages per country and year
     logger.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 14 -> Loading the Excel file to calculate the percentages...')
@@ -765,7 +839,15 @@ def bp1Step14(nutsId, clipped, excelFile, downloadFolder, config):
 
 # Function: Build. Energy Sim. -> Preprocess -> Step 15 -> Assign year info
 def bp1Step15(nutsId, buildings, layersDict, excelFile, config):
-    ''' Build. Energy Sim. -> Preprocess -> Step 15 : Assign year info. '''
+    '''
+    Build. Energy Sim. -> Preprocess -> Step 15 : Assign year info.
+    Input parameters:
+        nutsId: text -> Identifier of NUTS2 region for which the analysis will be carried out.
+        buildings: object -> The buildings layer.
+        layersDict: dict -> The dictionary of layers.
+        excelFile: object -> The Excel file to work with.
+        config: ConfigParser -> The data in the configuration file.
+    '''
 
     logger.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 15 -> Assigning year info...')
     for rasterName, (rasterData, transform) in layersDict.items():
@@ -793,7 +875,11 @@ def bp1Step15(nutsId, buildings, layersDict, excelFile, config):
 
 # Function: Build. Energy Sim. -> Preprocess -> Step 16 -> Calculate additional info
 def bp1Step16(buildings):
-    ''' Build. Energy Sim. -> Preprocess -> Step 16 : Calculate additional info. '''
+    '''
+    Build. Energy Sim. -> Preprocess -> Step 16 : Calculate additional info.
+    Input parameters:
+        buildings: object -> The buildings layer.
+    '''
 
     logger.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 16 -> Calculating additional info...')
     
@@ -822,7 +908,11 @@ def bp1Step16(buildings):
 
 # Function: Build. Energy Sim. -> Preprocess -> Step 17 -> Prepare clustering
 def bp1Step17(buildings):
-    ''' Build. Energy Sim. -> Preprocess -> Step 17 : Prepare clustering. '''
+    '''
+    Build. Energy Sim. -> Preprocess -> Step 17 : Prepare clustering.
+    Input parameters:
+        buildings: object -> The buildings layer.
+    '''
 
     logger.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 17 -> Preparing clustering...')
     
@@ -867,7 +957,12 @@ def bp1Step17(buildings):
 
 # Function: Build. Energy Sim. -> Preprocess -> Step 18 -> Perform clustering (AB)
 def bp1Step18(dfAB, nClustersAB):
-    ''' Build. Energy Sim. -> Preprocess -> Step 09 : Perform clustering (AB). '''
+    '''
+    Build. Energy Sim. -> Preprocess -> Step 09 : Perform clustering (AB).
+    Input parameters:
+        dfAB: DataFrame -> The DataFrame corresponding to Apartment Blocks.
+        nClustersAB: integer -> The number of clusters corresponding to Apartment Blocks.
+    '''
 
     logger.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 18 -> Performing clustering (AB)...')
 
@@ -950,7 +1045,12 @@ def bp1Step18(dfAB, nClustersAB):
 
 # Function: Build. Energy Sim. -> Preprocess -> Step 19 -> Perform clustering (SFH)
 def bp1Step19(dfSFH, nClustersSFH):
-    ''' Build. Energy Sim. -> Preprocess -> Step 19 : Perform clustering (SFH). '''
+    '''
+    Build. Energy Sim. -> Preprocess -> Step 19 : Perform clustering (SFH).
+    Input parameters:
+        dfSFH: DataFrame -> The DataFrame corresponding to Single Family Terraced Houses.
+        nClustersSFH: integer -> The number of clusters corresponding to Single Family Terraced Houses.
+    '''
    
     logger.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 19 -> Performing clustering (SFH)...')
     
@@ -1077,7 +1177,12 @@ def bp1Step19(dfSFH, nClustersSFH):
 
 # Function: Build. Energy Sim. -> Preprocess -> Step 20 -> Perform clustering (SS)
 def bp1Step20(dfSS, nClustersSS):
-    ''' Build. Energy Sim. -> Preprocess -> Step 20 : Perform clustering (SS). '''
+    '''
+    Build. Energy Sim. -> Preprocess -> Step 20 : Perform clustering (SS).
+    Input parameters:
+        dfSS: DataFrame -> The DataFrame.
+        nClustersSS: integer -> The number of clusters.
+    '''
 
     logger.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 20 -> Performing clustering (SS)...')
     
@@ -1196,7 +1301,16 @@ def bp1Step20(dfSS, nClustersSS):
 
 # Function: Build. Energy Sim. -> Preprocess -> Step 21 -> Create the final Dataframe
 def bp1Step21(dfClustersAB, dfClustersSFH, dfClustersSS, process, username, nutsid):
-    ''' Build. Energy Sim. -> Preprocess -> Step 21 : Create the final dataframe. '''
+    '''
+    Build. Energy Sim. -> Preprocess -> Step 21 : Create the final dataframe.
+    Input parameters:
+        dfClustersAB: DataFrame -> The clusters DataFrame (AB).
+        dfClustersSFH: DataFrame -> The clusters DataFrame (SFH).
+        dfClustersSS: DataFrame -> The clusters DataFrame (SS).
+        process: text -> The UUID of the selected process.
+        username: text -> The name of the user executing the process.
+        nutsid: text -> Identifier of NUTS2 region for which the analysis will be carried out.
+    '''
 
     logger.info('  QGIS Server/> Build. Energy Sim. -> Preprocess -> Step 21 -> Creating the final Dataframe...')
     
@@ -1250,7 +1364,14 @@ def bp1Step21(dfClustersAB, dfClustersSFH, dfClustersSS, process, username, nuts
 
 # Auxiliary function: Get pixel value
 def getPixelValue(centroidX, centroidY, rasterData, transform):
-    ''' Function to get a pixel value. '''
+    '''
+    Function to get a pixel value.
+    Input parameters:
+        centroidX: number -> The centroid X.
+        centroidY: number -> The centroid Y.
+        rasterData: object -> The raster data.
+        transform: object -> The transformer object.
+    '''
 
     pixelX, pixelY = ~transform['transform'] * (centroidX, centroidY)
     pixelX, pixelY = int(pixelX), int(pixelY)

@@ -9,7 +9,11 @@ from modules.logging_config import logger
 
 # Function: Build the connection parameters
 def buildConnectionParameters(config):
-    ''' Function to define the database connection parameters. '''
+    '''
+    Function to define the database connection parameters.
+    Input parameters:
+        config: ConfigParser -> The data in the configuration file.
+    '''
 
     obj = { 'host': config['IDESIGNRES-DB']['idesignres.db.host'],
             'user': config['IDESIGNRES-DB']['idesignres.db.username'],
@@ -21,7 +25,11 @@ def buildConnectionParameters(config):
 
 # Function: Retrieve all the processes in the database
 def retrieveAllProcesses(config):
-    ''' Function to retrieve from the database all the available processes. '''
+    '''
+    Function to retrieve from the database all the available processes.
+    Input parameters:
+        config: ConfigParser -> The data in the configuration file.
+    '''
 
     result = []
     conn = None
@@ -63,7 +71,12 @@ def retrieveAllProcesses(config):
 
 # Function: Retrieve all the layers in the database
 def retrieveAllLayersByProcess(process, config):
-    ''' Function to retrieve from the database all the layers associated to a process. '''
+    '''
+    Function to retrieve from the database all the layers associated to a process.
+    Input parameters:
+        process: text -> The UUID of the selected process.
+        config: ConfigParser -> The data in the configuration file.
+    '''
 
     result = []
     conn = None
@@ -108,7 +121,12 @@ def retrieveAllLayersByProcess(process, config):
 
 # Function: Retrieve all the files in the database
 def retrieveAllFilesByProcess(process, config):
-    ''' Function to retrieve from the database all the files associated to a process. '''
+    '''
+    Function to retrieve from the database all the files associated to a process.
+    Input parameters:
+        process: text -> The UUID of the selected process.
+        config: ConfigParser -> The data in the configuration file.
+    '''
 
     result = []
     conn = None
@@ -152,7 +170,13 @@ def retrieveAllFilesByProcess(process, config):
 
 # Function: Retrieve all the resources in the database
 def retrieveAllResources(process, config):
-    ''' Function to retrieve from the database all the resources. '''
+    '''
+    Function to retrieve from the database all the resources.
+    Input parameters:
+        Input parameters:
+        process: text -> The UUID of the selected process.
+        config: ConfigParser -> The data in the configuration file.
+    '''
 
     result = []
     conn = None

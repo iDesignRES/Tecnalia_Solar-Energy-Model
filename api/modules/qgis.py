@@ -11,7 +11,11 @@ from qgis.server import *
 
 # Function: Init QGIS
 def init():
-    ''' Function to init QGIS. '''
+    '''
+    Function to init QGIS.
+    Input parameters:
+        None.
+    '''
 
     QgsApplication.setPrefixPath(os.environ['QGIS_PREFIX_PATH'], True)
     qgisapp = QgsApplication([], False)
@@ -22,14 +26,24 @@ def init():
 
 # Function: Retrieve QGIS version
 def getVersion():
-    ''' Function to retrieve the QGIS version. '''
+    '''
+    Function to retrieve the QGIS version.
+    Input parameters:
+        None.
+    '''
 
     return str(Qgis.QGIS_VERSION)
 
 
 # Function: Create a QGIS project
 def createProject(projectFullPath, projectName, properties):
-    ''' Function to create a QGIS project. '''
+    '''
+    Function to create a QGIS project.
+    Input parameters:
+        projectFullPath: text -> The full path where the project is stored.
+        projectName: text -> The name of the project.
+        properties: ConfigParser -> The data in the properties file.
+    '''
 
     if io.fileExists(projectFullPath):
         raise ValueError(properties['IDESIGNRES-EXCEPTIONS']['idesignres.exception.project.exists'].replace('{1}', projectName))
@@ -38,14 +52,22 @@ def createProject(projectFullPath, projectName, properties):
 
 # Function: Write the QGIS project
 def writeProject():
-    ''' Function to write the QGIS project. '''
+    '''
+    Function to write the QGIS project.
+    Input parameters:
+        None.
+    '''
 
     QgsProject.instance().write()
 
 
 # Function: Remove the QGIS project
 def removeProject(projectFullPathAndName):
-    ''' Function to remove a QGIS project. '''
+    '''
+    Function to remove a QGIS project.
+    Input parameters:
+        projectFullPathAndName: text -> The full path of the project to be removed.
+    '''
 
     QgsProject.instance().clear()
     if io.fileExists(projectFullPathAndName):
@@ -54,7 +76,13 @@ def removeProject(projectFullPathAndName):
 
 # Function: Load a vector layer
 def loadVectorLayer(layerPath, layerName, dataProvider):
-    ''' Function to load a vector layer. '''
+    '''
+    Function to load a vector layer.
+    Input parameters:
+        layerPath: text -> The path of the layer file.
+        layerName: text -> The name of the layer.
+        dataProvider: text -> The data provider.
+    '''
 
     layer = QgsVectorLayer(layerPath, layerName, dataProvider)
     return layer
@@ -62,7 +90,12 @@ def loadVectorLayer(layerPath, layerName, dataProvider):
 
 # Function: Load a raster layer
 def loadRasterLayer(layerPath, layerName):
-    ''' Function to load a raster layer. '''
+    '''
+    Function to load a raster layer.
+    Input parameters:
+        layerPath: text -> The path of the layer file.
+        layerName: text -> The name of the layer.
+    '''
 
     layer = QgsRasterLayer(layerPath, layerName)
     return layer
@@ -70,7 +103,13 @@ def loadRasterLayer(layerPath, layerName):
 
 # Function: Load a raster layer with provider
 def loadRasterLayerWithProvider(layerPath, layerName, dataProvider):
-    ''' Function to load a raster layer with provider. '''
+    '''
+    Function to load a raster layer with provider.
+    Input parameters:
+        layerPath: text -> The path of the layer file.
+        layerName: text -> The name of the layer.
+        dataProvider: text -> The data provider.
+    '''
 
     layer = QgsRasterLayer(layerPath, layerName, dataProvider)
     return layer
@@ -78,7 +117,11 @@ def loadRasterLayerWithProvider(layerPath, layerName, dataProvider):
 
 # Function: Add a layer to the QGIS project
 def addLayerToProject(layer):
-    ''' Function to add a layer to a QGIS project. '''
+    '''
+    Function to add a layer to a QGIS project.
+    Input parameters:
+        layer: object -> The layer to be added.
+    '''
 
     QgsProject.instance().addMapLayer(layer)
 

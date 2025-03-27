@@ -58,7 +58,11 @@ pd.options.mode.chained_assignment = None
 
 # Function: Set memory limit (in bytes)
 def setMemoryLimit(limitConfig):
-    ''' Function to limit the memory. '''
+    '''
+    Function to limit the memory.
+    Input parameters:
+        limitConfig: integer -> The limit (GB) established in the configuration file.
+    '''
     
     limit = limitConfig * 1024 * 1024 * 1024
     resource.setrlimit(resource.RLIMIT_AS, (limit, limit))
@@ -66,7 +70,11 @@ def setMemoryLimit(limitConfig):
 
 @app.before_first_request
 def before_first_request():
-    ''' Function to set the memory limit before the first request. '''
+    '''
+    Function to set the memory limit before the first request.
+    Input parameters:
+        None.
+    '''
     
     setMemoryLimit(int(config['IDESIGNRES']['idesignres.memory.limit.gb']))
 
@@ -74,7 +82,11 @@ def before_first_request():
 # Function: Verify as online
 @app.route('/api/qgis/hello', methods = ['GET'])
 def hello():
-    ''' API function to check if the API is online. '''
+    '''
+    API function to check if the API is online.
+    Input parameters:
+        None.
+    '''
     
     # Show info logs
     logger.info('')
@@ -102,7 +114,12 @@ def hello():
 # Function: Authenticate
 @app.route('/api/qgis/authenticate', methods = ['POST'])
 def authenticate():
-    ''' Function to check if a user is authenticated. '''
+    '''
+    Function to check if a user is authenticated.
+    Input parameters:
+        username: text -> The name of the user who access to execute the processes.
+        password: text -> The password of the user who access to execute the processes.
+    '''
     
     # Show info logs
     logger.info('')
@@ -156,7 +173,15 @@ def authenticate():
 
 # Function: Execute solar preprocess
 def executeSolarPreprocess(process, nutsid, slopeAngle, user):
-    ''' API function to execute the solar preprocess. '''
+    '''
+    Internal function to execute the solar preprocess.
+    Input parameters:
+        process: text -> The UUID of the process (stored in the database).
+        nutsid: text -> Identifier of NUTS2 region for which the analysis will be carried out.
+        slopeAngle: integer between 0 and 360 -> Maximum slope angle in º with
+            which a land area can be considered suitable for PV.
+        user: text -> The user who is going to to execute the process.
+    '''
     
     outCsvFile = None
     try:
@@ -189,7 +214,7 @@ def executeSolarPreprocess(process, nutsid, slopeAngle, user):
                 npaClipPath = qgisPV1.pv1Steps02030405(layerList[4], nutsOut, '05', config)
                     
                 # Step 06 -> Filter the "slope" raster
-                slopeFltPath = qgisPV1.pv1Step06(slopeClipPath, slopeAngle, config)
+                slopeFltPath = qgisPV1.pv1Step06(slopeClipPath, slopeAngle)
                     
                 # Step 07 -> Filter "land use" raster by codes
                 lanFltPath = qgisPV1.pv1Step07(lanClipPath, config)
@@ -252,7 +277,13 @@ def executeSolarPreprocess(process, nutsid, slopeAngle, user):
 
 # Function: Execute building preprocess
 def executeBuildingPreprocess(process, nutsid, user):
-    ''' API function to execute the buildings preprocess. '''
+    '''
+    Internal function to execute the buildings preprocess.
+    Input parameters:
+        process: text -> The UUID of the process (stored in the database).
+        nutsid: text -> Identifier of NUTS2 region for which the analysis will be carried out.
+        user: text -> The user who is going to to execute the process.
+    '''
     
     outCsvFile = None
     try:
@@ -389,40 +420,40 @@ def executePVPowerPlantsProcess():
     '''
     API function to execute the PV Power Plants process.
     Input parameters:
-    nutsid: text -> Identifier of NUTS2 region for which the analysis will be carried out.
-    slope_angle: integer between 0 and 360 -> Maximum slope angle in º with which a land area
-        can be considered suitable for PV Installation. 
-    area_total_thermal: null, or integer between 0 and 10000000000 -> Area in m2 to deploy CSP technology.
-    area_total_pv: null, or integer between 0 and 10000000000 -> Area in m2 to deploy PV technology. 
-    power_thermal: null, or integer between 0 and 1000000000000 -> CSP power capacity in MW to be deployed.
-    power_pv: null, or integer between 0 and 1000000000000 -> PV power capacity in MW to be deployed.
-    capex_thermal: null, or integer between 0 and 500000000000 -> Investment in € to deploy CSP technology.
-    capex_pv: null, or integer between 0 and 500000000000 -> Investment in € to deploy PV technology.
-    tilt: integer between 0 and 90 -> Tilt angle in º from horizontal plane.
-    azimuth: integer between 0 and 360 -> Orientation (azimuth angle) of the (fixed) plane of array. Clockwise from north.
-    tracking_percentage: integer between 0 and 100 -> Percentage in % of single-axis tracking systems
-        from the total PV capacity. The rest is considered fixed mounted systems.
-    loss: integer between 8 and 20 -> Percentage in % of power losses of PV systems. Please read
-        the documentation to understand which other losses are already included in the model.
-    efficiency_thermal: integer between 25 and 65 -> Thermal efficiency in % of collectors of CSP systems.
-    efficiency_optical: integer between 45 and 85 -> Amount of incoming solar radiation in % captured in the collectors of CSP systems.
-    aperture: integer between 25 and 75 -> Aperture area in % of solar field of CSP systems.
-    system_cost_thermal: decimal number between 1 and 10 -> CAPEX in €/W of CSP technology to
-        compute CSP power capacity to be installed from a given investment.
-    system_cost_pv: decimal number between 0.2 and 1 -> CAPEX in €/W of PV technology to compute
-        PV power capacity to be installed from a given investment.
-    opex_thermal: decimal number between 0 and 40000 -> Annual Operational Expenditures in €/MW for CSP technology.
-    opex_pv: decimal number between 0 and 30000 -> Annual Operational Expenditures in €/MW for PV technology.
-    min_ghi_thermal: integer between 1500 and 2500 -> Minimum annual Global Horizontal Irradiance
-        in kWh/m2 in a land area to install CSP systems.
-    min_ghi_pv: integer between 500 and 2000 -> Minimum annual Global Horizontal Irradiance
-        in kWh/m2 in a land area to install PV systems.
-    land_use_thermal: integer between 25 and 100 -> Land use ratio of CSP technology in W/m2 to
-        compute required area for a given CSP power capacity.
-    land_use_pv: integer between 50 and 200 -> Land use ratio of PV technology in W/m2 to compute
-        required area for a given PV power capacity.
-    convert_coord: integer with the value 0 (False) or 1 (True) -> Convert coordinates expressed into EPSG:3035 to EPSG:4326.
-    pvgis_year: integer between 1900 and 2020 -> Year for calculate time-series hourly production.
+        nutsid: text -> Identifier of NUTS2 region for which the analysis will be carried out.
+        slope_angle: integer between 0 and 360 -> Maximum slope angle in º with which a land area
+            can be considered suitable for PV Installation. 
+        area_total_thermal: null, or integer between 0 and 10000000000 -> Area in m2 to deploy CSP technology.
+        area_total_pv: null, or integer between 0 and 10000000000 -> Area in m2 to deploy PV technology. 
+        power_thermal: null, or integer between 0 and 1000000000000 -> CSP power capacity in MW to be deployed.
+        power_pv: null, or integer between 0 and 1000000000000 -> PV power capacity in MW to be deployed.
+        capex_thermal: null, or integer between 0 and 500000000000 -> Investment in € to deploy CSP technology.
+        capex_pv: null, or integer between 0 and 500000000000 -> Investment in € to deploy PV technology.
+        tilt: integer between 0 and 90 -> Tilt angle in º from horizontal plane.
+        azimuth: integer between 0 and 360 -> Orientation (azimuth angle) of the (fixed) plane of array. Clockwise from north.
+        tracking_percentage: integer between 0 and 100 -> Percentage in % of single-axis tracking systems
+            from the total PV capacity. The rest is considered fixed mounted systems.
+        loss: integer between 8 and 20 -> Percentage in % of power losses of PV systems. Please read
+            the documentation to understand which other losses are already included in the model.
+        efficiency_thermal: integer between 25 and 65 -> Thermal efficiency in % of collectors of CSP systems.
+        efficiency_optical: integer between 45 and 85 -> Amount of incoming solar radiation in % captured in the collectors of CSP systems.
+        aperture: integer between 25 and 75 -> Aperture area in % of solar field of CSP systems.
+        system_cost_thermal: decimal number between 1 and 10 -> CAPEX in €/W of CSP technology to
+            compute CSP power capacity to be installed from a given investment.
+        system_cost_pv: decimal number between 0.2 and 1 -> CAPEX in €/W of PV technology to compute
+            PV power capacity to be installed from a given investment.
+        opex_thermal: decimal number between 0 and 40000 -> Annual Operational Expenditures in €/MW for CSP technology.
+        opex_pv: decimal number between 0 and 30000 -> Annual Operational Expenditures in €/MW for PV technology.
+        min_ghi_thermal: integer between 1500 and 2500 -> Minimum annual Global Horizontal Irradiance
+            in kWh/m2 in a land area to install CSP systems.
+        min_ghi_pv: integer between 500 and 2000 -> Minimum annual Global Horizontal Irradiance
+            in kWh/m2 in a land area to install PV systems.
+        land_use_thermal: integer between 25 and 100 -> Land use ratio of CSP technology in W/m2 to
+            compute required area for a given CSP power capacity.
+        land_use_pv: integer between 50 and 200 -> Land use ratio of PV technology in W/m2 to compute
+            required area for a given PV power capacity.
+        convert_coord: integer with the value 0 (False) or 1 (True) -> Convert coordinates expressed into EPSG:3035 to EPSG:4326.
+        pvgis_year: integer between 1900 and 2020 -> Year for calculate time-series hourly production.
     '''
     
     # Show info logs
@@ -490,7 +521,7 @@ def executePVPowerPlantsProcess():
             # Step 01 -> Load the specific configuration
             listParametersTH, listParametersPV, systemCostTH, systemCostPV, landUseTH, landUsePV, minGhiTH,\
                 minGhiPV, effTH, effOp, aperture, convertCoord, year, tilt, azimuth, tracking, loss, opexTH, opexPV =\
-                    qgisPV2.pv2Step01(body, config)
+                    qgisPV2.pv2Step01(body)
             
             # Step 02 -> Download the result of the Solar preprocess and load the data
             scadaTH, scadaPV = qgisPV2.pv2Step02(user, body['nutsid'].strip(), processList[0]['uuid'], config)
@@ -569,41 +600,41 @@ def executeBuildingEnergySimulationProcess():
     '''
     API function to execute the Building Energy Simulation process.
     Input parameters:
-    nutsid: text -> Region over which the model will be generated.
-    year: integer between 1900 and 2050 -> Year of the modeled scenario.
-    increase_residential_built_area: decimal number as percentage, between 0 and 1 ->
-        % increase in residential built area compared to the base year. It represents the
-        construction of new residential buildings.
-    increase_service_built_area: decimal number as percentage, between 0 and 1 ->
-        % increase in tertiary built area compared to the base year. It represents the construction
-        of new tertiary buildings.
-    hdd_reduction: decimal number as percentage, between 0 and 1 -> Reduction in heating degree days
-        for future scenario.
-    cdd_reduction: decimal number as percentage, between 0 and 1 -> Reduction in cooling degree days
-        for future scenarios. The value represents the reduction. If the value is negative, it will imply an increase.
-    building_use: text -> Input values are defined for each of the building uses.
-    user_defined_data: boolean -> Indicates whether the values used are user defined or those
-        from the database are taken.
-    pct_build_equipped: decimal number as percentage, between 0 and 1 -> Represents the % of buildings equipped with the technology.
+        nutsid: text -> Region over which the model will be generated.
+        year: integer between 1900 and 2050 -> Year of the modeled scenario.
+        increase_residential_built_area: decimal number as percentage, between 0 and 1 ->
+            % increase in residential built area compared to the base year. It represents the
+            construction of new residential buildings.
+        increase_service_built_area: decimal number as percentage, between 0 and 1 ->
+            % increase in tertiary built area compared to the base year. It represents the construction
+            of new tertiary buildings.
+        hdd_reduction: decimal number as percentage, between 0 and 1 -> Reduction in heating degree days
+            for future scenario.
+        cdd_reduction: decimal number as percentage, between 0 and 1 -> Reduction in cooling degree days
+            for future scenarios. The value represents the reduction. If the value is negative, it will imply an increase.
+        building_use: text -> Input values are defined for each of the building uses.
+        user_defined_data: boolean -> Indicates whether the values used are user defined or those
+            from the database are taken.
+        pct_build_equipped: decimal number as percentage, between 0 and 1 -> Represents the % of buildings equipped with the technology.
 
-    % of buildings supplied by each type of fuel:
-        solids: decimal number as percentage, between 0 and 1.
-        lpg: decimal number as percentage, between 0 and 1.
-        diesel_oil: decimal number as percentage, between 0 and 1.
-        gas_heat_pumps: decimal number as percentage, between 0 and 1.
-        natural_gas: decimal number as percentage, between 0 and 1.
-        biomass: decimal number as percentage, between 0 and 1.
-        geothermal: decimal number as percentage, between 0 and 1.
-        distributed_heat: decimal number as percentage, between 0 and 1.
-        advanced_electric_heating: decimal number as percentage, between 0 and 1.
-        conventional_electric_heating: decimal number as percentage, between 0 and 1.
-        bio_oil: decimal number as percentage, between 0 and 1.
-        bio_gas: decimal number as percentage, between 0 and 1.
-        hydrogen: decimal number as percentage, between 0 and 1.
-        electricity_in_circulation: decimal number as percentage, between 0 and 1.
-        electric_space_cooling: decimal number as percentage, between 0 and 1.
-        solar: decimal number as percentage, between 0 and 1.
-        electricity: decimal number as percentage, between 0 and 1.
+        % of buildings supplied by each type of fuel:
+            solids: decimal number as percentage, between 0 and 1.
+            lpg: decimal number as percentage, between 0 and 1.
+            diesel_oil: decimal number as percentage, between 0 and 1.
+            gas_heat_pumps: decimal number as percentage, between 0 and 1.
+            natural_gas: decimal number as percentage, between 0 and 1.
+            biomass: decimal number as percentage, between 0 and 1.
+            geothermal: decimal number as percentage, between 0 and 1.
+            distributed_heat: decimal number as percentage, between 0 and 1.
+            advanced_electric_heating: decimal number as percentage, between 0 and 1.
+            conventional_electric_heating: decimal number as percentage, between 0 and 1.
+            bio_oil: decimal number as percentage, between 0 and 1.
+            bio_gas: decimal number as percentage, between 0 and 1.
+            hydrogen: decimal number as percentage, between 0 and 1.
+            electricity_in_circulation: decimal number as percentage, between 0 and 1.
+            electric_space_cooling: decimal number as percentage, between 0 and 1.
+            solar: decimal number as percentage, between 0 and 1.
+            electricity: decimal number as percentage, between 0 and 1.
 
         ref_level: text -> Type of renovation implemented: Low, Medium, or High level.
 
@@ -833,10 +864,10 @@ def executeBuildingEnergySimulationProcess():
                     raise ValueError(properties['IDESIGNRES-EXCEPTIONS']['idesignres.exception.no.input.data.preprocess'])
 
                 # Step 02 -> Retrieve temperatures
-                tempsPath = qgisBP2.bp2Step02(body['nutsid'].strip(), body['year'], dbaseFileList[6], config, properties)
+                tempsPath = qgisBP2.bp2Step02(body['nutsid'].strip(), body['year'], dbaseFileList[6], config)
                         
                 # Step 03 -> Retrieve radiation values
-                radPath = qgisBP2.bp2Step03(body['nutsid'].strip(), body['year'], dbaseFileList[5], config, properties)
+                radPath = qgisBP2.bp2Step03(body['nutsid'].strip(), body['year'], dbaseFileList[5], config)
                 if not tempsPath or not radPath:
                     raise ValueError(properties['IDESIGNRES-EXCEPTIONS']['idesignres.exception.validation.no.rad.temp'])
                
@@ -850,7 +881,7 @@ def executeBuildingEnergySimulationProcess():
                 dfInput = qgisBP2.bp2Step05(dfCsv)
                             
                 # Step 06 -> Add the input data
-                dfInput = qgisBP2.bp2Step06(dfCsv, dfDHW, dfYears, dfSectors, dfDwellings, body, properties)
+                dfInput = qgisBP2.bp2Step06(dfCsv, dfDHW, dfYears, dfSectors, dfDwellings, body)
                 del dfYears, dfSectors, dfDwellings
                             
                 # Step 07 -> Add the active measures
@@ -896,7 +927,7 @@ def executeBuildingEnergySimulationProcess():
                 del dfTemperatures, dfBaseTemperatures, dfSolarOffice, dfSolarNoffice
                             
                 # Step 18 -> Calculate the Scenario
-                dictSchedule = qgisBP2.bp2Step18(dfInput, dictSchedule, config, body)
+                dictSchedule = qgisBP2.bp2Step18(dfInput, dictSchedule, config)
                             
                 # Step 19 -> Calculate the Anual Results
                 dfAnualResults = qgisBP2.bp2Step19(dfInput, dictSchedule)
@@ -905,7 +936,7 @@ def executeBuildingEnergySimulationProcess():
                 dictConsolidated = {}
                 if int(config['IDESIGNRES']['idesignres.build.consolidated.data']) == 1:
                     for arch in archetypes:
-                        dictConsolidated[arch] = qgisBP2.bp2Step20(dfInput, dictSchedule, arch)
+                        dictConsolidated[arch] = qgisBP2.bp2Step20(dictSchedule, arch)
                             
                 # Step 21 -> Calculate the Hourly Results
                 dictHourlyResults = {}

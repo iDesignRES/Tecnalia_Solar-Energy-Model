@@ -20,8 +20,12 @@ from modules.logging_config import logger
 
 
 # Function: PV Power Plants -> Process -> Step 01 -> Load the specific configuration
-def pv2Step01(body, config):
-    ''' PV Power Plants -> Process -> Step 01 : Load the specific configuration. '''
+def pv2Step01(body):
+    '''
+    PV Power Plants -> Process -> Step 01 : Load the specific configuration.
+    Input parameters:
+        body: dict -> The request body.
+    '''
     
     logger.info('  QGIS Server/> PV Power Plants -> Process -> Step 01 -> Building the specific configuration...')
     areaAvailableTH = checkLimits(body, 'area_total_thermal', 0, 10 ** 10, 0) if 'area_total_thermal' in body else None
@@ -69,7 +73,14 @@ def pv2Step01(body, config):
 
 # Function: PV Power Plants -> Process -> Step 02 -> Download the previous result
 def pv2Step02(currentUser, nutsId, processId, config):
-    ''' PV Power Plants -> Process -> Step 02 : Download the previous result. '''
+    '''
+    PV Power Plants -> Process -> Step 02 : Download the previous result.
+    Input parameters:
+        currentUser: text -> The name of the user executing the process.
+        nutsId: text -> Identifier of NUTS2 region for which the analysis will be carried out.
+        processId: text -> The UUID of the current process.
+        config: ConfigParser -> The data in the configuration file.
+    '''
 
     logger.info('  QGIS Server/> PV Power Plants -> Process -> Step 02 -> Downloading the result file of the Solar preprocess...')
     logger.info('')
@@ -95,7 +106,14 @@ def pv2Step02(currentUser, nutsId, processId, config):
 
 # Function: PV Power Plants -> Process -> Step 03 -> Calculate the available thermal area
 def pv2Step03(listParametersTH, systemCostTH, landUseTH):
-    ''' PV Power Plants -> Process -> Step 03 : Calculate the available thermal area. '''
+    '''
+    PV Power Plants -> Process -> Step 03 : Calculate the available thermal area.
+    Input parameters:
+        listParametersTH: list -> The list of thermal parameters.
+        systemCostTH: number -> The thermal system cost in €.
+        landUseTH: integer -> Land use ratio of CSP technology in W/m2 to compute required
+            area for a given CSP power capacity.
+    '''
 
     logger.info('  QGIS Server/> PV Power Plants -> Process -> Step 03 -> Calculating the available thermal area...')
     areaTH, powerTH, capexTH = getAvailableArea(
@@ -113,7 +131,14 @@ def pv2Step03(listParametersTH, systemCostTH, landUseTH):
 
 # Function: PV Power Plants -> Process -> Step 04 -> Calculate the available PV area
 def pv2Step04(listParametersPV, systemCostPV, landUsePV):
-    ''' PV Power Plants -> Process -> Step 04 : Calculate the available PV area. '''
+    '''
+    PV Power Plants -> Process -> Step 04 : Calculate the available PV area.
+    Input parameters:
+        listParametersPV: list -> The list of PV parameters.
+        systemCostPV: number -> The PV system cost in €.
+        landUsePV: integer -> Land use ratio of PV technology in W/m2 to compute required
+            area for a given PV power capacity.
+    '''
 
     logger.info('  QGIS Server/> PV Power Plants -> Process -> Step 04 -> Calculating the available PV area...')
     areaPV, powerPV, capexPV = getAvailableArea(
@@ -131,7 +156,21 @@ def pv2Step04(listParametersPV, systemCostPV, landUsePV):
 
 # Function: PV Power Plants -> Process -> Step 05 -> Thermal production
 def pv2Step05(scadaTH, scadaPV, areaTH, minGhiTH, landUseTH, effTH, effOp, aperture, convertCoord, year):
-    ''' PV Power Plants -> Process -> Step 03 : Calculate the thermal production. '''
+    '''
+    PV Power Plants -> Process -> Step 03 : Calculate the thermal production.
+    Input parameters:
+        scadaTH: DataFrame -> The Dataframe corresponding to thermal scada.
+        scadaPV: DataFrame -> The Dataframe corresponding to PV scada.
+        areaTH: integer -> The thermal area.
+        minGhiTH: integer -> Minimum annual Global Horizontal Irradiance in kWh/m2 in a land area to install CSP systems.
+        landUseTH: integer -> Land use ratio of CSP technology in W/m2 to compute required
+            area for a given CSP power capacity.
+        effTH: integer -> Thermal efficiency in % of collectors of CSP systems. 
+        effOp: integer -> Amount of incoming solar radiation in % captured in the collectors of CSP systems.
+        aperture: integer -> Aperture area in % of solar field of CSP systems.
+        convertCoord: integer (0/1) -> Convert coordinates expressed into EPSG:3035 to EPSG:4326.
+        year: integer -> Year for calculate time-series hourly production.
+    '''
 
     # Get the regions
     logger.info('  QGIS Server/> PV Power Plants -> Process -> Step 05 -> Obtaining the regions...')
@@ -164,7 +203,24 @@ def pv2Step05(scadaTH, scadaPV, areaTH, minGhiTH, landUseTH, effTH, effOp, apert
 
 # Function: PV Power Plants -> Process -> Step 06 -> PV production
 def pv2Step06(rowsTH, scadaPV, areaPV, minGhiPV, landUsePV, tilt, azimuth, tracking, loss, convertCoord, year):
-    ''' PV Power Plants -> Process -> Step 06 : Calculate the PV production. '''
+    '''
+    PV Power Plants -> Process -> Step 06 : Calculate the PV production.
+    Input parameters:
+        rowsTH: list -> Rows of thermal data.
+        scadaPV: DataFrame -> The Dataframe corresponding to PV scada.
+        areaPV: integer -> The PV area.
+        minGhiPV: integer -> Minimum annual Global Horizontal Irradiance in kWh/m2 in a land area to install PV systems.
+        landUsePV: integer -> Land use ratio of PV technology in W/m2 to compute required
+            area for a given PV power capacity.
+        tilt: integer -> Tilt angle in º from horizontal plane.
+        azimuth: integer -> Orientation (azimuth angle) of the (fixed) plane of array. Clockwise from north.
+        tracking: integer -> Percentage in % of single-axis tracking systems from the total PV capacity.
+            The rest is considered fixed mounted systems.
+        loss: integer -> Percentage in % of power losses of PV systems. Please read the documentation to
+            understand which other losses are already included in the model.
+        convertCoord: integer (0/1) -> Convert coordinates expressed into EPSG:3035 to EPSG:4326.
+        year: integer -> Year for calculate time-series hourly production.
+    '''
 
     # Get the regions
     logger.info('  QGIS Server/> PV Power Plants -> Process -> Step 06 -> Obtaining the regions...')
@@ -192,7 +248,13 @@ def pv2Step06(rowsTH, scadaPV, areaPV, minGhiPV, landUsePV, tilt, azimuth, track
 
 # Function: PV Power Plants -> Process -> Step 07 -> Calculate the aggregated production
 def pv2Step07(dfTH, dfPV, nameNuts2):
-    ''' PV Power Plants -> Process -> Step 07 : Calculate the aggregated production. '''
+    '''
+    PV Power Plants -> Process -> Step 07 : Calculate the aggregated production.
+    Input parameters:
+        dfTH: DataFrame -> The DataFrame corresponding to the thermal data.
+        dfPV: DataFrame -> The Dataframe corresponding to the PV data.
+        nameNuts2: text -> The name of the NUTS2 region.
+    '''
 
     logger.info('  QGIS Server/> PV Power Plants -> Process -> Step 07 -> Calculating the aggregated production...')
     if not dfTH.empty:
@@ -213,7 +275,13 @@ def pv2Step07(dfTH, dfPV, nameNuts2):
 
 # Function: PV Power Plants -> Process -> Step 08 -> Calculate the distributed production
 def pv2Step08(dfTH, nuts2TH, nuts2PV):
-    ''' PV Power Plants -> Process -> Step 08 : Calculate the distributed production. '''
+    '''
+    PV Power Plants -> Process -> Step 08 : Calculate the distributed production.
+    Input parameters:
+        dfTH: DataFrame -> The DataFrame corresponding to the thermal data.
+        nuts2TH: DataFrame -> The Dataframe corresponding to the NUTS2 thermal data.
+        nuts2PV: DataFrame -> The Dataframe corresponding to the NUTS2 PV data.
+    '''
 
     logger.info('  QGIS Server/> PV Power Plants -> Process -> Step 08 -> Calculating the distributed production...')
     if not dfTH.empty:
@@ -235,7 +303,19 @@ def pv2Step08(dfTH, nuts2TH, nuts2PV):
 
 # Function: PV Power Plants -> Process -> Step 09 -> Save the results
 def pv2Step09(prodAgreggated, nuts2Dist, nameNuts2, dfTH, potDistTH, potDistPV, opexTH, opexPV, config):
-    ''' PV Power Plants -> Process -> Step 09 : Save the results. '''
+    '''
+    PV Power Plants -> Process -> Step 09 : Save the results.
+    Input parameters:
+        prodAgreggated: DataFrame -> The DataFrame corresponding to aggregated production.
+        nuts2Dist: DataFrame -> The Dataframe corresponding to the NUTS2 distribution data.
+        nameNuts2: text -> The name of the NUTS2 region.
+        dfTH: DataFrame -> The DataFrame corresponding to the thermal data.
+        potDistTH: DataFrame -> The DataFrame corresponding to the thermal distributed power.
+        potDistPV: DataFrame -> The DataFrame corresponding to the PV distributed power.
+        opexTH: DataFrame -> The DataFrame corresponding to the thermal Opex.
+        opexPV: DataFrame -> The DataFrame corresponding to the PV Opex.
+        config: ConfigParser -> The data in the configuration file.
+    '''
 
     logger.info('  QGIS Server/> PV Power Plants -> Process -> Step 09 -> Saving the results...')
     outputs = [mio.retrieveOutputBasePath(True, config) + nameNuts2 + '.csv']
@@ -284,6 +364,16 @@ def pv2Step09(prodAgreggated, nuts2Dist, nameNuts2, dfTH, potDistTH, potDistPV, 
 
 # Auxiliary function: Check limits
 def checkLimits(dictToEvaluate, name, limitDown, limitUp, defaultValue):
+    '''
+    Function to check the limits of a parameter.
+    Input parameters:
+        dictToEvaluate: dict -> The dictionary to be evaluated.
+        name: text -> The name of the property to be evaluated.
+        limitDown: integer -> The lower limit.
+        limitUp: integer -> The highest limit.
+        defaultValue: text -> The default value of the property.
+    '''
+
     if name in dictToEvaluate:
         value = dictToEvaluate[name]
         if value is not None:
@@ -296,7 +386,11 @@ def checkLimits(dictToEvaluate, name, limitDown, limitUp, defaultValue):
 
 # Auxiliary function: Get coord
 def getCoord(df: pd.DataFrame) -> tuple:
-    ''' Function to get the coordinates. '''
+    '''
+    Function to get the coordinates.
+    Input parameters:
+        df: DataFrame -> The source DataFrame.
+    '''
 
     sampleX = df['Median_Radiation_X']
     sampleY = df['Median_Radiation_Y']
@@ -307,15 +401,26 @@ def getCoord(df: pd.DataFrame) -> tuple:
 
 
 # Auxiliary function: To CSV
-def toCsv(df, filename):
-    ''' Function to transform a dataframe to CSV. '''
+def toCsv(df, fileName):
+    '''
+    Function to transform a dataframe to CSV.
+    Input parameters:
+        df: DataFrame -> The source DataFrame.
+        fileName: text -> The target file name.
+    '''
 
-    df.to_csv(filename, index = False, decimal = ',', sep = ';')
+    df.to_csv(fileName, index = False, decimal = ',', sep = ';')
 
 
 # Auxiliary function: Dict to JSON
 def dictToJson(d: Union[dict, list], path: Path, replace: bool = False):
-    ''' Function to transform a dictionary to JSON. '''
+    '''
+    Function to transform a dictionary to JSON.
+    Input parameters:
+        d: dict -> The source dictionary.
+        path: object -> The Path object.
+        replace: boolean -> Indicates if it is necessary to apply replacing.
+    '''
 
     path = path.with_suffix(".json")
     if replace or not path.is_file():
@@ -325,14 +430,27 @@ def dictToJson(d: Union[dict, list], path: Path, replace: bool = False):
 
 # Auxiliary function: Thermal model
 def thermalModel(radiation: pd.DataFrame, effTH: float, effOp: float, aperture: float) -> list:
-    ''' Function to get the thermal model. '''
+    '''
+    Function to get the thermal model.
+    Input parameters:
+        radiation: DataFrame -> The source DataFrame.
+        effTH: number -> Thermal efficiency in % of collectors of CSP systems.
+        effOp: number -> Amount of incoming solar radiation in % captured in the collectors of CSP systems.
+        aperture: number -> Aperture area in % of solar field of CSP systems.
+    '''
 
     return radiation * aperture * effTH * effOp / 1000000  # in  MWh
 
 
 # Auxiliary function: Get available area
 def getAvailableArea(parameters: list, cost: float, landUse: float) -> tuple:
-    ''' Function to obtain the available area. '''
+    '''
+    Function to obtain the available area.
+    Input parameters:
+        parameters: list -> The list of parameters.
+        cost: number -> The system cost.
+        landUse: number -> The land use ratio.
+    '''
 
     index = next((i for i, value in enumerate(parameters) if value is not None), -1)
     if index == 2:
@@ -353,7 +471,13 @@ def getAvailableArea(parameters: list, cost: float, landUse: float) -> tuple:
 
 # Auxiliary function: Get regions
 def getRegions(scada: dict, area: float, minGHI: float) -> tuple:
-    ''' Function to get the regions. '''
+    '''
+    Function to get the regions.
+    Input parameters:
+        scada: DataFrame -> The source DataFrame.
+        area: number -> The source area.
+        minGHI: number -> Minimum annual Global Horizontal Irradiance in kWh/m2.
+    '''
 
     currentSum = 0
     nameNuts2 = None
@@ -376,7 +500,17 @@ def getRegions(scada: dict, area: float, minGHI: float) -> tuple:
 # Auxiliary function: Get thermal production
 def getThermalProduction(rows: list, landUse: float,
     effTH: float, effOp: float, aperture: float, convertCoord: bool, year: int) -> list:
-    ''' Function to get the thermal production. '''
+    '''
+    Function to get the thermal production.
+    Input parameters:
+        rows: list -> The source list of rows..
+        landUse: number -> The land use ratio.
+        effTH: number -> Thermal efficiency in % of collectors of CSP systems.
+        effOp: number -> Amount of incoming solar radiation in % captured in the collectors of CSP systems.
+        aperture: number -> Aperture area in % of solar field of CSP systems.
+        convertCoord: integer (0/1) -> Convert coordinates expressed into EPSG:3035 to EPSG:4326.
+        year: integer -> Year for calculate time-series hourly production.
+    '''
 
     production = []
     for region in rows:
@@ -405,7 +539,19 @@ def getThermalProduction(rows: list, landUse: float,
 # Auxiliary function: Get PV production
 def getPVProduction(rows: list, landUse: float, tilt: float, azimuth: float,
     tracking: int, loss: float, convertCoord: bool, year: int) -> list:
-    ''' Function to get the PV production. '''
+    '''
+    Function to get the PV production.
+    Input parameters:
+        rows: list -> The source list of rows.
+        landUse: number -> The land use ratio.
+        tilt: number -> Tilt angle in º from horizontal plane.
+        azimuth: number -> Orientation (azimuth angle) of the (fixed) plane of array. Clockwise from north.
+        tracking: number -> Percentage in % of single-axis tracking systems from the total PV capacity.
+            The rest is considered fixed mounted systems.
+        loss: number -> Percentage in % of power losses of PV systems. Please 
+        convertCoord: boolean -> Convert coordinates expressed into EPSG:3035 to EPSG:4326.
+        year: integer -> Year for calculate time-series hourly production.
+    '''
 
     production = []
     for region in rows:
@@ -437,7 +583,12 @@ def getPVProduction(rows: list, landUse: float, tilt: float, azimuth: float,
 
 # Auxiliary function: Get distribution
 def getDistribution(rows: list, label: str) -> tuple:
-    ''' Function to obtain the distribution. '''
+    '''
+    Function to obtain the distribution.
+    Input parameters:
+        rows: list -> The source list of rows.
+        label: text -> The label.
+    '''
 
     res = []
     for i in rows:
@@ -468,7 +619,13 @@ def getDistribution(rows: list, label: str) -> tuple:
 
 # Auxiliary function: Opex calc
 def opexCalc(dictData: dict, opexTH: float, opexPV: float) -> tuple:
-    ''' Function to calculate the OPEX. '''
+    '''
+    Function to calculate the OPEX.
+    Input parameters:
+        dictData: dict -> The source dictionary.
+        opexTH: number -> The thermal Opex.
+        opexPV: number -> The PV Opex.
+    '''
 
     totalTH = 0
     totalPV = 0

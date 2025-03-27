@@ -22,7 +22,14 @@ from modules.logging_config import logger
 
 # Function: Build. Energy Sim. -> Process -> Step 01 -> Download and load in a dataframe the previous result for the nutsId
 def bp2Step01(currentUser, nutsId, processId, config):
-    ''' Build. Energy Sim. -> Process -> Step 01 : Download and load in a dataframe the previous result for the nutsId. '''
+    '''
+    Build. Energy Sim. -> Process -> Step 01 : Download and load in a dataframe the previous result for the nutsId.
+    Input parameters:
+        currentUser: text -> The name of the user executing the process.
+        nutsId: text -> Identifier of NUTS2 region for which the analysis will be carried out.
+        processId: text -> The UUID of the process.
+        config: ConfigParser -> The data in the configuration file.
+    '''
 
     logger.info('  QGIS Server/> Build. Energy Sim. -> Process -> Step 01 -> Downloading the result file of the Buildings preprocess...')
     logger.info('')
@@ -42,8 +49,15 @@ def bp2Step01(currentUser, nutsId, processId, config):
 
 
 # Function: Build. Energy Sim. -> Process -> Step 02 -> Retrieve temperatures
-def bp2Step02(nutsId, year, dbase, config, properties):
-    ''' Build. Energy Sim. -> Process -> Step 02 : Retrieve temperatures. '''
+def bp2Step02(nutsId, year, dbase, config):
+    '''
+    Build. Energy Sim. -> Process -> Step 02 : Retrieve temperatures.
+    Input parameters:
+        nutsId: text -> Identifier of NUTS2 region for which the analysis will be carried out.
+        year: integer -> The selected year.
+        dbase: dict -> The dictionary of the database file.
+        config: ConfigParser -> The data in the configuration file.
+    '''
     
     logger.info('  QGIS Server/> Build. Energy Sim. -> Process -> Step 02 -> Retrieving temperatures...')
     output = None
@@ -143,8 +157,15 @@ def bp2Step02(nutsId, year, dbase, config, properties):
 
 
 # Function: Build. Energy Sim. -> Process -> Step 03 -> Retrieve radiation values
-def bp2Step03(nutsId, year, dbase, config, properties):
-    ''' Build. Energy Sim. -> Process -> Step 03 : Retrieve radiation values. '''
+def bp2Step03(nutsId, year, dbase, config):
+    '''
+    Build. Energy Sim. -> Process -> Step 03 : Retrieve radiation values.
+    Input parameters:
+        nutsId: text -> Identifier of NUTS2 region for which the analysis will be carried out.
+        year: integer -> The selected year.
+        dbase: dict -> The dictionary of the database file.
+        config: ConfigParser -> The data in the configuration file.
+    '''
 
     logger.info('  QGIS Server/> Build. Energy Sim. -> Process -> Step 03 -> Retrieving radiation values...')
     output = None
@@ -180,7 +201,12 @@ def bp2Step03(nutsId, year, dbase, config, properties):
 
 # Function: Build. Energy Sim. -> Process -> Step 04 -> Load the database
 def bp2Step04(dbaseFileList, body):
-    ''' Build. Energy Sim. -> Process -> Step 04 : Load the database. '''
+    '''
+    Build. Energy Sim. -> Process -> Step 04 : Load the database.
+    Input parameters:
+        dbaseFileList: list -> The full list of database files.
+        body: dict -> The request body.
+    '''
 
     logger.info('  QGIS Server/> Build. Energy Sim. -> Process -> Step 04 -> Loading the database...')
     dfDHW = pd.read_csv(dbaseFileList[7]['path'], sep = ';', decimal = ',', thousands = '.')
@@ -250,7 +276,11 @@ def bp2Step04(dbaseFileList, body):
 
 # Function: Build. Energy Sim. -> Process -> Step 05 -> Add columns to the input dataframe
 def bp2Step05(dfCSV):
-    ''' Build. Energy Sim. -> Process -> Step 05 : Add columns to the input dataframe. '''
+    '''
+    Build. Energy Sim. -> Process -> Step 05 : Add columns to the input dataframe.
+    Input parameters:
+        dfCSV: DataFrame -> The built input data DataFrame.
+    '''
 
     logger.info('  QGIS Server/> Build. Energy Sim. -> Process -> Step 05 -> Adding new columns to the input dataframe...')
     dfCSV = pd.concat([dfCSV,
@@ -397,8 +427,17 @@ def bp2Step05(dfCSV):
 
 
 # Function: Build. Energy Sim. -> Process -> Step 06 -> Add the input data
-def bp2Step06(dfCSV, dfDHW, dfYears, dfSectors, dfDwellings, body, properties):
-    ''' Build. Energy Sim. -> Process -> Step 06 : Add the input data. '''
+def bp2Step06(dfCSV, dfDHW, dfYears, dfSectors, dfDwellings, body):
+    '''
+    Build. Energy Sim. -> Process -> Step 06 : Add the input data.
+    Input parameters:
+        dfCSV: DataFrame -> The built input data DataFrame.
+        dfDHW: DataFrame -> The DataFrame corresponding to DHW.
+        dfYears: DataFrame -> The DataFrame corresponding to Years.
+        dfSectors: DataFrame -> The DataFrame corresponding to Sectors.
+        dfDwellings: DataFrame -> The DataFrame corresponding to Dwellings.
+        body: dict -> The request body.
+    '''
 
     logger.info('  QGIS Server/> Build. Energy Sim. -> Process -> Step 06 -> Updating the dataframe information...')
     for index, row in dfCSV.iterrows():
@@ -467,7 +506,16 @@ def bp2Step06(dfCSV, dfDHW, dfYears, dfSectors, dfDwellings, body, properties):
 
 # Function: Build. Energy Sim. -> Process -> Step 07 -> Add the active measures
 def bp2Step07(dfCSV, dfReshhtes, dfSerhhtes, dfRThheff, config, body):
-    ''' Build. Energy Sim. -> Process -> Step 07 : Add the active measures. '''
+    '''
+    Build. Energy Sim. -> Process -> Step 07 : Add the active measures.
+    Input parameters:
+        dfCSV: DataFrame -> The built input data DataFrame.
+        dfReshhtes: DataFrame -> The DataFrame corresponding to Residential.
+        dfSerhhtes: DataFrame -> The DataFrame corresponding to Service.
+        dfRThheff: DataFrame -> The DataFrame corresponding to RT.
+        config: ConfigParser -> The data in the configuration file.
+        body: dict -> The request body.
+    '''
 
     dfReshhtes = dfReshhtes[['Energy service_Fuel', 'Energy service', body['nutsid'].strip()[:2].upper()]]
     dfSerhhtes = dfSerhhtes[['Energy service_Fuel', 'Energy service', body['nutsid'].strip()[:2].upper()]]
@@ -1771,7 +1819,12 @@ def bp2Step07(dfCSV, dfReshhtes, dfSerhhtes, dfRThheff, config, body):
 
 # Function: Build. Energy Sim. -> Process -> Step 08 -> Add the passive measures
 def bp2Step08(dfCSV, body):
-    ''' Build. Energy Sim. -> Process -> Step 08 : Add the passive measures. '''
+    '''
+    Build. Energy Sim. -> Process -> Step 08 : Add the passive measures.
+    Input parameters:
+        dfCSV: DataFrame -> The built input data DataFrame.
+        body: dict -> The request body.
+    '''
 
     logger.info('  QGIS Server/> Build. Energy Sim. -> Process -> Step 08 -> Writing the Passive measures...')
     for measure in body['scenario']['passive_measures']:
@@ -1799,7 +1852,16 @@ def bp2Step08(dfCSV, body):
 
 # Function: Build. Energy Sim. -> Process -> Step 09 -> Write the U-Values and the Internal Gains
 def bp2Step09(dfCSV, dfDHW, dfUValues, dfRUValues, dfACH, body):
-    ''' Build. Energy Sim. -> Process -> Step 09 : Write the U-Values and the Internal Gains. '''
+    '''
+    Build. Energy Sim. -> Process -> Step 09 : Write the U-Values and the Internal Gains.
+    Input parameters:
+        dfCSV: DataFrame -> The built input data DataFrame.
+        dfDHW: DataFrame -> The DataFrame corresponding to DHW.
+        dfUValues: DataFrame -> The DataFrame corresponding to U-Values.
+        dfRUValues: DataFrame -> The DataFrame corresponding to Retroffitting U-Values.
+        dfACH: DataFrame -> The DataFrame corresponding to ACH.
+        body: dict -> The request body.
+    '''
 
     logger.info('  QGIS Server/> Build. Energy Sim. -> Process -> Step 09 -> Writing the U-Values and the Internal Gains...')
     country = body['nutsid'].strip()[:2].upper()
@@ -1843,7 +1905,12 @@ def bp2Step09(dfCSV, dfDHW, dfUValues, dfRUValues, dfACH, body):
 
 # Function: Build. Energy Sim. -> Process -> Step 10 -> Add the CAPEX dataframe
 def bp2Step10(dfCSV, dfBesCapex):
-    ''' Build. Energy Sim. -> Process -> Step 10 : Add the CAPEX dataframe. '''
+    '''
+    Build. Energy Sim. -> Process -> Step 10 : Add the CAPEX dataframe.
+    Input parameters:
+        dfCSV: DataFrame -> The built input data DataFrame.
+        dfBesCapex: DataFrame -> The DataFrame corresponding to Capex.
+    '''
 
     logger.info('  QGIS Server/> Build. Energy Sim. -> Process -> Step 10 -> Adding the CAPEX dataframe...')
     
@@ -2083,7 +2150,12 @@ def bp2Step10(dfCSV, dfBesCapex):
 
 # Function: Build. Energy Sim. -> Process -> Step 11 -> Add the OPEX dataframe
 def bp2Step11(dfCSV, dfBesOpex):
-    ''' Build. Energy Sim. -> Process -> Step 11 : Add the OPEX dataframe. '''
+    '''
+    Build. Energy Sim. -> Process -> Step 11 : Add the OPEX dataframe.
+    Input parameters:
+        dfCSV: DataFrame -> The built input data DataFrame.
+        dfBesOpex: DataFrame -> The DataFrame corresponding to Opex.
+    '''
 
     logger.info('  QGIS Server/> Build. Energy Sim. -> Process -> Step 11 -> Adding the OPEX dataframe...')
     
@@ -2179,7 +2251,12 @@ def bp2Step11(dfCSV, dfBesOpex):
 
 # Function: Build. Energy Sim. -> Process -> Step 12 -> Add the Retrofitting Cost dataframe
 def bp2Step12(dfCSV, dfRetroCost):
-    ''' Build. Energy Sim. -> Process -> Step 12 : Add the Retrofitting Cost dataframe. '''
+    '''
+    Build. Energy Sim. -> Process -> Step 12 : Add the Retrofitting Cost dataframe.
+    Input parameters:
+        dfCSV: DataFrame -> The built input data DataFrame.
+        dfRetroCost: DataFrame -> The DataFrame corresponding to Retrofitting Cost.
+    '''
 
     logger.info('  QGIS Server/> Build. Energy Sim. -> Process -> Step 12 -> Adding the Retrofitting Cost dataframe...')
     dfCSV = dfCSV.assign(
@@ -2204,7 +2281,12 @@ def bp2Step12(dfCSV, dfRetroCost):
 
 # Function: Build. Energy Sim. -> Process -> Step 13 -> Add the Renewable Energy Systems dataframe
 def bp2Step13(dfCSV, dfRes):
-    ''' Build. Energy Sim. -> Process -> Step 13 : Add the Renewable Energy Systems dataframe. '''
+    '''
+    Build. Energy Sim. -> Process -> Step 13 : Add the Renewable Energy Systems dataframe.
+    Input parameters:
+        dfCSV: DataFrame -> The built input data DataFrame.
+        dfRes: DataFrame -> The DataFrame corresponding to Renewable Energy Systems.
+    '''
 
     logger.info('  QGIS Server/> Build. Energy Sim. -> Process -> Step 13 -> Adding the Renewable Energy Systems (RES) dataframe...')
     dfCSV = dfCSV.assign(
@@ -2236,7 +2318,13 @@ def bp2Step13(dfCSV, dfRes):
 
 # Function: Build. Energy Sim. -> Process -> Step 14 -> Add the Capacity dataframe
 def bp2Step14(dfCSV, dfCapacity, config):
-    ''' Build. Energy Sim. -> Process -> Step 14 : Add the Capacity dataframe. '''
+    '''
+    Build. Energy Sim. -> Process -> Step 14 : Add the Capacity dataframe.
+    Input parameters:
+        dfCSV: DataFrame -> The built input data DataFrame.
+        dfCapacity: DataFrame -> The DataFrame corresponding to Capacity.
+        config: ConfigParser -> The data in the configuration file.
+    '''
 
     logger.info('  QGIS Server/> Build. Energy Sim. -> Process -> Step 14 -> Adding the Capacity dataframe...')
     archetypes = [arch.strip() for arch in config['IDESIGNRES-PARAMETERS']['idesignres.params.archetypes'].split(',')]
@@ -2268,7 +2356,11 @@ def bp2Step14(dfCSV, dfCapacity, config):
 
 # Function: Build. Energy Sim. -> Process -> Step 15 -> Add the Equivalent Power dataframe
 def bp2Step15(dfCSV):
-    ''' Build. Energy Sim. -> Process -> Step 15 : Add the Equivalent Power dataframe. '''
+    '''
+    Build. Energy Sim. -> Process -> Step 15 : Add the Equivalent Power dataframe.
+    Input parameters:
+        dfCSV: DataFrame -> The built input data DataFrame.
+    '''
 
     logger.info('  QGIS Server/> Build. Energy Sim. -> Process -> Step 15 -> Adding the Equivalent Power dataframe...')
 
@@ -2315,7 +2407,11 @@ def bp2Step15(dfCSV):
 
 # Function: Build. Energy Sim. -> Process -> Step 16 -> Calculate the costs
 def bp2Step16(dfCSV):
-    ''' Build. Energy Sim. -> Process -> Step 16 : Calculate the costs. '''
+    '''
+    Build. Energy Sim. -> Process -> Step 16 : Calculate the costs.
+    Input parameters:
+        dfCSV: DataFrame -> The built input data DataFrame.
+    '''
 
     logger.info('  QGIS Server/> Build. Energy Sim. -> Process -> Step 16 -> Calculating the costs...')
     dfDwellings = dfCSV[['Sector', 'Occ. Dwellings']]
@@ -2488,7 +2584,17 @@ def bp2Step16(dfCSV):
 
 # Function: Build. Energy Sim. -> Process -> Step 17 -> Calculate the General Schedule for each archetype
 def bp2Step17(dfCSV, dfSched, dfTemperatures, dfBaseTemperatures, dfSolarOffice, dfSolarNOffice, body):
-    ''' Build. Energy Sim. -> Process -> Step 17 : Calculate the General Schedule for each archetype. '''
+    '''
+    Build. Energy Sim. -> Process -> Step 17 : Calculate the General Schedule for each archetype.
+    Input parameters:
+        dfCSV: DataFrame -> The built input data DataFrame.
+        dfSched: DataFrame -> The DataFrame corresponding to Schedule.
+        dfTemperatures: DataFrame -> The DataFrame corresponding to Temperatures.
+        dfBaseTemperatures: DataFrame -> The DataFrame corresponding to Base Temperatures.
+        dfSolarOffice: DataFrame -> The DataFrame corresponding to Solar Office data.
+        dfSolarNOffice: DataFrame -> The DataFrame corresponding to Solar Non-Office data.
+        body: dict -> The request body.
+    '''
 
     # Divide the Schedule dataframe by column value
     logger.info('  QGIS Server/> Build. Energy Sim. -> Process -> Step 17 -> Dividing the Schedule dataframe by archetypes...')
@@ -2619,8 +2725,14 @@ def bp2Step17(dfCSV, dfSched, dfTemperatures, dfBaseTemperatures, dfSolarOffice,
 
 
 # Function: Build. Energy Sim. -> Process -> Step 18 -> Calculate the Scenario
-def bp2Step18(dfCSV, dictSchedule, config, body):
-    ''' Build. Energy Sim. -> Process -> Step 18 : Calculate the Scenario. '''
+def bp2Step18(dfCSV, dictSchedule, config):
+    '''
+    Build. Energy Sim. -> Process -> Step 18 : Calculate the Scenario.
+    Input parameters:
+        dfCSV: DataFrame -> The built input data DataFrame.
+        dictSchedule: dict -> The dictionary corresponding to the Schedule.
+        config: ConfigParser -> The data in the configuration file.
+    '''
 
     logger.info('  QGIS Server/> Build. Energy Sim. -> Process -> Step 18 -> Calculating the Scenario...')
 
@@ -2904,7 +3016,12 @@ def bp2Step18(dfCSV, dictSchedule, config, body):
 
 # Function: Build. Energy Sim. -> Process -> Step 19 -> Calculate the Anual Results
 def bp2Step19(dfCSV, dictSchedule):
-    ''' Build. Energy Sim. -> Process -> Step 19 : Calculate the Anual Results. '''
+    '''
+    Build. Energy Sim. -> Process -> Step 19 : Calculate the Anual Results.
+    Input parameters:
+        dfCSV: DataFrame -> The built input data DataFrame.
+        dictSchedule: dict -> The dictionary corresponding to the Schedule.
+    '''
 
     # Create the Anual Results dataframe
     logger.info('  QGIS Server/> Build. Energy Sim. -> Process -> Step 19 -> Building the Anual Results dataframe...')
@@ -3021,8 +3138,13 @@ def bp2Step19(dfCSV, dictSchedule):
 
 
 # Function: Build. Energy Sim. -> Process -> Step 20 -> Calculate the Consolidate
-def bp2Step20(dfCSV, dictSchedule, archetype):
-    ''' Build. Energy Sim. -> Process -> Step 20 : Calculate the Consolidate. '''
+def bp2Step20(dictSchedule, archetype):
+    '''
+    Build. Energy Sim. -> Process -> Step 20 : Calculate the Consolidate.
+    Input parameters:
+        dictSchedule: dict -> The dictionary corresponding to the Schedule.
+        archetype: text -> The name of the archetype (building use).
+    '''
 
     # Create the Consolidated dataframe
     logger.info('  QGIS Server/> Build. Energy Sim. -> Process -> Step 20 -> Building the Consolidated (' + archetype + ') dataframe...')
@@ -3106,7 +3228,13 @@ def bp2Step20(dfCSV, dictSchedule, archetype):
 
 # Function: Build. Energy Sim. -> Process -> Step 21 -> Calculate the Hourly Results
 def bp2Step21(dfCSV, dictSchedule, archetype):
-    ''' Build. Energy Sim. -> Process -> Step 21 : Calculate the Hourly Results. '''
+    '''
+    Build. Energy Sim. -> Process -> Step 21 : Calculate the Hourly Results.
+    Input parameters:
+        dfCSV: DataFrame -> The built input data DataFrame.
+        dictSchedule: dict -> The dictionary corresponding to the Schedule.
+        archetype: text -> The name of the archetype (building use).
+    '''
 
     # Create the Hourly Results dataframe
     logger.info('  QGIS Server/> Build. Energy Sim. -> Process -> Step 21 -> Building the Hourly Results (' + archetype + ') dataframe...')
@@ -3217,7 +3345,15 @@ def bp2Step21(dfCSV, dictSchedule, archetype):
 
 # Function: Build. Energy Sim. -> Process -> Step 22 -> Save the final result
 def bp2Step22(dfCSV, dfAnualResults, dictConsolidated, dictHourlyResults, config):
-    ''' Build. Energy Sim. -> Process -> Step 22 : Save the final result. '''
+    '''
+    Build. Energy Sim. -> Process -> Step 22 : Save the final result.
+    Input parameters:
+        dfCSV: DataFrame -> The built input data DataFrame.
+        dfCddfAnualResultsfAnualResultsSV: DataFrame -> The DataFrame corresponding to the anual results.
+        dictConsolidated: dict -> The dictionary corresponding to the consolidated data.
+        dictHourlyResults: dict -> The dictionary corresponding to the hourly results.
+        config: ConfigParser -> The data in the configuration file.
+    '''
 
     # Load the list of archetypes
     archetypes = [arch.strip() for arch in config['IDESIGNRES-PARAMETERS']['idesignres.params.archetypes'].split(',')]
@@ -3272,7 +3408,11 @@ def bp2Step22(dfCSV, dfAnualResults, dictConsolidated, dictHourlyResults, config
 
 # Auxiliary function: Format Anual Results Tab
 def formatAnualResultsTab(sheet):
-    ''' Function to format the Anual Results tab. '''
+    '''
+    Function to format the Anual Results tab.
+    Input parameters:
+        sheet: object -> The Excel sheet.
+    '''
 
     # Create rows, columns, and adjust the sizes
     for i in range(1, 3):
@@ -3306,7 +3446,12 @@ def formatAnualResultsTab(sheet):
 
 # Auxiliary function: Format Consolidated Tab
 def formatConsolidatedTab(sheet, archetype):
-    ''' Function to format the Consolidate tab. '''
+    '''
+    Function to format the Consolidate tab.
+    Input parameters:
+        sheet: object -> The Excel sheet.
+        archetype: text -> The name of the archetype (building use).
+    '''
 
     # Create rows, columns, and adjust the sizes
     for i in range(1, 3):
@@ -3353,7 +3498,12 @@ def formatConsolidatedTab(sheet, archetype):
 
 # Auxiliary function: Format Hourly Results Tab
 def formatHourlyResultsTab(sheet, archetype):
-    ''' Function to format the Hourly Results tab. '''
+    '''
+    Function to format the Hourly Results tab.
+    Input parameters:
+        sheet: object -> The Excel sheet.
+        archetype: text -> The name of the archetype (building use).
+    '''
 
     # Create rows, columns, and adjust the sizes
     for i in range(1, 3):

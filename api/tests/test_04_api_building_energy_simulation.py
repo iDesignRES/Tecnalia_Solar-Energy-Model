@@ -8,7 +8,11 @@ from api.api import app
 
 @pytest.fixture
 def client():
-    ''' Define the test_client '''
+    '''
+    Define the test_client.
+    Input parameters:
+        None.
+    '''
 
     with app.app_context():
         yield app.test_client()
@@ -16,7 +20,12 @@ def client():
 
 # Test 04 (a) -> Missing input parameters
 def testMissingInputParameters(client, caplog):
-    ''' Test 04 (a) -> Missing input parameters. '''
+    '''
+    Test 04 (a) -> Missing input parameters.
+    Input parameters:
+        client: object -> The PyTest client object.
+        caplog: object -> The PyTest object to capture the logs.
+    '''
 
     # Load the authentication payload
     with open('api/tests/payloads/auth_payload.json', 'r') as payloadFile:
@@ -185,7 +194,12 @@ def testMissingInputParameters(client, caplog):
 
 # Test 04 (b) -> Wrong values in input parameters
 def testWrongValuesInInputParameters(client, caplog):
-    ''' Test 04 (b) -> Wrong values in input parameters. '''
+    '''
+    Test 04 (b) -> Wrong values in input parameters.
+    Input parameters:
+        client: object -> The PyTest client object.
+        caplog: object -> The PyTest object to capture the logs.
+    '''
 
     # Load the authentication payload
     with open('api/tests/payloads/auth_payload.json', 'r') as payloadFile:
@@ -353,7 +367,12 @@ def testWrongValuesInInputParameters(client, caplog):
 
 # Test 04 (c) -> Process successful
 def testProcessSuccessful(client, caplog):
-    ''' Test 04 (c) -> Process successful. '''
+    '''
+    Test 04 (c) -> Process successful.
+    Input parameters:
+        client: object -> The PyTest client object.
+        caplog: object -> The PyTest object to capture the logs.
+    '''
 
     # Load the authentication payload
     with open('api/tests/payloads/auth_payload.json', 'r') as payloadFile:

@@ -23,7 +23,13 @@ from modules.logging_config import logger
 
 # Function: PV Power Plants -> Preprocess -> Step 01 -> Process the layer and retrieve the output files
 def pv1Step01(layer, nutsId, config):
-    ''' PV Power Plants -> Preprocess -> Step 01 : Process the layer and retrieve the output files. '''
+    '''
+    PV Power Plants -> Preprocess -> Step 01 : Process the layer and retrieve the output files.
+    Input parameters:
+        layer: dict -> The layers doctionary.
+        nutsId: text -> Identifier of NUTS2 region for which the analysis will be carried out.
+        config: ConfigParser -> The data in the configuration file.
+    '''
 
     # Read the layer file and convert it to a dataframe
     layerName = layer['name'] + '.' + layer['format']
@@ -64,7 +70,14 @@ def pv1Step01(layer, nutsId, config):
 
 # Function: PV Power Plants -> Preprocess -> Steps 02, 03, 04, 05 -> Apply the mask layer
 def pv1Steps02030405(layer, mask, step, config):
-    ''' PV Power Plants -> Preprocess -> Steps 02, 03, 04 and 05 : Apply the mask layer. '''
+    '''
+    PV Power Plants -> Preprocess -> Steps 02, 03, 04 and 05 : Apply the mask layer.
+    Input parameters:
+        layer: dict -> The layers dictionary.
+        mask: object -> The mask object.
+        step: text -> The step of the process to log.
+        config: ConfigParser -> The data in the configuration file.
+    '''
     
     layerName = layer['name'] + '.' + layer['format']
     logger.info('  QGIS Server/> PV Power Plants -> Preprocess -> Step ' + step + ' -> Processing "' + layerName + '"...')
@@ -106,8 +119,13 @@ def pv1Steps02030405(layer, mask, step, config):
 
 
 # Function: PV Power Plants -> Preprocess -> Step 06 -> Filter the slope raster
-def pv1Step06(slopeRasterClippedPath, slopeAngle, config):
-    ''' PV Power Plants -> Preprocess -> Step 06 : Filter the slope raster. '''
+def pv1Step06(slopeRasterClippedPath, slopeAngle):
+    '''
+    PV Power Plants -> Preprocess -> Step 06 : Filter the slope raster.
+    Input parameters:
+        slopeRasterClippedPath: text -> The path of the slope raster layer.
+        slopeAngle: integer -> Maximum slope angle in º with which a land area can be considered suitable for PV.
+    '''
 
     # Transform
     logger.info('  QGIS Server/> PV Power Plants -> Preprocess -> Step 06 -> Transforming...')
@@ -140,7 +158,12 @@ def pv1Step06(slopeRasterClippedPath, slopeAngle, config):
 
 # Function: PV Power Plants -> Preprocess -> Step 07 -> Filter raster by user codes
 def pv1Step07(srcPath, config):
-    ''' PV Power Plants -> Preprocess -> Step 07 : Filter raster by user codes. '''
+    '''
+    PV Power Plants -> Preprocess -> Step 07 : Filter raster by user codes.
+    Input parameters:
+        srcPath: text -> The layer source path.
+        config: ConfigParser -> The data in the configuration file.
+    '''
     
     # Build "user codes" as a list
     logger.info('  QGIS Server/> PV Power Plants -> Preprocess -> Step 07 -> Building user codes...')
@@ -184,7 +207,13 @@ def pv1Step07(srcPath, config):
 
 # Function: PV Power Plants -> Preprocess -> Steps 08, 10 -> Change a raster resolution
 def pv1Steps0810(srcPath, step, config):
-    ''' PV Power Plants -> Preprocess -> Steps 09 and 10 : Change a raster resolution. '''
+    '''
+    PV Power Plants -> Preprocess -> Steps 09 and 10 : Change a raster resolution.
+    Input parameters:
+        srcPath: text -> The layer source path.
+        step: text -> The step of the process to log.
+        config: ConfigParser -> The data in the configuration file.
+    '''
     
     logger.info('  QGIS Server/> PV Power Plants -> Preprocess -> Step ' + step + ' -> Changing the resolution...')
     dstCrs = CRS.from_epsg(3035)
@@ -227,7 +256,14 @@ def pv1Steps0810(srcPath, step, config):
 
 # Function: PV Power Plants -> Preprocess -> Step 09, 11, 13 -> Adjust to the size of the "slope" raster
 def pv1Steps091113(srcFile, dstFile, step, config):
-    ''' PV Power Plants -> Preprocess -> Steps 09, 11 and 13 : Adjust to the size of the slope raster. '''
+    '''
+    PV Power Plants -> Preprocess -> Steps 09, 11 and 13 : Adjust to the size of the slope raster.
+    Input parameters:
+        srcFile: text -> The source file.
+        dstFile: text -> The target file.
+        step: text -> The step of the process to log.
+        config: ConfigParser -> The data in the configuration file.
+    '''
     
     logger.info('  QGIS Server/> PV Power Plants -> Preprocess -> Step ' + step + ' -> Reading the metadata of the source layer...')
     with rasterio.open(srcFile) as src:
@@ -287,7 +323,12 @@ def pv1Steps091113(srcFile, dstFile, step, config):
 
 # Function: PV Power Plants -> Preprocess -> Step 12 -> Change a raster resolution and reference system
 def pv1Step12(inputPath, config):
-    ''' PV Power Plants -> Preprocess -> Step 12 : Change a raster resolution and reference system. '''
+    '''
+    PV Power Plants -> Preprocess -> Step 12 : Change a raster resolution and reference system.
+    Input parameters:
+        inputPath: text -> The input path.
+        config: ConfigParser -> The data in the configuration file.
+    '''
 
     logger.info('  QGIS Server/> PV Power Plants -> Preprocess -> Step 12 -> Reading the metadata of the source layer...')
     dstCrs = CRS.from_epsg(3035)
@@ -339,7 +380,15 @@ def pv1Step12(inputPath, config):
 
 # Function: PV Power Plants -> Preprocess -> Step 14 -> Calculate the multiplication of all the layers
 def pv1Step14(GHIAlignedOutput, npaAlignedOutput, landuseAlignedPath, slopeFltPath, config):
-    ''' PV Power Plants -> Preprocess -> Step 14 : Calculate the multiplication of all the layers. '''
+    '''
+    PV Power Plants -> Preprocess -> Step 14 : Calculate the multiplication of all the layers.
+    Input parameters:
+        GHIAlignedOutput: object -> The GHI layer object.
+        npaAlignedOutput: object -> The non protected areas layer object.
+        landuseAlignedPath: object -> The land use layer object.
+        slopeFltPath: object -> The slope layer object.
+        config: ConfigParser -> The data in the configuration file.
+    '''
 
     logger.info('  QGIS Server/> PV Power Plants -> Preprocess -> Step 14 -> Calculating...')
     resultPath = io.retrieveRadiationPotentialAreasPath(config)
@@ -379,7 +428,16 @@ def pv1Step14(GHIAlignedOutput, npaAlignedOutput, landuseAlignedPath, slopeFltPa
 
 # Function: PV Power Plants -> Preprocess -> Step 15 -> Calculate regions
 def pv1Step15(radiationPotentialAreas, nutsOutputPath, process, username, nutsid, config):
-    ''' PV Power Plants -> Preprocess -> Step 15 : Calculate regions. '''
+    '''
+    PV Power Plants -> Preprocess -> Step 15 : Calculate regions.
+    Input parameters:
+        radiationPotentialAreas: object -> The source layer.
+        nutsOutputPath: text -> The NUTS output path.
+        process: text -> The UUID of the current process.
+        username: text -> The name of the user executing the process.
+        nutsid: text -> Identifier of NUTS2 region for which the analysis will be carried out.
+        config: ConfigParser -> The data in the configuration file.
+    '''
 
     logger.info('  QGIS Server/> PV Power Plants -> Preprocess -> Step 15 -> Loading the files...')
     radiationThresholdStart = int(config['IDESIGNRES-PARAMETERS']['idesignres.params.radiation.threshold.start'])

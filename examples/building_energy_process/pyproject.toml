@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "building_energy_process"
-version = "0.8.6"
+version = "0.8.7"
 description = "Building Energy Simulation process client"
 authors = ["Alberto Molinuevo Martin <alberto.molinuevo@tecnalia.com>"]
 license = "GPLv2"

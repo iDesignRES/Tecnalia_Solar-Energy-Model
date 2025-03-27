@@ -24,7 +24,15 @@ BUILDING_USES = ['Apartment Block',
 
 # Function: Execute the Building Energy Simulation process
 def executeBuildingEnergySimulationProcess(authPayload: dict, processPayload: dict, startTime: str, endTime: str, buildingUse: str):
-    ''' Function to execute the Building Energy Simulation process. '''
+    '''
+    Function to execute the Building Energy Simulation process.
+    Input parameters:
+        authPayload: dict -> The dictionary with the authorization payload.
+        processPayload: dict -> The dictionary with the process input payload.
+        startTime: text -> The start datetime.
+        endTime: text -> The end datetime.
+        buildingUse: text -> The archetype (building use).
+    '''
 
     try:
         # Authenticate
@@ -56,22 +64,6 @@ def executeBuildingEnergySimulationProcess(authPayload: dict, processPayload: di
             end = pd.to_datetime(datetime.strptime(endTime, '%Y-%m-%dT%H:%M:%S'))
             dataFiltered = data[(data['Datetime'] >= start) & (data['Datetime'] <= end)]
             return dataFiltered.to_dict(orient = 'list')
-            #solidsCoal = dataFiltered['Solids|Coal'].to_numpy()
-            #liquidsGas = dataFiltered['Liquids|Gas'].to_numpy()
-            #liquidsOil = dataFiltered['Liquids|Oil'].to_numpy()
-            #gasesGas = dataFiltered['Gases|Gas'].to_numpy()
-            #solidsBiomass = dataFiltered['Solids|Biomass'].to_numpy()
-            #electricity = dataFiltered['Electricity'].to_numpy()
-            #heat = dataFiltered['Heat'].to_numpy()
-            #liquidsBiomass = dataFiltered['Liquids|Biomass'].to_numpy()
-            #gasesBiomass = dataFiltered['Gases|Biomass'].to_numpy()
-            #hydrogen = dataFiltered['Hydrogen'].to_numpy()
-            #heatSolar = dataFiltered['Heat|Solar'].to_numpy()
-            #variableCost = dataFiltered['Variable cost [€/KWh]'].to_numpy()
-            #emissions = dataFiltered['Emissions [KgCO2/KWh]'].to_numpy()
-            #return solidsCoal, liquidsGas, liquidsOil,gasesGas, solidsBiomass,\
-            #    electricity, heat, liquidsBiomass, gasesBiomass, hydrogen,\
-            #    heatSolar, variableCost, emissions
     except Exception as error:
         print('Process/>  An error occurred executing the Building Energy Simulation process!')
         print(error)
@@ -79,16 +71,19 @@ def executeBuildingEnergySimulationProcess(authPayload: dict, processPayload: di
 
 # Function: Main
 def main():
-    ''' Main function '''
+    '''
+    Main function.
+    Input parameters:
+        sys.argv[0]: text -> The client file name.
+        sys.argv[1]: text -> The authorization file path.
+        sys.argv[2]: text -> The process input data file path.
+        sys.argv[3]: text -> The start datetime.
+        sys.argv[4]: text -> The end datetime.
+        sys.argv[5]: text -> The archetype (building use).
+    '''
 
     try:
         # Read input parameters:
-        # [0]: client file name
-        # [1]: auth file path
-        # [2]: input data file path
-        # [3]: start datetime (yyyy-MM-ddTHH:mm:ss)
-        # [4]: end datetime (yyyy-MM-ddTHH:mm:ss)
-        # [5]: building use
         if len(sys.argv) < 6:
             raise Exception('The number of input parameters is incorrect! (6)')
         if not os.path.exists(sys.argv[1].strip()):

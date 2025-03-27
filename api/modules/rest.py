@@ -9,7 +9,13 @@ from modules.logging_config import logger
 
 # Function: Build a 200-OK response
 def buildResponse200(isWelcome, config, properties):
-    ''' Function to build a simple OK response. '''
+    '''
+    Function to build a simple OK response.
+    Input parameters:
+        isWelcome: boolean -> Indicates if it refers to a Welcome message or not.
+        config: ConfigParser -> The data in the configuration file.
+        properties: ConfigParser -> The data in the properties file.
+    '''
 
     # Build the message
     message = properties['IDESIGNRES-MESSAGES']['idesignres.message.success']
@@ -36,7 +42,12 @@ def buildResponse200(isWelcome, config, properties):
 
 # Function: Build a 200-OK response with value
 def buildResponse200Value(value, properties):
-    ''' Function to build an OK response, including a customized value. '''
+    '''
+    Function to build an OK response, including a customized value.
+    Input parameters:
+        value: text -> The customized text value.
+        properties: ConfigParser -> The data in the properties file.
+    '''
     
     # Build the header
     headerTypeHeader = properties['IDESIGNRES-REST']['idesignres.rest.content.type.header']
@@ -58,7 +69,12 @@ def buildResponse200Value(value, properties):
 
 # Function: Build a 200-OK response with time series
 def buildResponse200TimeSeries(value, properties):
-    ''' Function to build an OK response, including a time series. '''
+    '''
+    Function to build an OK response, including a time series.
+    Input parameters:
+        value: text -> The time series.
+        properties: ConfigParser -> The data in the properties file.
+    '''
 
     # Build the header
     headerTypeHeader = properties['IDESIGNRES-REST']['idesignres.rest.content.type.header']
@@ -72,7 +88,12 @@ def buildResponse200TimeSeries(value, properties):
 
 # Function: Build a 400-Bad request response
 def buildResponse400(errorMessage, properties):
-    ''' Function to build a Bad Request response. '''
+    '''
+    Function to build a Bad Request response.
+    Input parameters:
+        errorMessage: text -> The customized error message.
+        properties: ConfigParser -> The data in the properties file.
+    '''
 
     # Build the header
     headerTypeHeader = properties['IDESIGNRES-REST']['idesignres.rest.content.type.header']
@@ -93,7 +114,11 @@ def buildResponse400(errorMessage, properties):
 
 #Function: Build a 401-Unauthorized request response
 def buildResponse401(properties):
-    ''' Function to build an Unauthorized Request response. '''
+    '''
+    Function to build an Unauthorized Request response.
+    Input parameters:
+        properties: ConfigParser -> The data in the properties file.
+    '''
 
     # Build the header
     headerTypeHeader = properties['IDESIGNRES-REST']['idesignres.rest.content.type.header']

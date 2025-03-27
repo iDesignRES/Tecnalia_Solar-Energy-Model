@@ -15,7 +15,14 @@ URL_PROCESS  = 'https://idesignres.digital.tecnalia.dev/api/qgis/pv-power-plants
 
 # Function: Execute the PV Power Plants process
 def executePVPowerPlantsProcess(authPayload: dict, processPayload: dict, startTime: str, endTime: str):
-    ''' Function to execute the PV Power Plants process. '''
+    '''
+    Function to execute the PV Power Plants process.
+    Input parameters:
+        authPayload: dict -> The dictionary with the authorization payload.
+        processPayload: dict -> The dictionary with the process input payload.
+        startTime: text -> The start datetime.
+        endTime: text -> The end datetime.
+    '''
 
     try:
         # Authenticate
@@ -56,15 +63,18 @@ def executePVPowerPlantsProcess(authPayload: dict, processPayload: dict, startTi
 
 # Function: Main
 def main():
-    ''' Main function '''
+    '''
+    Main function.
+    Input parameters:
+        sys.argv[0]: text -> The client file name.
+        sys.argv[1]: text -> The authorization file path.
+        sys.argv[2]: text -> The process input data file path.
+        sys.argv[3]: text -> The start datetime.
+        sys.argv[4]: text -> The end datetime.
+    '''
 
     try:
         # Read input parameters:
-        # [0]: client file name
-        # [1]: auth file path
-        # [2]: input data file path
-        # [3]: start datetime (yyyy-MM-ddTHH:mm:ss)
-        # [4]: end datetime (yyyy-MM-ddTHH:mm:ss)
         if len(sys.argv) < 5:
             raise Exception('The number of input parameters is incorrect! (5)')
         if not os.path.exists(sys.argv[1].strip()):

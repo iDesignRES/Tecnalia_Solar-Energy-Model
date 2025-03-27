@@ -5,7 +5,11 @@ import pytest
 
 # Test 01 -> The process works
 def testProcess():
-    ''' Test 01 -> The process works. '''
+    '''
+    Test 01 -> The process works.
+    Input parameters:
+        None.
+    '''
     
     # Load the authorization payload
     with open('auth.json', 'r') as authPayloadFile:

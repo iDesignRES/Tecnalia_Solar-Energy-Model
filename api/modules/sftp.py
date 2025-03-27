@@ -11,7 +11,11 @@ from modules.logging_config import logger
 
 # Function: Build the connection parameters
 def buildConnectionParameters(config):
-    ''' Function to build the SFTP connection parameters. '''
+    '''
+    Function to build the SFTP connection parameters.
+    Input parameters:
+        config: ConfigParser -> The data in the configuration file.
+    '''
 
     obj = { 'hostname': config['IDESIGNRES-SFTP']['idesignres.sftp.host'],
             'port': int(config['IDESIGNRES-SFTP']['idesignres.sftp.port']),
@@ -24,7 +28,12 @@ def buildConnectionParameters(config):
 
 # Function: Checks a user directory
 def checkUserDirectory(username, config):
-    ''' Function to check the user directory. '''
+    '''
+    Function to check the user directory.
+    Input parameters:
+        username: text -> The name of the user to check his/her directory.
+        config: ConfigParser -> The data in the configuration file.
+    '''
 
     try:
         # Build the path
@@ -66,7 +75,12 @@ def checkUserDirectory(username, config):
 
 # Function: Retrieve the layer files stored in the SFTP Server
 def retrieveLayerFiles(layerList, config):
-    ''' Function to retrieve the layer files. '''
+    '''
+    Function to retrieve the layer files.
+    Input parameters:
+        layerList: list -> The list of layers to be retrieved.
+        config: ConfigParser -> The data in the configuration file.
+    '''
 
     try:
         if layerList and len(layerList) > 0:
@@ -108,7 +122,12 @@ def retrieveLayerFiles(layerList, config):
 
 # Function: Retrieve the data files stored in the SFTP Server
 def retrieveDataFiles(fileList, config):
-    ''' Function to retrieve the data files. '''
+    '''
+    Function to retrieve the data files.
+    Input parameters:
+        fileList: list -> The list of files to be retrieved.
+        config: ConfigParser -> The data in the configuration file.
+    '''
 
     try:
         if fileList and len(fileList) > 0:
@@ -150,7 +169,11 @@ def retrieveDataFiles(fileList, config):
 
 # Function: Retrieve the dbase files stored in the SFTP Server
 def retrieveDbaseFiles(config):
-    ''' Function to retrieve the dbase files. '''
+    '''
+    Function to retrieve all the dbase files.
+    Input parameters:
+        config: ConfigParser -> The data in the configuration file.
+    '''
 
     try:
         # Retrieve the base path
@@ -194,7 +217,13 @@ def retrieveDbaseFiles(config):
 
 # Function: Retrieve a single file stored in the SFTP Server
 def retrieveSingleFile(filePath, fileName, config):
-    ''' Function to retrieve a single file. '''
+    '''
+    Function to retrieve a single file.
+    Input parameters:
+        filePath: text -> The path of the file to be retrieved.
+        fileName: text -> The name of the file to be retrieved.
+        config: ConfigParser -> The data in the configuration file.
+    '''
 
     try:
         # Retrieve the connection parameters
@@ -226,7 +255,12 @@ def retrieveSingleFile(filePath, fileName, config):
 
 # Function: Downloads a resource stored in the SFTP Server
 def downloadResource(resource, config):
-    ''' Function to download a resource. '''
+    '''
+    Function to download a resource.
+    Input parameters:
+        resource: text -> The resource to be retrieved.
+        config: ConfigParser -> The data in the configuration file.
+    '''
 
     try:
         if resource:
@@ -262,7 +296,12 @@ def downloadResource(resource, config):
 
 # Function: Checks if a file exists in the SFTP Server
 def fileExists(remoteFilePath, config):
-    ''' Function to check if a file exists in the SFTP Server. '''
+    '''
+    Function to check if a file exists in the SFTP Server.
+    Input parameters:
+        remoteFilePath: text -> The remote file path to be checked.
+        config: ConfigParser -> The data in the configuration file.
+    '''
 
     try:
         if remoteFilePath:
@@ -301,7 +340,13 @@ def fileExists(remoteFilePath, config):
  
  # Function: Upload an output file to the SFTP Server
 def uploadOutputFile(localFilePath, remoteFilePath, config):
-    ''' Function to upload an output file to the SFTP Server. '''
+    '''
+    Function to upload an output file to the SFTP Server.
+    Input parameters:
+        localFilePath: text -> The local file path to be uploaded.
+        remoteFilePath: text -> The remote file path to store the local file.
+        config: ConfigParser -> The data in the configuration file.
+    '''
 
     try:
         if localFilePath and remoteFilePath:
