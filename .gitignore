@@ -1,11 +1,8 @@
 **/.settings
 **/.vscode
-**/.mvn
-**/*.class
 **/*.log
 **/*.db
 **/*.backup
-**/*.csv
 **/*.tiff
 **/*.tif
 **/*.gpkg
