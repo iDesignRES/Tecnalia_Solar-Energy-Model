@@ -30,12 +30,12 @@ jobs:
       - name: Install dependencies
         run: |
           export PATH="$HOME/.local/bin:$PATH"
-          cd examples/pv_power_plants
+          cd PV Power Plants Model
           poetry install
 
       - name: Run tests PV Power Plants
         run: |
-          cd examples/pv_power_plants
+          cd PV Power Plants Model
           poetry run pytest
 
   building_energy:
@@ -58,10 +58,10 @@ jobs:
       - name: Install dependencies
         run: |
           export PATH="$HOME/.local/bin:$PATH"
-          cd examples/building_energy_process
+          cd Building Energy Simulation Model
           poetry install
 
       - name: Run tests Building Energy Stock
         run: |
-          cd examples/building_energy_process
+          cd Building Energy Simulation Model
           poetry run pytest
