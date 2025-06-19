@@ -8,4 +8,5 @@
 **/*.gpkg
 **/*.shp
 **/*.zip
+**/*.lock
 **/volumes/
