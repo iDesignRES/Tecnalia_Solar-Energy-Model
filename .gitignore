@@ -9,4 +9,7 @@
 **/*.shp
 **/*.zip
 **/*.lock
+**/*.coverage
+**/__pycache__/
+**/.pytest_cache/
 **/volumes/

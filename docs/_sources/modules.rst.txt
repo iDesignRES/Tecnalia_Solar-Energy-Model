@@ -1,0 +1,27 @@
+Modules
+=======
+
+Main Module
+-----------
+
+.. automodule:: solar_power_plants
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+Model Module
+------------------
+   
+.. automodule:: modules.model
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+Validator Module
+------------------
+
+.. automodule:: modules.validator
+   :members:
+   :undoc-members:
+   :show-inheritance:
+

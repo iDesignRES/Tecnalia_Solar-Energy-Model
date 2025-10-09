@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="./">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Modules &#8212; iDesignRES - Solar Energy Model 0.9.3 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="_static/basic.css?v=686e5160" />
+    <link rel="stylesheet" type="text/css" href="_static/alabaster.css?v=27fed22d" />
+    <script src="_static/documentation_options.js?v=0e439607"></script>
+    <script src="_static/doctools.js?v=9bcbadda"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="iDesignRES - Solar Energy Model documentation" href="index.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="modules">
+<h1>Modules<a class="headerlink" href="#modules" title="Link to this heading">¶</a></h1>
+<section id="module-solar_power_plants">
+<span id="main-module"></span><h2>Main Module<a class="headerlink" href="#module-solar_power_plants" title="Link to this heading">¶</a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="solar_power_plants.executeModel">
+<span class="sig-prename descclassname"><span class="pre">solar_power_plants.</span></span><span class="sig-name descname"><span class="pre">executeModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">modelPayload</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#solar_power_plants.executeModel" title="Link to this definition">¶</a></dt>
+<dd><p>Function to execute the Solar Energy Model.
+Input parameters:</p>
+<blockquote>
+<div><p>modelPayload: dict -&gt; The dictionary with the Model input payload.</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="solar_power_plants.executeSolarEnergyModelProcess">
+<span class="sig-prename descclassname"><span class="pre">solar_power_plants.</span></span><span class="sig-name descname"><span class="pre">executeSolarEnergyModelProcess</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">processPayload</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">startTime</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">endTime</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#solar_power_plants.executeSolarEnergyModelProcess" title="Link to this definition">¶</a></dt>
+<dd><p>Function to execute the Solar Energy Model process.
+Input parameters:</p>
+<blockquote>
+<div><p>processPayload: dict -&gt; The dictionary with the process input payload.
+startTime: str -&gt; The start datetime.
+endTime: str -&gt; The end datetime.</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="solar_power_plants.main">
+<span class="sig-prename descclassname"><span class="pre">solar_power_plants.</span></span><span class="sig-name descname"><span class="pre">main</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#solar_power_plants.main" title="Link to this definition">¶</a></dt>
+<dd><p>Main function.
+Input parameters:</p>
+<blockquote>
+<div><p>sys.argv[0]: str -&gt; The current file name.
+sys.argv[1]: str -&gt; The process input data file path.
+sys.argv[2]: str -&gt; The start datetime.
+sys.argv[3]: str -&gt; The end datetime.</p>
+</div></blockquote>
+</dd></dl>
+
+</section>
+<section id="module-modules.model">
+<span id="model-module"></span><h2>Model Module<a class="headerlink" href="#module-modules.model" title="Link to this heading">¶</a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="modules.model.executeModelStep01">
+<span class="sig-prename descclassname"><span class="pre">modules.model.</span></span><span class="sig-name descname"><span class="pre">executeModelStep01</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">payload</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#modules.model.executeModelStep01" title="Link to this definition">¶</a></dt>
+<dd><p>PV Power Plants -&gt; Model -&gt; Step 01 : Build the specific configuration.
+Input parameters:</p>
+<blockquote>
+<div><p>payload: dict -&gt; The process payload.</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="modules.model.executeModelStep02">
+<span class="sig-prename descclassname"><span class="pre">modules.model.</span></span><span class="sig-name descname"><span class="pre">executeModelStep02</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">nutsId</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#modules.model.executeModelStep02" title="Link to this definition">¶</a></dt>
+<dd><p>PV Power Plants -&gt; Model -&gt; Step 02 : Load the previous result.
+Input parameters:</p>
+<blockquote>
+<div><p>nutsId: str -&gt; Identifier of NUTS2 region for which the analysis will be carried out.</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="modules.model.executeModelStep03">
+<span class="sig-prename descclassname"><span class="pre">modules.model.</span></span><span class="sig-name descname"><span class="pre">executeModelStep03</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">listParametersTH</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">systemCostTH</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">landUseTH</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#modules.model.executeModelStep03" title="Link to this definition">¶</a></dt>
+<dd><p>PV Power Plants -&gt; Model -&gt; Step 03 : Calculate the available thermal area.
+Input parameters:</p>
+<blockquote>
+<div><p>listParametersTH: list -&gt; The list of thermal parameters.
+systemCostTH: float -&gt; The thermal system cost in €.
+landUseTH: int -&gt; Land use ratio of CSP technology in W/m2 to compute</p>
+<blockquote>
+<div><p>required area for a given CSP power capacity.</p>
+</div></blockquote>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="modules.model.executeModelStep04">
+<span class="sig-prename descclassname"><span class="pre">modules.model.</span></span><span class="sig-name descname"><span class="pre">executeModelStep04</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">listParametersPV</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">systemCostPV</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">landUsePV</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#modules.model.executeModelStep04" title="Link to this definition">¶</a></dt>
+<dd><p>PV Power Plants -&gt; Model -&gt; Step 04 : Calculate the available PV area.
+Input parameters:</p>
+<blockquote>
+<div><p>listParametersPV: list -&gt; The list of PV parameters.
+systemCostPV: float -&gt; The PV system cost in €.
+landUsePV: integer -&gt; Land use ratio of PV technology in W/m2 to compute</p>
+<blockquote>
+<div><p>required area for a given PV power capacity.</p>
+</div></blockquote>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="modules.model.executeModelStep05">
+<span class="sig-prename descclassname"><span class="pre">modules.model.</span></span><span class="sig-name descname"><span class="pre">executeModelStep05</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">scadaTH</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scadaPV</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">areaTH</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">minGhiTH</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">landUseTH</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">effTH</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">effOp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">aperture</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">convertCoord</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">year</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#modules.model.executeModelStep05" title="Link to this definition">¶</a></dt>
+<dd><p>PV Power Plants -&gt; Model -&gt; Step 03 : Calculate the thermal production.
+Input parameters:</p>
+<blockquote>
+<div><p>scadaTH: DataFrame -&gt; The Dataframe corresponding to thermal scada.
+scadaPV: DataFrame -&gt; The Dataframe corresponding to PV scada.
+areaTH: int -&gt; The thermal area.
+minGhiTH: int -&gt; Minimum annual Global Horizontal Irradiance in</p>
+<blockquote>
+<div><p>kWh/m2 in a land area to install CSP systems.</p>
+</div></blockquote>
+<dl class="simple">
+<dt>landUseTH: int -&gt; Land use ratio of CSP technology in W/m2 to compute</dt><dd><p>required area for a given CSP power capacity.</p>
+</dd>
+</dl>
+<p>effTH: int -&gt; Thermal efficiency in % of collectors of CSP systems.
+effOp: int -&gt; Amount of incoming solar radiation in % captured in</p>
+<blockquote>
+<div><p>the collectors of CSP systems.</p>
+</div></blockquote>
+<p>aperture: int -&gt; Aperture area in % of solar field of CSP systems.
+convertCoord: int (0/1) -&gt; Convert coordinates expressed into</p>
+<blockquote>
+<div><p>EPSG:3035 to EPSG:4326.</p>
+</div></blockquote>
+<p>year: int -&gt; Year for calculate time-series hourly production.</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="modules.model.executeModelStep06">
+<span class="sig-prename descclassname"><span class="pre">modules.model.</span></span><span class="sig-name descname"><span class="pre">executeModelStep06</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">scadaPV</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">areaPV</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">minGhiPV</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">landUsePV</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tilt</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">azimuth</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tracking</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loss</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">convertCoord</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">year</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#modules.model.executeModelStep06" title="Link to this definition">¶</a></dt>
+<dd><p>PV Power Plants -&gt; Model -&gt; Step 06 : Calculate the PV production.
+Input parameters:</p>
+<blockquote>
+<div><p>scadaPV: DataFrame -&gt; The Dataframe corresponding to PV scada.
+areaPV: int -&gt; The PV area.
+minGhiPV: int -&gt; Minimum annual Global Horizontal Irradiance in kWh/m2</p>
+<blockquote>
+<div><p>in a land area to install PV systems.</p>
+</div></blockquote>
+<dl class="simple">
+<dt>landUsePV: int -&gt; Land use ratio of PV technology in W/m2 to compute</dt><dd><p>required area for a given PV power capacity.</p>
+</dd>
+</dl>
+<p>tilt: int -&gt; Tilt angle in º from horizontal plane.
+azimuth: int -&gt; Orientation (azimuth angle) of the (fixed) plane</p>
+<blockquote>
+<div><p>of array. Clockwise from north.</p>
+</div></blockquote>
+<dl class="simple">
+<dt>tracking: int -&gt; Percentage in % of single-axis tracking systems from the</dt><dd><p>total PV capacity. The rest is considered fixed mounted systems.</p>
+</dd>
+<dt>loss: int -&gt; Percentage in % of power losses of PV systems. Please read the</dt><dd><p>documentation to understand which other losses are already
+included in the model.</p>
+</dd>
+<dt>convertCoord: int (0/1) -&gt; Convert coordinates expressed into</dt><dd><p>EPSG:3035 to EPSG:4326.</p>
+</dd>
+</dl>
+<p>year: int -&gt; Year for calculate time-series hourly production.</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="modules.model.executeModelStep07">
+<span class="sig-prename descclassname"><span class="pre">modules.model.</span></span><span class="sig-name descname"><span class="pre">executeModelStep07</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dfTH</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dfPV</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nameNuts2</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#modules.model.executeModelStep07" title="Link to this definition">¶</a></dt>
+<dd><p>PV Power Plants -&gt; Model -&gt; Step 07 : Calculate the aggregated production.
+Input parameters:</p>
+<blockquote>
+<div><p>dfTH: DataFrame -&gt; The DataFrame corresponding to the thermal data.
+dfPV: DataFrame -&gt; The Dataframe corresponding to the PV data.
+nameNuts2: str -&gt; The name of the NUTS2 region.</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="modules.model.executeModelStep08">
+<span class="sig-prename descclassname"><span class="pre">modules.model.</span></span><span class="sig-name descname"><span class="pre">executeModelStep08</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dfTH</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nuts2TH</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nuts2PV</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#modules.model.executeModelStep08" title="Link to this definition">¶</a></dt>
+<dd><p>PV Power Plants -&gt; Model -&gt; Step 08 : Calculate the distributed production.
+Input parameters:</p>
+<blockquote>
+<div><p>dfTH: DataFrame -&gt; The DataFrame corresponding to the thermal data.
+nuts2TH: DataFrame -&gt; The Dataframe corresponding to the NUTS2 thermal data.
+nuts2PV: DataFrame -&gt; The Dataframe corresponding to the NUTS2 PV data.</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="modules.model.executeModelStep09">
+<span class="sig-prename descclassname"><span class="pre">modules.model.</span></span><span class="sig-name descname"><span class="pre">executeModelStep09</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">prodAgreggated</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nuts2Dist</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dfTH</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">potDistTH</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">potDistPV</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">opexTH</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">opexPV</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#modules.model.executeModelStep09" title="Link to this definition">¶</a></dt>
+<dd><p>PV Power Plants -&gt; Model -&gt; Step 09 : Save the results.
+Input parameters:</p>
+<blockquote>
+<div><p>prodAgreggated: DataFrame -&gt; The DataFrame corresponding to aggregated production.
+nuts2Dist: DataFrame -&gt; The Dataframe corresponding to the NUTS2 distribution data.
+dfTH: DataFrame -&gt; The DataFrame corresponding to the thermal data.
+potDistTH: DataFrame -&gt; The DataFrame corresponding to the thermal distributed power.
+potDistPV: DataFrame -&gt; The DataFrame corresponding to the PV distributed power.
+opexTH: DataFrame -&gt; The DataFrame corresponding to the thermal Opex.
+opexPV: DataFrame -&gt; The DataFrame corresponding to the PV Opex.</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="modules.model.getAvailableArea">
+<span class="sig-prename descclassname"><span class="pre">modules.model.</span></span><span class="sig-name descname"><span class="pre">getAvailableArea</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parameters</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cost</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">landUse</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span></span></span><a class="headerlink" href="#modules.model.getAvailableArea" title="Link to this definition">¶</a></dt>
+<dd><p>Function to obtain the available area.
+Input parameters:</p>
+<blockquote>
+<div><p>parameters: list -&gt; The list of parameters.
+cost: float -&gt; The system cost.
+landUse: float -&gt; The land use ratio.</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="modules.model.getCoord">
+<span class="sig-prename descclassname"><span class="pre">modules.model.</span></span><span class="sig-name descname"><span class="pre">getCoord</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">df</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span></span></span><a class="headerlink" href="#modules.model.getCoord" title="Link to this definition">¶</a></dt>
+<dd><p>Function to get the coordinates.
+Input parameters:</p>
+<blockquote>
+<div><p>df: DataFrame -&gt; The source DataFrame.</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="modules.model.getDistribution">
+<span class="sig-prename descclassname"><span class="pre">modules.model.</span></span><span class="sig-name descname"><span class="pre">getDistribution</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rows</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span></span></span><a class="headerlink" href="#modules.model.getDistribution" title="Link to this definition">¶</a></dt>
+<dd><p>Function to obtain the distribution.
+Input parameters:</p>
+<blockquote>
+<div><p>rows: list -&gt; The source list of rows.
+label: str -&gt; The label.</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="modules.model.getPVProduction">
+<span class="sig-prename descclassname"><span class="pre">modules.model.</span></span><span class="sig-name descname"><span class="pre">getPVProduction</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rows</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">landUse</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tilt</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">azimuth</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tracking</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loss</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">convertCoord</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">year</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span></span></span><a class="headerlink" href="#modules.model.getPVProduction" title="Link to this definition">¶</a></dt>
+<dd><p>Function to get the PV production.
+Input parameters:</p>
+<blockquote>
+<div><p>rows: list -&gt; The source list of rows.
+landUse: float -&gt; The land use ratio.
+tilt: float -&gt; Tilt angle in º from horizontal plane.
+azimuth: float -&gt; Orientation (azimuth angle) of the (fixed)</p>
+<blockquote>
+<div><p>plane of array. Clockwise from north.</p>
+</div></blockquote>
+<dl class="simple">
+<dt>tracking: float -&gt; Percentage in % of single-axis tracking systems from the total</dt><dd><p>PV capacity. The rest is considered fixed mounted systems.</p>
+</dd>
+</dl>
+<p>loss: float -&gt; Percentage in % of power losses of PV systems. Please
+convertCoord: bool -&gt; Convert coordinates expressed into</p>
+<blockquote>
+<div><p>EPSG:3035 to EPSG:4326.</p>
+</div></blockquote>
+<p>year: int -&gt; Year for calculate time-series hourly production.</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="modules.model.getRegions">
+<span class="sig-prename descclassname"><span class="pre">modules.model.</span></span><span class="sig-name descname"><span class="pre">getRegions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">scada</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">area</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">minGHI</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span></span></span><a class="headerlink" href="#modules.model.getRegions" title="Link to this definition">¶</a></dt>
+<dd><p>Function to get the regions.
+Input parameters:</p>
+<blockquote>
+<div><p>scada: DataFrame -&gt; The source DataFrame.
+area: float -&gt; The source area.
+minGHI: float -&gt; Minimum annual Global Horizontal Irradiance in kWh/m2.</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="modules.model.getThermalProduction">
+<span class="sig-prename descclassname"><span class="pre">modules.model.</span></span><span class="sig-name descname"><span class="pre">getThermalProduction</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rows</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">landUse</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">effTH</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">effOp</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">aperture</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">convertCoord</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">year</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span></span></span><a class="headerlink" href="#modules.model.getThermalProduction" title="Link to this definition">¶</a></dt>
+<dd><p>Function to get the thermal production.
+Input parameters:</p>
+<blockquote>
+<div><p>rows: list -&gt; The source list of rows..
+landUse: float -&gt; The land use ratio.
+effTH: float -&gt; Thermal efficiency in % of collectors of CSP systems.
+effOp: float -&gt; Amount of incoming solar radiation in % captured in</p>
+<blockquote>
+<div><p>the collectors of CSP systems.</p>
+</div></blockquote>
+<p>aperture: float -&gt; Aperture area in % of solar field of CSP systems.
+convertCoord: bool -&gt; Convert coordinates expressed into</p>
+<blockquote>
+<div><p>EPSG:3035 to EPSG:4326.</p>
+</div></blockquote>
+<p>year: int -&gt; Year for calculate time-series hourly production.</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="modules.model.opexCalc">
+<span class="sig-prename descclassname"><span class="pre">modules.model.</span></span><span class="sig-name descname"><span class="pre">opexCalc</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dictData</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">opexTH</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">opexPV</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span></span></span><a class="headerlink" href="#modules.model.opexCalc" title="Link to this definition">¶</a></dt>
+<dd><p>Function to calculate the OPEX.
+Input parameters:</p>
+<blockquote>
+<div><p>dictData: dict -&gt; The source dictionary.
+opexTH: float -&gt; The thermal Opex.
+opexPV: float -&gt; The PV Opex.</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="modules.model.thermalModel">
+<span class="sig-prename descclassname"><span class="pre">modules.model.</span></span><span class="sig-name descname"><span class="pre">thermalModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">radiation</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">effTH</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">effOp</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">aperture</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span></span></span><a class="headerlink" href="#modules.model.thermalModel" title="Link to this definition">¶</a></dt>
+<dd><p>Function to get the thermal model.
+Input parameters:</p>
+<blockquote>
+<div><p>radiation: DataFrame -&gt; The source DataFrame.
+effTH: float -&gt; Thermal efficiency in % of collectors of CSP systems.
+effOp: float -&gt; Amount of incoming solar radiation in % captured in</p>
+<blockquote>
+<div><p>the collectors of CSP systems.</p>
+</div></blockquote>
+<p>aperture: float -&gt; Aperture area in % of solar field of CSP systems.</p>
+</div></blockquote>
+</dd></dl>
+
+</section>
+<section id="module-modules.validator">
+<span id="validator-module"></span><h2>Validator Module<a class="headerlink" href="#module-modules.validator" title="Link to this heading">¶</a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="modules.validator.validateCommandLineParameters">
+<span class="sig-prename descclassname"><span class="pre">modules.validator.</span></span><span class="sig-name descname"><span class="pre">validateCommandLineParameters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parameters</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#modules.validator.validateCommandLineParameters" title="Link to this definition">¶</a></dt>
+<dd><p>Funtion to validate the command line parameters.
+Input parameters:</p>
+<blockquote>
+<div><p>parameters: list -&gt; The list of command line parameters.</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="modules.validator.validateLimits">
+<span class="sig-prename descclassname"><span class="pre">modules.validator.</span></span><span class="sig-name descname"><span class="pre">validateLimits</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">limitDown</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">limitUp</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#modules.validator.validateLimits" title="Link to this definition">¶</a></dt>
+<dd><p>Function to check the limits of a given value.
+Input parameters:</p>
+<blockquote>
+<div><p>value: number -&gt; The value of the property to be evaluated.
+limitDown: integer -&gt; The lower limit.
+limitUp: integer -&gt; The highest limit.</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="modules.validator.validateProcessOutput">
+<span class="sig-prename descclassname"><span class="pre">modules.validator.</span></span><span class="sig-name descname"><span class="pre">validateProcessOutput</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">result</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#modules.validator.validateProcessOutput" title="Link to this definition">¶</a></dt>
+<dd><p>Funtion to validate the process output.
+Input parameters:</p>
+<blockquote>
+<div><p>result: dict -&gt; The process result.</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="modules.validator.validateProcessPayload">
+<span class="sig-prename descclassname"><span class="pre">modules.validator.</span></span><span class="sig-name descname"><span class="pre">validateProcessPayload</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">payload</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#modules.validator.validateProcessPayload" title="Link to this definition">¶</a></dt>
+<dd><p>Funtion to validate the process payload.
+Input parameters:</p>
+<blockquote>
+<div><p>payload: dict -&gt; The process payload.</p>
+</div></blockquote>
+</dd></dl>
+
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">iDesignRES - Solar Energy Model</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Modules</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#module-solar_power_plants">Main Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-modules.model">Model Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-modules.validator">Validator Module</a></li>
+</ul>
+</li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="index.html" title="previous chapter">iDesignRES - Solar Energy Model documentation</a></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;2025, Tecnalia.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 8.1.2</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="_sources/modules.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

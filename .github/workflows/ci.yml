@@ -1,4 +1,4 @@
-name: CI Pipeline for iDesignRES
+name: CI Pipeline for iDesignRES-Solar Energy Model
 
 on:
   workflow_dispatch:
@@ -30,38 +30,8 @@ jobs:
       - name: Install dependencies
         run: |
           export PATH="$HOME/.local/bin:$PATH"
-          cd ./"PV Power Plants Model"
           poetry install
 
       - name: Run tests PV Power Plants
         run: |
-          cd ./"PV Power Plants Model"
-          poetry run pytest
-
-  building_energy:
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-      
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.10'
-
-      - name: Install Poetry
-        run: |
-          curl -sSL https://install.python-poetry.org | python3 -
-          export PATH="$HOME/.local/bin:$PATH"
-      
-      - name: Install dependencies
-        run: |
-          export PATH="$HOME/.local/bin:$PATH"
-          cd ./"Building Energy Simulation Model"
-          poetry install
-
-      - name: Run tests Building Energy Stock
-        run: |
-          cd ./"Building Energy Simulation Model"
           poetry run pytest
