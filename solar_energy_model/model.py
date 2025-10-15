@@ -17,7 +17,7 @@
 import pandas as pd
 import pvlib
 
-from modules import constants
+from solar_energy_model import constants
 from pathlib import Path
 from pyproj import Transformer
 

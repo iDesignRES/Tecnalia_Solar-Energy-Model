@@ -19,9 +19,9 @@ import pandas as pd
 import sys
 
 from datetime import datetime
-from modules import constants
-from modules import model
-from modules import validator
+from solar_energy_model import constants
+from solar_energy_model import model
+from solar_energy_model import validator
 
 
 # Function: Execute the Model

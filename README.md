@@ -101,6 +101,12 @@ Once installed, execute the *Solar Energy Model* entering the command:
 poetry run python solar_power_plants.py <input_payload> <start_time> <end_time>
 ```
 
+For example 
+
+```
+poetry run python solar_power_plants.py input.json 2019-01-01T00:00:00 2019-01-07T23:00:00
+```
+
 This command automatically runs the simulation, taking the necessary input data from the *[usecases](usecases)* folder and the *[input.json](input.json)* file.
 
 ## Testing and code coverage

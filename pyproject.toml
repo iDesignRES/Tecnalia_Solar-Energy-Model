@@ -7,7 +7,7 @@ license = "GPLv2"
 readme = "README.md"
 
 # Packages
-packages = [{ include = "modules" }]
+packages = [{ include = "solar_energy_model" }]
 
 # Dependencies
 [tool.poetry.dependencies]
