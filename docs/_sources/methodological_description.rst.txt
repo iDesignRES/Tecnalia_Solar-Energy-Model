@@ -1,0 +1,124 @@
+Methodological description
+==========================
+
+Mathematical description
+~~~~~~~~~~~~~~~~~~~~~~~~
+The most relevant aspects of the mathematical description of the generation models are detailed below. It should be noted that proposed models are quite simple and general, since more precise models would require a level of detail unknown for each NUTS3 region and proposed scenario.
+
+This section is composed of different subsections, each of them focused on the description of the most relevant methodological and mathematical aspects of each of the large blocks described in the model design philosophy section.
+
+Required area computation
+~~~~~~~~~~~~~~~~~~~~~~~~~
+In case the input from the user is not directly the area to be used for CSP and PV technologies, the investment in € will be translated into power capacities to be installed through systems costs reported above and these into required area through land use ratios also previously reported.
+
+Characterization of available surfaces
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The process determines for each selected region whether or not each zone is suitable for the potential implementation of solar technology. Different criteria (layers of information) are used, as well as a series of extra-limiting criteria that overlap each other to determine the suitability of each zone.
+
+More specifically, in a first step, potential areas for the installation of solar systems are calculated based on a combination of information layers that consider global incipient solar irradiation (GHI), environmental protection (protected areas), land use and terrain slope. With all this information, a new layer is generated with a final image of each point in the region based on its suitability to these criteria.
+
+On the other hand, for each region a raster file is generated with the areas of potential radiation differentiated by different radiation ranges or thresholds. This is intended to obtain more criteria to determine which are the most interesting areas in which to start deploying solar technology once the alternative scenarios are being generate.
+
+As output of this process, the results obtained in terms of the region ID (NUTS Level 3 and NUTS Level 2), the coordinates of the region centroid, the total area, the maximum radiation, the average radiation, and the area corresponding to each of the zones corresponding to each radiation threshold measured above are stored.
+
+This information is used in later phases to calculate solar generation, taking as inputs data with a high degree of disaggregation.
+
+The different layers of information used in the process described above are listed in more detail below:
+
+- Slope terrain inclination map: 25x25m and classifies them from 0 to 90º (It is only inclination) [1]_.
+- Global solar radiation atlas GHI at 200x200m resolution2.
+- Land use map: 100x100m. Selected from this layer the uses corresponding to; pastures (2310, 3210), shrubs and heaths (3220, 3240), and sparsely vegetated areas (3330) [3]_.
+- Several layers of protected areas [4]_:
+	- Emerald network: The Emerald Network is an ecological network made up of Areas of Special Conservation Interest. The objective of the Emerald Network is the long-term survival of the species and habitats. The Emerald Network consists of the Areas of Special Conservation Interest (ASCI) [5]_. 
+	- Natura 2000: Natura 2000 is an ecological network of protected areas, set up to ensure the survival of Europe's most valuable species and habitats. Natura 2000 is based on the 1979 Birds Directive and the 1992 Habitats Directive [6]_.
+	- Nationally designated areas The European inventory of Nationally designated areas holds information about designated areas and their designation types, which directly or indirectly create protected areas. The Nationally designated areas is the official source of protected area information from the 38 European member countries to the World Database of Protected Areas (WDPA) [7]_.
+
+The following is a more detailed description of the preprocessing process according to its logic and processing sequence.
+
+Data Preparation and Clipping
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- Clip the NUTS (Nomenclature of Territorial Units for Statistics) regions layer to the selected NUTS 2 or NUTS 3 region.
+- Clip the following layers to the selected region: (Slope, Land use, Protected areas, Solar radiation) 
+
+Slope Layer Filtering
+^^^^^^^^^^^^^^^^^^^^^
+The slope layer is filtered to create a binary map indicating areas where the slope exceeds a specified threshold angle. This process involves:
+- Converting the threshold angle to radians.
+- Applying a cosine function and multiplying by 250 to calculate the slope threshold value.
+- Creating a new raster image where pixels exceeding the threshold are set to 1, and others to 0.
+
+Land Use Layer Filtering
+^^^^^^^^^^^^^^^^^^^^^^^^
+The land use layer is filtered to identify specific land cover types suitable for solar installation:
+- User-defined codes for suitable land types (e.g., pastures, shrubs, heathlands, and sparsely vegetated areas) are used to filter the layer.
+- Pixels corresponding to the specified land use codes are set to 1, while all others are set to 0.
+
+Raster Alignment and Standardization
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+All layers are aligned and adjusted to ensure consistent resolution, projection system, and size across datasets.
+
+Potential Area Calculation
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+The code calculates potential areas for solar infrastructure installation by combining multiple factors: (Global Horizontal Irradiance (GHI), Environmental protection status, Land use, Slope)
+
+These factors are represented as raster images and are multiplied together to generate a new composite image identifying the most suitable areas for installation
+
+Regional Analysis and Reporting
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+The code performs a regional analysis based on the potential radiation areas:
+- Radiation thresholds are defined from a starting value to the maximum raster value, incrementing by 100W/m [2]_.
+- A Data Frame is created to store results corresponding to each radiation threshold, including: region ID, centroid coordinates, total area, maximum radiation, average radiation, median radiation and coordinates for this median radiation.
+- The code iterates over each NUTS 3 region, calculating values for each radiation threshold.
+- Results are saved as a CSV file in the same directory as the input raster file.
+
+PVGIS model and PV production profile
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The tool used to estimate the Photovoltaic generation in buildings is PVGIS [8]_, a free web application that allows the user to get data on solar radiation and photovoltaic system energy production. This is automatedly accessible via API.
+
+First of all, PVGIS makes use of reanalysis-based solar radiation data sets to estimate the solar radiation arriving at the earth surface. Data. Reanalysis data are calculated using numerical weather forecast models, re-running the models for the past and making corrections using the known meteorological measurements. The output of the models is a large number of meteorological quantities, often including the solar irradiance at ground level. More concretely, ECMWF ERA-5, produced by the `European Centre for Medium-range Weather Forecast (ECMWF) <https://www.ecmwf.int/>`_, has global coverage at a resolution of about 30km, and includes both global and direct solar irradiance. At the time of writing, only the time period 2005-2020 has been in PVGIS along with global coverage.
+
+The satellite-based calculation described above produces values of global and beam irradiance on a horizontal plane.
+
+However, modules and PV systems are generally installed at an inclined angle with regard to the horizontal plane or on tracking systems, so as to maximize the received in-plane irradiance. Therefore, the satellite retrieved irradiance values are not representative of the solar radiation available at the module surface, and it becomes necessary to estimate the in-plane irradiance.
+
+There are several models in the scientific bibliography which use as input data the irradiance values on the horizontal plane of global and diffuse and/or beam irradiance components, to estimate the values of the beam and diffuse components on tilted surfaces. A comparison of some of these models can be found in `Gracia Amillo and Huld, 2013. <https://joint-research-centre.ec.europa.eu/photovoltaic-geographical-information-system-pvgis/getting-started-pvgis/pvgis-data-sources-calculation-methods_en#references>`_. The estimation model implemented in PVGIS is the one developed by `Muneer T. (1990) <https://joint-research-centre.ec.europa.eu/photovoltaic-geographical-information-system-pvgis/getting-started-pvgis/pvgis-data-sources-calculation-methods_en#references>`_, which can be classified as anisotropic of two components.
+
+In the case of large PV plants, fixed-mounted and single-axis tracking systems are considered. The distribution between these two technologies is set as an input parameter.
+
+On the other hand, PVGIS uses information about the elevation of the terrain with a resolution of 3 arc-seconds (about 90m). This means that for every 90m we have a value for the ground elevation. From these data the height of the horizon around each geographical location is calculated. These data are then used to calculate the times when the sun is shadowed by hills or mountains. When this happens, the solar radiation is then calculated using only the diffuse part of the radiation. Please notice that with a resolution of ~90m the calculations in PVGIS cannot take into account the effects of shadows from nearby objects.
+
+Indeed, once the amount of solar radiation that arrives at the PV modules is computed, the different effects that influence PV output and how they are calculated in PVGIS.
+- Shallow-angle reflection. This is calculated using a mathematical model described in `Martin&Ruiz, 2001, Martin&Ruiz, 2013 <https://joint-research-centre.ec.europa.eu/photovoltaic-geographical-information-system-pvgis/getting-started-pvgis/pvgis-data-sources-calculation-methods_en#references>`_. Generally, this effect causes a loss of 2-4% of the sunlight, though this will be lower for sun-tracking PV systems `Huld et al., 2015 <https://joint-research-centre.ec.europa.eu/photovoltaic-geographical-information-system-pvgis/getting-started-pvgis/pvgis-data-sources-calculation-methods_en#references>`_.
+- Effects of changes in the solar spectrum. PVGIS has used solar radiation data from satellite that have been calculated for different spectral bands Mueller et al., 2012) to calculate the effect of spectrum changes on the PV energy output.
+- PV power dependence on irradiance and module temperature. PVGIS calculates the effects of irradiance and module temperature using a model described in (Huld et al., 2011). Module temperature is treated in PVGIS using a model suggested by Faiman (Faiman, 2008) and the BIPV/BAPV configuration is selected in this case.
+- System losses and degradation. Considering the system losses and the losses due to ageing PVGIS recommends a value of 14% for the "system loss" that the user gives as input to the model.
+
+CSP model and CSP production profile
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The CSP Parabolic Trough generation model is quite simplified by the following equation including: (1) the available Direct Normal Irradiance (DNI) on the location in W/m [2]_, (2) the aperture area of the Parabolic Trough solar field in m [2]_, (3) optical efficiency in %, and (4) thermal efficiency in %
+
+$CSP_{generation} = efficiency_{optical} \cdot efficiency_{thermal} \cdot aperture\_area \cdot DNI$
+
+The DNI is directly obtained from PVGIS reanalysis-based solar radiation data sets.
+
+The aperture area is estimated as a half of the total area for CSP technology, considering that each collector loop of a Parabolic Trough System typically has an aperture area of 5,000 to 7,000 m [2]_ and it requires about 10,000 to 15,000 m [2]_  of land.
+
+The optical and thermal efficiencies are input parameters for CSP technology that can be modified by the user.
+
+References
+~~~~~~~~~~
+.. [1] https://ec.europa.eu/eurostat/web/gisco/geodata/digital-elevation-model/eu-dem#Slope
+
+.. [2] https://globalsolaratlas.info/download/world 
+
+.. [3] https://jeodpp.jrc.ec.europa.eu/ftp/jrc-opendata/LUISA/EUROPE/Basemaps/LandUse/2018/LATEST/ 
+
+.. [4] https://www.eea.europa.eu/en/analysis/maps-and-charts/european-protected-areas-1 
+
+.. [5] https://www.eea.europa.eu/en/datahub/datahubitem-view/4c4c8086-c940-400b-9064-29063143b2d 
+
+.. [6] https://www.eea.europa.eu/en/datahub/datahubitem-view/6fc8ad2d-195d-40f4-bdec-576e7d1268e4 
+
+.. [7] https://www.eea.europa.eu/en/datahub/datahubitem-view/f60cec02-6494-4d08-b12d-17a37012cb2 
+
+.. [8] https://joint-research-centre.ec.europa.eu/photovoltaic-geographical-information-system-pvgis/getting-started-pvgis/pvgis-data-sources-calculation-methods_en 
