@@ -144,4 +144,4 @@ To review a complete example of the model, access [this directory](example/READM
 
 ## Documentation
 
-To review the complete model documentation, access [here](https://molinuevo.github.io/molinuevosolar/).
+To review the complete model documentation, access [here](https://idesignres.github.io/Tecnalia_Solar-Energy-Model/).
