@@ -14,8 +14,8 @@
 #
 # Copyright (c) 2025 Tecnalia Research & Innovation
 
-from solar_energy_model import validator
 from pathlib import Path
+from solar_energy_model import validator
 
 
 TEST_INPUT_PATH = str(Path(__file__).parent / 'input_test.json')

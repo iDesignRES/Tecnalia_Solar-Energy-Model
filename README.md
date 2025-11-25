@@ -1,5 +1,7 @@
 # iDesignRES: Solar Energy Model
 
+[![Docs](https://img.shields.io/badge/docs-stable-brightgreen)](https://molinuevo.github.io/molinuevosolar)
+
 This README provides an overview of the iDesignRES Solar Energy Model within iDesignRES.
 
 It is handled by Tecnalia and part of WP1, Task number Task 1.3.
@@ -31,12 +33,17 @@ Output:
 
 ## Implemented features
 
-- Estimation of required area to deploy given investment or power capacity of CSP and PV technologies
+- Estimation of required area to deploy given investment or power capacity of CSP and PV technologies.
+
 - Categorization of available areas in intervals of 100W/m2 of annual radiation for each NUTS3 region complying with selection criteria (maximum slope and land use restriction) for each technology.
+  
+  > It should be noted that in the current implementation stage, the model is only available for the use case in Spain. The other use cases for the project will also be included when appropriate.
+
 - Selection of previously characterized areas with the highest solar radiation until reaching all the required area, prioritizing CSP and relegating PV in case of conflicts.
+
 - For each selected areas estimation of annual thermal or electrical energy generation on hurly basis making use of simplified model of CSP and Solar PV models.
+  
   - Aggregation of estimated generation profiles at NUTS3 and NUTS2 level.
-- It should be noted that in the current implementation stage, the model is only available for the use case in Spain. The other use cases for the project will also be included when appropriate.
 
 ## Core assumption
 
@@ -119,17 +126,17 @@ The following tests have been defined for the model:
 
 - Valid payload.
 
-- Correct execution tests.
+- Correct execution tests, checking the correct output.
 
-With a resulting code coverage of 95%:
+With a resulting code coverage of 94%:
 
 | Name                  | Stmts   | Miss   | Cover   |
 | --------------------- | ------- | ------ | ------- |
 | modules/_ *init _*.py | 0       | 0      | 100%    |
-| modules/constants.py  | 2       | 0      | 100%    |
-| modules/model.py      | 242     | 11     | 95%     |
+| modules/constants.py  | 1       | 0      | 100%    |
+| modules/model.py      | 245     | 13     | 95%     |
 | modules/validator.py  | 184     | 11     | 94%     |
-| **TOTAL**             | **428** | **22** | **95%** |
+| **TOTAL**             | **430** | **24** | **94%** |
 
 ## Full example
 
@@ -137,4 +144,4 @@ To review a complete example of the model, access [this directory](example/READM
 
 ## Documentation
 
-To review the complete model documentation, access [this directory](docs/README.md).
+To review the complete model documentation, access [here](https://molinuevo.github.io/molinuevosolar/).

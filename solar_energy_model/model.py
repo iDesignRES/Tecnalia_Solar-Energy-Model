@@ -17,18 +17,24 @@
 import pandas as pd
 import pvlib
 
-from solar_energy_model import constants
 from pathlib import Path
 from pyproj import Transformer
+from solar_energy_model import constants
 
 
 # Function: PV Power Plants -> Model -> Step 01 : Build the specific configuration
-def executeModelStep01(payload):
-    '''
-    PV Power Plants -> Model -> Step 01 : Build the specific configuration.
-    Input parameters:
-        payload: dict -> The process payload.
-    '''
+def s01BuildSpecificConfiguration(payload: dict) -> tuple:
+    """Model Step 01: Build the specific configuration.
+
+    Args:
+        payload (dict): The process payload::
+        
+            Example: see "input.json" file in the root directory.
+    
+    Returns:
+        tuple
+
+    """
 
     print('Model: Step 01/>  Building the specific configuration...')
     areaAvailableTH = payload['area_total_thermal'] if payload['area_total_thermal'] is not None else None
@@ -65,12 +71,16 @@ def executeModelStep01(payload):
 
 
 # Function: PV Power Plants -> Model -> Step 02 -> Load the previous result
-def executeModelStep02(nutsId):
-    '''
-    PV Power Plants -> Model -> Step 02 : Load the previous result.
-    Input parameters:
-       nutsId: str -> Identifier of NUTS2 region for which the analysis will be carried out.
-    '''
+def s02LoadPreviousResult(nutsId: str) -> tuple:
+    """Model Step 02: Load the previous result.
+
+    Args:
+        nutsId (str): Identifier of NUTS2 region for which the analysis will be carried out.
+    
+    Returns:
+        tuple
+
+    """
 
     # Load the result file of the Solar preprocess por the use case
     print('Model: Step 02/>  Loading the result file of the Solar preprocess...')
@@ -80,13 +90,21 @@ def executeModelStep02(nutsId):
     # Load the thermal data
     print('Model: Step 02/>  Loading the thermal data...')
     dfScadaTH, dfScadaPV = None, None
-    dfScadaTH = pd.read_csv(csvPath, header=0, encoding="ISO-8859-1",
-                            delimiter=",", decimal=".").sort_values(by='Median_Radiation', ascending=False)
+    dfScadaTH = pd.read_csv(csvPath,
+                            header=0,
+                            encoding="ISO-8859-1",
+                            delimiter=",",
+                            decimal=".").sort_values(by='Median_Radiation',
+                                                     ascending=False)
 
     # Load the photovoltaic data
     print('Model: Step 02/>  Loading the photovoltaic data...')
-    dfScadaPV = pd.read_csv(csvPath, header=0, encoding="ISO-8859-1",
-                            delimiter=",", decimal=".").sort_values(by='Median_Radiation', ascending=False)
+    dfScadaPV = pd.read_csv(csvPath,
+                            header=0,
+                            encoding="ISO-8859-1",
+                            delimiter=",",
+                            decimal=".").sort_values(by='Median_Radiation',
+                                                     ascending=False)
 
     # Finish
     print('Model: Step 02/>  [OK]')
@@ -94,26 +112,35 @@ def executeModelStep02(nutsId):
 
 
 # Function: PV Power Plants -> Model -> Step 03 -> Calculate the available thermal area
-def executeModelStep03(listParametersTH, systemCostTH, landUseTH):
-    '''
-    PV Power Plants -> Model -> Step 03 : Calculate the available thermal area.
-    Input parameters:
-        listParametersTH: list -> The list of thermal parameters.
-        systemCostTH: float -> The thermal system cost in €.
-        landUseTH: int -> Land use ratio of CSP technology in W/m2 to compute
-                          required area for a given CSP power capacity.
-    '''
+def s03CalculateAvailableThermalArea(listParametersTH: list,
+                                     systemCostTH: float,
+                                     landUseTH: float) -> tuple:
+    """Model Step 03: Calculate the available thermal area.
+
+    Args:
+        listParametersTH (list): The list of thermal parameters. Example::
+
+            [
+                None,
+                10,
+                None
+            ]
+        systemCostTH (float): The thermal system cost in €.
+        landUseTH (int): Land use ratio of CSP technology in W/m2 to compute
+            required area for a given CSP power capacity.
+    
+    Returns:
+        tuple
+    """
 
     print('Model: Step 03/>  Calculating the available thermal area...')
-    areaTH, powerTH, capexTH = getAvailableArea(
-        parameters=listParametersTH, cost=systemCostTH, landUse=landUseTH)
+    areaTH, powerTH, capexTH = x03GetAvailableArea(parameters=listParametersTH,
+                                                cost=systemCostTH,
+                                                landUse=landUseTH)
 
-    print('Model: Step 03/>  Area -> ' +
-          (str(f"{areaTH:.2e}") if constants.SCIENTIFIC_NOTATION else str(areaTH)))
-    print('Model: Step 03/>  Power -> ' +
-          (str(f"{powerTH:.2e}") if constants.SCIENTIFIC_NOTATION else str(powerTH)))
-    print('Model: Step 03/>  Capex -> ' +
-          (str(f"{capexTH:.2e}") if constants.SCIENTIFIC_NOTATION else str(capexTH)))
+    print('Model: Step 03/>  Area -> ' + str(areaTH))
+    print('Model: Step 03/>  Power -> ' + str(powerTH))
+    print('Model: Step 03/>  Capex -> ' + str(capexTH))
 
     # Finish
     print('Model: Step 03/>  [OK]')
@@ -121,69 +148,95 @@ def executeModelStep03(listParametersTH, systemCostTH, landUseTH):
 
 
 # Function: PV Power Plants -> Model -> Step 04 -> Calculate the available PV area
-def executeModelStep04(listParametersPV, systemCostPV, landUsePV):
-    '''
-    PV Power Plants -> Model -> Step 04 : Calculate the available PV area.
-    Input parameters:
-        listParametersPV: list -> The list of PV parameters.
-        systemCostPV: float -> The PV system cost in €.
-        landUsePV: integer -> Land use ratio of PV technology in W/m2 to compute
-                              required area for a given PV power capacity.
-    '''
+def s04CalculateAvailablePVArea(listParametersPV: list,
+                                systemCostPV: float,
+                                landUsePV: float) -> tuple:
+    """Model Step 04: Calculate the available PV area.
+
+    Args:
+        listParametersPV (list): The list of PV parameters. Example::
+
+            [
+                None,
+                200,
+                None
+            ]
+        systemCostPV (float): The PV system cost in €.
+        landUsePV (int): Land use ratio of PV technology in W/m2 to compute
+            required area for a given PV power capacity.
+    
+    Returns:
+        tuple
+    """
 
     print('Model: Step 04/>  Calculating the available PV area...')
-    areaPV, powerPV, capexPV = getAvailableArea(
-        parameters=listParametersPV, cost=systemCostPV, landUse=landUsePV)
-    print('Model: Step 04/>  Area -> ' +
-          (str(f"{areaPV:.2e}") if constants.SCIENTIFIC_NOTATION else str(areaPV)))
-    print('Model: Step 04/>  Power -> ' +
-          (str(f"{powerPV:.2e}") if constants.SCIENTIFIC_NOTATION else str(powerPV)))
-    print('Model: Step 04/>  Capex -> ' +
-          (str(f"{capexPV:.2e}") if constants.SCIENTIFIC_NOTATION else str(capexPV)))
+    areaPV, powerPV, capexPV = x03GetAvailableArea(parameters=listParametersPV,
+                                                cost=systemCostPV,
+                                                landUse=landUsePV)
+    print('Model: Step 04/>  Area -> ' + str(areaPV))
+    print('Model: Step 04/>  Power -> ' + str(powerPV))
+    print('Model: Step 04/>  Capex -> ' + str(capexPV))
 
     # Finish
     print('Model: Step 04/>  [OK]')
     return areaPV, powerPV, capexPV
 
 
-# Function: PV Power Plants -> Model -> Step 05 -> Thermal production
-def executeModelStep05(scadaTH, scadaPV, areaTH, minGhiTH, landUseTH, effTH, effOp, aperture, convertCoord, year):
-    '''
-    PV Power Plants -> Model -> Step 03 : Calculate the thermal production.
-    Input parameters:
-        scadaTH: DataFrame -> The Dataframe corresponding to thermal scada.
-        scadaPV: DataFrame -> The Dataframe corresponding to PV scada.
-        areaTH: int -> The thermal area.
-        minGhiTH: int -> Minimum annual Global Horizontal Irradiance in
-                         kWh/m2 in a land area to install CSP systems.
-        landUseTH: int -> Land use ratio of CSP technology in W/m2 to compute
-                          required area for a given CSP power capacity.
-        effTH: int -> Thermal efficiency in % of collectors of CSP systems. 
-        effOp: int -> Amount of incoming solar radiation in % captured in
-                      the collectors of CSP systems.
-        aperture: int -> Aperture area in % of solar field of CSP systems.
-        convertCoord: int (0/1) -> Convert coordinates expressed into
-                                   EPSG:3035 to EPSG:4326.
-        year: int -> Year for calculate time-series hourly production.
-    '''
+# Function: PV Power Plants -> Model -> Step 05 -> Calculate the thermal production
+def s05CalculateThermalProduction(scadaTH: pd.DataFrame,
+                                  scadaPV: pd.DataFrame,
+                                  areaTH: float,
+                                  minGhiTH: float,
+                                  landUseTH: float,
+                                  effTH: float,
+                                  effOp: float,
+                                  aperture: float,
+                                  convertCoord: int,
+                                  year: int) -> tuple:
+    """Model Step 05: Calculate the thermal production.
+
+    Args:
+        scadaTH (DataFrame): The Dataframe corresponding to thermal scada.
+        scadaPV (DataFrame): The Dataframe corresponding to PV scada.
+        areaTH (float): The thermal area.
+        minGhiTH (float): Minimum annual Global Horizontal Irradiance in
+            kWh/m2 in a land area to install CSP systems.
+        landUseTH (float): Land use ratio of CSP technology in W/m2 to compute
+            required area for a given CSP power capacity.
+        effTH (float): Thermal efficiency in % of collectors of CSP systems. 
+        effOp (float): Amount of incoming solar radiation in % captured in
+            the collectors of CSP systems.
+        aperture (float): Aperture area in % of solar field of CSP systems.
+        convertCoord (int): Convert coordinates expressed into EPSG:3035 to EPSG:4326.
+        year (int): Year for calculate time-series hourly production.
+    
+    Returns:
+        tuple
+    """
 
     # Get the regions
     print('Model: Step 05/>  Obtaining the regions...')
-    rowsTH, nameNuts2 = getRegions(scada=scadaTH, area=areaTH, minGHI=minGhiTH)
+    rowsTH, nameNuts2 = x04GetRegions(scada=scadaTH,
+                                   area=areaTH,
+                                   minGHI=minGhiTH)
 
     # Get the thermal production and save it to a dataframe
     print('Model: Step 05/>  Obtaining the thermal production...')
-    prodTH = getThermalProduction(rows=rowsTH, landUse=landUseTH, effTH=effTH,
-                                  effOp=effOp, aperture=areaTH * aperture,
-                                  convertCoord=convertCoord, year=year)
+    prodTH = x05GetThermalProduction(rows=rowsTH,
+                                     landUse=landUseTH,
+                                     effTH=effTH,
+                                     effOp=effOp,
+                                     aperture=areaTH * aperture,
+                                     convertCoord=convertCoord,
+                                     year=year)
     print('Model: Step 05/>  Saving the thermal production in a DataFrame...')
     dfTH = (pd.DataFrame(prodTH).sum(axis=0))
 
     # Get the distribution
     print('Model: Step 05/>  Obtaining the distribution...')
     if not dfTH.empty:
-        nuts2TH, potDistTH, areasDistTH = getDistribution(
-            rows=rowsTH, label='thermal_power')
+        nuts2TH, potDistTH, areasDistTH = x07GetDistribution(rows=rowsTH,
+                                                             label='thermal_power')
 
         # Remove areas used with TH power
         print('Model: Step 05/>  Removing areas used with thermal power...')
@@ -199,43 +252,62 @@ def executeModelStep05(scadaTH, scadaPV, areaTH, minGhiTH, landUseTH, effTH, eff
     return nuts2TH, rowsTH, potDistTH, dfTH, scadaPV
 
 
-# Function: PV Power Plants -> Model -> Step 06 -> PV production
-def executeModelStep06(scadaPV, areaPV, minGhiPV, landUsePV, tilt, azimuth,
-                       tracking, loss, convertCoord, year):
-    '''
-    PV Power Plants -> Model -> Step 06 : Calculate the PV production.
-    Input parameters:
-        scadaPV: DataFrame -> The Dataframe corresponding to PV scada.
-        areaPV: int -> The PV area.
-        minGhiPV: int -> Minimum annual Global Horizontal Irradiance in kWh/m2
-                         in a land area to install PV systems.
-        landUsePV: int -> Land use ratio of PV technology in W/m2 to compute
-                          required area for a given PV power capacity.
-        tilt: int -> Tilt angle in º from horizontal plane.
-        azimuth: int -> Orientation (azimuth angle) of the (fixed) plane
-                        of array. Clockwise from north.
-        tracking: int -> Percentage in % of single-axis tracking systems from the
-                         total PV capacity. The rest is considered fixed mounted systems.
-        loss: int -> Percentage in % of power losses of PV systems. Please read the
-                     documentation to understand which other losses are already
-                     included in the model.
-        convertCoord: int (0/1) -> Convert coordinates expressed into
-                                   EPSG:3035 to EPSG:4326.
-        year: int -> Year for calculate time-series hourly production.
-    '''
+# Function: PV Power Plants -> Model -> Step 06 -> Calculate the PV production
+def s06CalculatePVProduction(scadaPV: pd.DataFrame,
+                             areaPV: pd.DataFrame,
+                             minGhiPV: float,
+                             landUsePV: float,
+                             tilt: float,
+                             azimuth: float,
+                             tracking: float,
+                             loss: float,
+                             convertCoord: int,
+                             year: int) -> tuple:
+    """Model Step 06: Calculate the PV production.
+
+    Args:
+        scadaPV (DataFrame): The Dataframe corresponding to PV scada.
+        areaPV (float): The PV area.
+        minGhiPV (float): Minimum annual Global Horizontal Irradiance in kWh/m2
+            in a land area to install PV systems.
+        landUsePV (float): Land use ratio of PV technology in W/m2 to compute
+            required area for a given PV power capacity.
+        tilt (float): Tilt angle in º from horizontal plane.
+        azimuth (float): Orientation (azimuth angle) of the (fixed) plane
+            of array. Clockwise from north.
+        tracking (float): Percentage in % of single-axis tracking systems from the
+            total PV capacity. The rest is considered fixed mounted systems.
+        loss (float): Percentage in % of power losses of PV systems. Please read the
+            documentation to understand which other losses are already included in the model.
+        convertCoord (int): Convert coordinates expressed into EPSG:3035 to EPSG:4326.
+        year (int): Year for calculate time-series hourly production.
+    
+    Returns:
+        tuple
+    """
 
     # Get the regions
     print('Model: Step 06/>  Obtaining the regions...')
-    rowsPV, nameNuts2 = getRegions(scada=scadaPV, area=areaPV, minGHI=minGhiPV)
+    rowsPV, nameNuts2 = x04GetRegions(scada=scadaPV, area=areaPV, minGHI=minGhiPV)
 
     # Get the PV production
     print('Model: Step 06/>  Obtaining the PV production...')
-    prodPVTracking = getPVProduction(rows=rowsPV, landUse=landUsePV, tilt=tilt,
-                                     azimuth=azimuth, tracking=1, loss=loss,
-                                     convertCoord=convertCoord, year=year)
-    prodPVFixed = getPVProduction(rows=rowsPV, landUse=landUsePV, tilt=tilt,
-                                  azimuth=azimuth, tracking=0, loss=loss,
-                                  convertCoord=convertCoord, year=year)
+    prodPVTracking = x06GetPVProduction(rows=rowsPV,
+                                        landUse=landUsePV,
+                                        tilt=tilt,
+                                        azimuth=azimuth,
+                                        tracking=1,
+                                        loss=loss,
+                                        convertCoord=convertCoord,
+                                        year=year)
+    prodPVFixed = x06GetPVProduction(rows=rowsPV,
+                                     landUse=landUsePV,
+                                     tilt=tilt,
+                                     azimuth=azimuth,
+                                     tracking=0,
+                                     loss=loss,
+                                     convertCoord=convertCoord,
+                                     year=year)
     prodPV = list(map(sum, zip(map(lambda x: x * tracking, prodPVTracking),
                   map(lambda x: x * (1 - tracking), prodPVFixed))))
     print('Model: Step 06/>  Saving the PV production in a DataFrame...')
@@ -243,8 +315,8 @@ def executeModelStep06(scadaPV, areaPV, minGhiPV, landUsePV, tilt, azimuth,
 
     # Get the distribution
     print('Model: Step 06/>  Obtaining the distribution...')
-    nuts2PV, potDistPV, areasDistPV = getDistribution(rows=rowsPV,
-                                                      label='pv_power')
+    nuts2PV, potDistPV, areasDistPV = x07GetDistribution(rows=rowsPV,
+                                                         label='pv_power')
 
     # Finish
     print('Model: Step 06/>  [OK]')
@@ -252,14 +324,19 @@ def executeModelStep06(scadaPV, areaPV, minGhiPV, landUsePV, tilt, azimuth,
 
 
 # Function: PV Power Plants -> Model -> Step 07 -> Calculate the aggregated production
-def executeModelStep07(dfTH, dfPV, nameNuts2):
-    '''
-    PV Power Plants -> Model -> Step 07 : Calculate the aggregated production.
-    Input parameters:
-        dfTH: DataFrame -> The DataFrame corresponding to the thermal data.
-        dfPV: DataFrame -> The Dataframe corresponding to the PV data.
-        nameNuts2: str -> The name of the NUTS2 region.
-    '''
+def s07CalculateAggregatedProduction(dfTH: pd.DataFrame,
+                                     dfPV: pd.DataFrame,
+                                     nameNuts2: str) -> pd.DataFrame:
+    """Model Step 07: Calculate the aggregated production.
+
+    Args:
+        dfTH (DataFrame): The DataFrame corresponding to the thermal data.
+        dfPV (DataFrame): The Dataframe corresponding to the PV data.
+        nameNuts2 (str): The name of the NUTS2 region.
+    
+    Returns:
+        pd.DataFrame
+    """
 
     print('Model: Step 07/>  Calculating the aggregated production...')
     if not dfTH.empty:
@@ -271,11 +348,11 @@ def executeModelStep07(dfTH, dfPV, nameNuts2):
         prodAgreggated = prodAgreggated.set_index('time(UTC)')
         prodAgreggated.columns = ['Pthermal_' + str(nameNuts2),
                                   'Ppv_' + str(nameNuts2)]
-        prodAgreggated.index = pd.to_datetime(
-            prodAgreggated.index,
-            format='%Y-%m-%d %H:%M:%S').round('h').strftime('%Y-%m-%d %H:%M:%S')
+        prodAgreggated.index = pd.to_datetime(prodAgreggated.index,
+                                              format='%Y-%m-%d %H:%M:%S').round('h').strftime('%Y-%m-%d %H:%M:%S')
     else:
-        prodAgreggated = pd.DataFrame(dfPV, columns=['Ppv_' + str(nameNuts2)])
+        prodAgreggated = pd.DataFrame(dfPV,
+                                      columns=['Ppv_' + str(nameNuts2)])
         prodAgreggated.index = pd.to_datetime(
             prodAgreggated.index).round('h').strftime('%Y-%m-%d %H:%M:%S')
 
@@ -285,14 +362,19 @@ def executeModelStep07(dfTH, dfPV, nameNuts2):
 
 
 # Function: PV Power Plants -> Model -> Step 08 -> Calculate the distributed production
-def executeModelStep08(dfTH, nuts2TH, nuts2PV):
-    '''
-    PV Power Plants -> Model -> Step 08 : Calculate the distributed production.
-    Input parameters:
-        dfTH: DataFrame -> The DataFrame corresponding to the thermal data.
-        nuts2TH: DataFrame -> The Dataframe corresponding to the NUTS2 thermal data.
-        nuts2PV: DataFrame -> The Dataframe corresponding to the NUTS2 PV data.
-    '''
+def s08CalculateDistributedProduction(dfTH: pd.DataFrame,
+                                      nuts2TH: pd.DataFrame,
+                                      nuts2PV: pd.DataFrame) -> pd.DataFrame:
+    """Model Step 08: Calculate the distributed production.
+
+    Args:
+        dfTH (DataFrame): The DataFrame corresponding to the thermal data.
+        nuts2TH (DataFrame): The Dataframe corresponding to the NUTS2 thermal data.
+        nuts2PV (DataFrame): The Dataframe corresponding to the NUTS2 PV data.
+    
+    Returns:
+        pd.DataFrame
+    """
 
     print('Model: Step 08/>  Calculating the distributed production...')
     if not dfTH.empty:
@@ -315,19 +397,27 @@ def executeModelStep08(dfTH, nuts2TH, nuts2PV):
 
 
 # Function: PV Power Plants -> Model -> Step 09 -> Save the results
-def executeModelStep09(prodAgreggated, nuts2Dist, dfTH, potDistTH,
-                       potDistPV, opexTH, opexPV):
-    '''
-    PV Power Plants -> Model -> Step 09 : Save the results.
-    Input parameters:
-        prodAgreggated: DataFrame -> The DataFrame corresponding to aggregated production.
-        nuts2Dist: DataFrame -> The Dataframe corresponding to the NUTS2 distribution data.
-        dfTH: DataFrame -> The DataFrame corresponding to the thermal data.
-        potDistTH: DataFrame -> The DataFrame corresponding to the thermal distributed power.
-        potDistPV: DataFrame -> The DataFrame corresponding to the PV distributed power.
-        opexTH: DataFrame -> The DataFrame corresponding to the thermal Opex.
-        opexPV: DataFrame -> The DataFrame corresponding to the PV Opex.
-    '''
+def s09SaveResults(prodAgreggated: pd.DataFrame,
+                   nuts2Dist: pd.DataFrame,
+                   dfTH: pd.DataFrame,
+                   potDistTH: pd.DataFrame,
+                   potDistPV: pd.DataFrame,
+                   opexTH: pd.DataFrame,
+                   opexPV: pd.DataFrame) -> list:
+    """Model Step 09: Save the results.
+
+    Args:
+        prodAgreggated (DataFrame): The DataFrame corresponding to aggregated production.
+        nuts2Dist (DataFrame): The Dataframe corresponding to the NUTS2 distribution data.
+        dfTH (DataFrame): The DataFrame corresponding to the thermal data.
+        potDistTH (DataFrame): The DataFrame corresponding to the thermal distributed power.
+        potDistPV (DataFrame): The DataFrame corresponding to the PV distributed power.
+        opexTH (DataFrame): The DataFrame corresponding to the thermal Opex.
+        opexPV (DataFrame): The DataFrame corresponding to the PV Opex.
+    
+    Returns:
+        list
+    """
 
     print('Model: Step 09/>  Saving the results...')
     prodAgreggated = prodAgreggated.reset_index()
@@ -353,9 +443,9 @@ def executeModelStep09(prodAgreggated, nuts2Dist, dfTH, potDistTH,
     combinedDict = {**potTH, **potPV} if not dfTH.empty else {**potPV}
 
     print('Model: Step 09/>  Calculating the OPEX and saving...')
-    opexTotTH, opexTotPV = opexCalc(dictData=combinedDict,
-                                    opexTH=opexTH,
-                                    opexPV=opexPV)
+    opexTotTH, opexTotPV = x08CalculateOpex(dictData=combinedDict,
+                                            opexTH=opexTH,
+                                            opexPV=opexPV)
     combinedDict['opex_thermal'] = opexTotTH  # In €
     combinedDict['opex_pv'] = opexTotPV  # In €
     output.append(combinedDict)
@@ -370,75 +460,96 @@ def executeModelStep09(prodAgreggated, nuts2Dist, dfTH, potDistTH,
 #####################################################################
 
 
-# Auxiliary function: Get coord
-def getCoord(df: pd.DataFrame) -> tuple:
-    '''
-    Function to get the coordinates.
-    Input parameters:
-        df: DataFrame -> The source DataFrame.
-    '''
+# Auxiliary function 01: Get coordinates
+def x01GetCoord(df: pd.DataFrame) -> tuple:
+    """Auxiliary function 01: Get the coordinates.
+
+    Args:
+        df (DataFrame): The source DataFrame.
+    
+    Returns:
+        tuple
+    """
 
     sampleX = df['Median_Radiation_X']
     sampleY = df['Median_Radiation_Y']
 
-    transformer = Transformer.from_crs(
-        "EPSG:3035", "EPSG:4326", always_xy=True)
-    xy = transformer.transform(sampleX, sampleY)
+    transformer = Transformer.from_crs("EPSG:3035",
+                                       "EPSG:4326",
+                                       always_xy=True)
+    xy = transformer.transform(sampleX,
+                               sampleY)
     return xy[0], xy[1]
 
 
-# Auxiliary function: Thermal model
-def thermalModel(radiation: pd.DataFrame, effTH: float, effOp: float, aperture: float) -> list:
-    '''
-    Function to get the thermal model.
-    Input parameters:
-        radiation: DataFrame -> The source DataFrame.
-        effTH: float -> Thermal efficiency in % of collectors of CSP systems.
-        effOp: float -> Amount of incoming solar radiation in % captured in
-                        the collectors of CSP systems.
-        aperture: float -> Aperture area in % of solar field of CSP systems.
-    '''
+# Auxiliary function 02: Get the thermal model
+def x02ThermalModel(radiation: pd.DataFrame,
+                    effTH: float,
+                    effOp: float,
+                    aperture: float) -> list:
+    """Auxiliary function 02: Get the thermal model.
 
-    return radiation * aperture * effTH * effOp / 1000000  # in  MWh
+    Args:
+        radiation (DataFrame): The radiation DataFrame.
+        effTH (float): Thermal efficiency in % of collectors of CSP systems.
+        effOp (float): Amount of incoming solar radiation in % captured in
+            the collectors of CSP systems.
+        aperture (float): Aperture area in % of solar field of CSP systems.
+    
+    Returns:
+        list
+    """
+
+    return radiation * aperture * effTH * effOp / 1.0e+06  # in  MWh
 
 
-# Auxiliary function: Get available area
-def getAvailableArea(parameters: list, cost: float, landUse: float) -> tuple:
-    '''
-    Function to obtain the available area.
-    Input parameters:
-        parameters: list -> The list of parameters.
-        cost: float -> The system cost.
-        landUse: float -> The land use ratio.
-    '''
+# Auxiliary function 03: Get the available area
+def x03GetAvailableArea(parameters: list,
+                        cost: float,
+                        landUse: float) -> tuple:
+    """Auxiliary function 03: Get the available area.
+
+    Args:
+        parameters (list): The list of parameters.
+        cost (float): The system cost.
+        landUse (float): The land use ratio.
+    
+    Returns:
+        tuple
+    """
 
     index = next((i for i, value in enumerate(
         parameters) if value is not None), -1)
     if index == 2:
         capex = parameters[index]
-        power = parameters[index] / (cost * 1000000)  # in MW
-        area = power * 1000000 / landUse  # in m2
+        power = parameters[index] / (cost * 1.0e+06)  # in MW
+        area = power * 1.0e+06 / landUse  # in m2
     elif index == 1:
-        area = parameters[index] * 1000000 / landUse  # in m2
+        area = parameters[index] * 1.0e+06 / landUse  # in m2
         power = parameters[index]
-        capex = power * cost * 1000000
+        capex = power * cost * 1.0e+06
     else:
         area = parameters[0]  # en m2
-        power = (area * landUse) / 1000000  # in MW
-        capex = power * cost * 1000000
+        power = (area * landUse) / 1.0e+06  # in MW
+        capex = power * cost * 1.0e+06
 
     return area, power, capex
 
 
-# Auxiliary function: Get regions
-def getRegions(scada: dict, area: float, minGHI: float) -> tuple:
-    '''
-    Function to get the regions.
-    Input parameters:
-        scada: DataFrame -> The source DataFrame.
-        area: float -> The source area.
-        minGHI: float -> Minimum annual Global Horizontal Irradiance in kWh/m2.
-    '''
+# Auxiliary function 04: Get the regions
+def x04GetRegions(scada: pd.DataFrame,
+                  area: float,
+                  minGHI: float) -> tuple:
+    """Auxiliary function 04: Get the regions.
+
+    Args:
+        scada (DataFrame): The source DataFrame.
+        area (float): The source area.
+        minGHI (float): Minimum annual Global Horizontal Irradiance in kWh/m2.
+    
+    Returns:
+        tuple
+    """
 
     currentSum = 0
     nameNuts2 = None
@@ -458,95 +569,103 @@ def getRegions(scada: dict, area: float, minGHI: float) -> tuple:
     return rows, nameNuts2
 
 
-# Auxiliary function: Get thermal production
-def getThermalProduction(rows: list,
-                         landUse: float,
-                         effTH: float,
-                         effOp: float,
-                         aperture: float,
-                         convertCoord: bool,
-                         year: int) -> list:
-    '''
-    Function to get the thermal production.
-    Input parameters:
-        rows: list -> The source list of rows..
-        landUse: float -> The land use ratio.
-        effTH: float -> Thermal efficiency in % of collectors of CSP systems.
-        effOp: float -> Amount of incoming solar radiation in % captured in
-                        the collectors of CSP systems.
-        aperture: float -> Aperture area in % of solar field of CSP systems.
-        convertCoord: bool -> Convert coordinates expressed into
-                              EPSG:3035 to EPSG:4326.
-        year: int -> Year for calculate time-series hourly production.
-    '''
+# Auxiliary function 05: Get the thermal production
+def x05GetThermalProduction(rows: list,
+                            landUse: float,
+                            effTH: float,
+                            effOp: float,
+                            aperture: float,
+                            convertCoord: bool,
+                            year: int) -> list:
+    """Auxiliary function 05: Get the regions.
+
+    Args:
+        rows (list): The source list of rows.
+        landUse (float): The land use ratio.
+        effTH (float): Thermal efficiency in % of collectors of CSP systems.
+        effOp (float): Amount of incoming solar radiation in % captured in
+            the collectors of CSP systems.
+        aperture (float): Aperture area in % of solar field of CSP systems.
+        convertCoord (bool): Convert coordinates expressed into EPSG:3035 to EPSG:4326.
+        year (int): Year for calculate time-series hourly production.
+    
+    Returns:
+        list
+    """
 
     production = []
     for region in rows:
         lon, lat = region['Median_Radiation_X'], region['Median_Radiation_Y']
         if convertCoord or lat > 180:
-            lon, lat = getCoord(region)
+            lon, lat = x01GetCoord(region)
 
         factor = 1
-        data, moths, inputs, metadata = pvlib.iotools.get_pvgis_tmy(latitude=lat,
-                                                                    longitude=lon,
-                                                                    outputformat='json',
-                                                                    usehorizon=True,
-                                                                    userhorizon=None,
-                                                                    startyear=None,
-                                                                    endyear=None,
-                                                                    map_variables=True,
-                                                                    timeout=30)
+        try:
+            data, moths, inputs, metadata = pvlib.iotools.get_pvgis_tmy(latitude=lat,
+                                                                        longitude=lon,
+                                                                        outputformat='json',
+                                                                        usehorizon=True,
+                                                                        userhorizon=None,
+                                                                        startyear=None,
+                                                                        endyear=None,
+                                                                        map_variables=True,
+                                                                        timeout=30)
+        except Exception as e:
+            raise Exception(
+                'Main/>  Could not get thermal production because the external server is not responding!')
 
         data.index = data.index.map(lambda x: x.replace(year=year))
         region['radiation'] = data['dni']
         region['temperature'] = data['temp_air']
-        region['power_installed(kW)'] = (region['Area_m2'] * landUse) / 1000000
+        region['power_installed(kW)'] = (region['Area_m2'] * landUse) / 1.0e+06
 
-        region['thermal_power'] = thermalModel(radiation=data['dni'],
-                                               effTH=effTH,
-                                               effOp=effOp,
-                                               aperture=aperture) * factor
+        region['thermal_power'] = x02ThermalModel(radiation=data['dni'],
+                                                  effTH=effTH,
+                                                  effOp=effOp,
+                                                  aperture=aperture) * factor
         production.append(region['thermal_power'])  # in MWh
     return production
 
 
-# Auxiliary function: Get PV production
-def getPVProduction(rows: list,
-                    landUse: float,
-                    tilt: float,
-                    azimuth: float,
-                    tracking: int,
-                    loss: float,
-                    convertCoord: bool,
-                    year: int) -> list:
-    '''
-    Function to get the PV production.
-    Input parameters:
-        rows: list -> The source list of rows.
-        landUse: float -> The land use ratio.
-        tilt: float -> Tilt angle in º from horizontal plane.
-        azimuth: float -> Orientation (azimuth angle) of the (fixed)
-                          plane of array. Clockwise from north.
-        tracking: float -> Percentage in % of single-axis tracking systems from the total
-                           PV capacity. The rest is considered fixed mounted systems.
-        loss: float -> Percentage in % of power losses of PV systems. Please 
-        convertCoord: bool -> Convert coordinates expressed into
-                              EPSG:3035 to EPSG:4326.
-        year: int -> Year for calculate time-series hourly production.
-    '''
+# Auxiliary function 06: Get the PV production
+def x06GetPVProduction(rows: list,
+                       landUse: float,
+                       tilt: float,
+                       azimuth: float,
+                       tracking: int,
+                       loss: float,
+                       convertCoord: bool,
+                       year: int) -> list:
+    """Auxiliary function 06: Get the PV production.
+
+    Args:
+        rows (list): The source list of rows.
+        landUse (float): The land use ratio.
+        tilt (float): Tilt angle in º from horizontal plane.
+        azimuth (float): Orientation (azimuth angle) of the (fixed)
+            plane of array. Clockwise from north.
+        tracking (float): Percentage in % of single-axis tracking systems from the total
+            PV capacity. The rest is considered fixed mounted systems.
+        loss (float): Percentage in % of power losses of PV systems.
+        convertCoord (bool): Convert coordinates expressed into EPSG:3035 to EPSG:4326.
+        year (int): Year for calculate time-series hourly production.
+    
+    Returns:
+        list
+    """
 
     production = []
     for region in rows:
         lon, lat = region['Median_Radiation_X'], region['Median_Radiation_Y']
         if convertCoord:
-            lon, lat = getCoord(region)
+            lon, lat = x01GetCoord(region)
 
-        potMW = (region['Area_m2'] * landUse) / 1000000
+        potMW = (region['Area_m2'] * landUse) / 1.0e+06
         region['power_installed(kW)'] = potMW
 
-        # pvgis is limited in peakpower to 100000000
-        potMW = potMW / 1000 if potMW * 1000 > 100000000 else potMW
-        factor = 1000 if potMW * 1000 > 100000000 else 1
+        # pvgis is limited in peakpower to 1.0e+08
+        potMW = potMW / 1.0e+03 if potMW * 1.0e+03 > 1.0e+08 else potMW
+        factor = 1.0e+03 if potMW * 1.0e+03 > 1.0e+08 else 1
 
         prod = []
         df, params, meta = pvlib.iotools.get_pvgis_hourly(latitude=lat,
@@ -557,26 +676,30 @@ def getPVProduction(rows: list,
                                                           surface_tilt=tilt,
                                                           surface_azimuth=azimuth,
                                                           pvcalculation=True,
-                                                          peakpower=potMW * 1000,
+                                                          peakpower=potMW * 1.0e+03,
                                                           trackingtype=tracking,
                                                           loss=loss,
                                                           components=False)
         prod.append(df['P'])  # in Wh
         region['pv_power'] = (pd.DataFrame(prod).sum(
-            axis=0)) * factor / 1000000  # to MW
+            axis=0)) * factor / 1.0e+06  # to MW
         production.append((pd.DataFrame(prod).sum(
-            axis=0) * factor / 1000000))  # to MkW
+            axis=0) * factor / 1.0e+06))  # to MkW
     return production
 
 
-# Auxiliary function: Get distribution
-def getDistribution(rows: list, label: str) -> tuple:
-    '''
-    Function to obtain the distribution.
-    Input parameters:
-        rows: list -> The source list of rows.
-        label: str -> The label.
-    '''
+# Auxiliary function 07: Get the distribution
+def x07GetDistribution(rows: list,
+                       label: str) -> tuple:
+    """Auxiliary function 07: Get the distribution.
+
+    Args:
+        rows (list): The source list of rows.
+        label (str): The label.
+    
+    Returns:
+        tuple
+    """
 
     res = []
     for i in rows:
@@ -599,21 +722,27 @@ def getDistribution(rows: list, label: str) -> tuple:
     areas = dict(zip(res, [x[0] for x in sumAreas]))
     pots = dict(zip(res, [x[0] for x in sumPots]))
 
-    nuts2 = pd.DataFrame(sumNuts, index=res).transpose()
+    nuts2 = pd.DataFrame(sumNuts,
+                         index=res).transpose()
     nuts2 = nuts2.dropna(axis=1)
     nuts2.index = nuts2.index.strftime('%Y-%m-%d %H:%M:%S')
     return nuts2, pots, areas
 
 
-# Auxiliary function: Opex calc
-def opexCalc(dictData: dict, opexTH: float, opexPV: float) -> tuple:
-    '''
-    Function to calculate the OPEX.
-    Input parameters:
-        dictData: dict -> The source dictionary.
-        opexTH: float -> The thermal Opex.
-        opexPV: float -> The PV Opex.
-    '''
+# Auxiliary function 08: Calculate the OPEX
+def x08CalculateOpex(dictData: dict,
+                     opexTH: float,
+                     opexPV: float) -> tuple:
+    """Auxiliary function 08: Calculate the OPEX.
+
+    Args:
+        dictData (dict): The source dictionary.
+        opexTH (float): The thermal Opex.
+        opexPV (float): The PV Opex.
+    
+    Returns:
+        tuple
+    """
 
     totalTH = 0
     totalPV = 0

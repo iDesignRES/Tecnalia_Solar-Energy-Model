@@ -15,11 +15,15 @@
 # Copyright (c) 2025 Tecnalia Research & Innovation
 
 import json
+import numpy as np
+import pandas as pd
+
 from pathlib import Path
 from solar_power_plants import executeSolarEnergyModelProcess
 
 
 TEST_INPUT_PATH = str(Path(__file__).parent / 'input_test.json')
+TEST_OUTPUT_PATH = str(Path(__file__).parent / 'output_test.csv')
 
 
 # Test -> First execution test for process
@@ -43,8 +47,9 @@ def test_firstExecutionForProcess():
             payload['area_total_pv'] = None
             payload['power_pv'] = None
             payload['capex_pv'] = None
-            executeSolarEnergyModelProcess(
-                payload, '2019-03-01T13:00:00', '2019-03-02T13:00:00')
+            executeSolarEnergyModelProcess(payload,
+                                           '2019-03-01T13:00:00',
+                                           '2019-03-02T13:00:00')
         except:
             exceptionsRaised += 1
 
@@ -66,8 +71,51 @@ def test_secondExecutionForProcess():
     with open(TEST_INPUT_PATH, 'r') as payloadFile:
         # Execute the process
         try:
-            executeSolarEnergyModelProcess(
-                json.load(payloadFile), '2019-03-01T13:00:00', '2019-03-02T13:00:00')
+            result = executeSolarEnergyModelProcess(json.load(payloadFile),
+                                                    '2019-03-01T13:00:00',
+                                                    '2019-03-02T13:00:00')
+            assert result is not None
+        except:
+            exceptionsRaised += 1
+
+    assert exceptionsRaised == 0
+
+
+# Test -> Third execution test for process
+def test_thirdExecutionForProcess():
+    '''
+    Test -> Third execution test for process to validate the output.
+    Input parameters:
+        None.
+    '''
+
+    exceptionsRaised = 0
+
+    # Load the payload file
+    with open(TEST_INPUT_PATH, 'r') as payloadFile:
+        # Execute the process
+        areEqual = True
+        try:
+            result = executeSolarEnergyModelProcess(json.load(payloadFile),
+                                                    '2019-03-01T13:00:00',
+                                                    '2019-03-02T13:00:00')
+            dfResult = pd.DataFrame(result)
+            with open(TEST_OUTPUT_PATH, 'r') as outputFile:
+                dfTest = pd.read_csv(outputFile,
+                                     header=0,
+                                     encoding='ISO-8859-1',
+                                     sep=',',
+                                     decimal='.')
+                dfTest['time(UTC)'] = pd.to_datetime(dfTest['time(UTC)'])
+
+            # Compare both DataFrames
+            thComparison = np.isclose(dfResult["Pthermal"],
+                                      dfTest["Pthermal"])
+            pvComparison = np.isclose(dfResult["Ppv"],
+                                      dfTest["Ppv"])
+            total = thComparison & pvComparison
+            if False in total:
+                raise Exception()
         except:
             exceptionsRaised += 1
 

@@ -25,53 +25,94 @@ from solar_energy_model import validator
 
 
 # Function: Execute the Model
-def executeModel(modelPayload: dict):
-    '''
-    Function to execute the Solar Energy Model.
-    Input parameters:
-        modelPayload: dict -> The dictionary with the Model input payload.
-    '''
+def executeModel(modelPayload: dict) -> list:
+    """Function to execute the Solar Energy Model.
+
+    Args:
+        modelPayload (dict): The dictionary with the Model input payload::
+
+            Example: see "input.json" file in the root directory.
+    
+    Returns:
+        list
+
+    """
 
     print('Main/>  Executing the Solar Energy Model (please wait)...')
     print('')
     listParametersTH, listParametersPV, systemCostTH, systemCostPV, \
         landUseTH, landUsePV, minGhiTH, minGhiPV, effTH, effOp, aperture, \
-        convertCoord, year, tilt, azimuth, tracking, loss, opexTH, opexPV = model.executeModelStep01(
+        convertCoord, year, tilt, azimuth, tracking, loss, opexTH, opexPV = model.s01BuildSpecificConfiguration(
             modelPayload)
     print('')
-    scadaTH, scadaPV = model.executeModelStep02(modelPayload['nutsid'])
+    scadaTH, scadaPV = model.s02LoadPreviousResult(modelPayload['nutsid'])
     print('')
-    areaTH, powerTH, capexTH = model.executeModelStep03(
-        listParametersTH, systemCostTH, landUseTH)
+    areaTH, powerTH, capexTH = model.s03CalculateAvailableThermalArea(listParametersTH,
+                                                                      systemCostTH,
+                                                                      landUseTH)
     print('')
-    areaPV, powerPV, capexPV = model.executeModelStep04(
+    areaPV, powerPV, capexPV = model.s04CalculateAvailablePVArea(
         listParametersPV, systemCostPV, landUsePV)
     print('')
-    nuts2TH, rowsTH, potDistTH, dfTH, scadaPV = model.executeModelStep05(scadaTH, scadaPV, areaTH, minGhiTH, landUseTH,
-                                                                         effTH, effOp, aperture, convertCoord, year)
+    nuts2TH, rowsTH, potDistTH, dfTH, scadaPV = model.s05CalculateThermalProduction(scadaTH,
+                                                                                    scadaPV,
+                                                                                    areaTH,
+                                                                                    minGhiTH,
+                                                                                    landUseTH,
+                                                                                    effTH,
+                                                                                    effOp,
+                                                                                    aperture,
+                                                                                    convertCoord,
+                                                                                    year)
     print('')
-    nameNuts2, nuts2PV, potDistPV, dfPV = model.executeModelStep06(scadaPV, areaPV, minGhiPV, landUsePV, tilt,
-                                                                   azimuth, tracking, loss, convertCoord, year)
+    nameNuts2, nuts2PV, potDistPV, dfPV = model.s06CalculatePVProduction(scadaPV,
+                                                                         areaPV,
+                                                                         minGhiPV,
+                                                                         landUsePV,
+                                                                         tilt,
+                                                                         azimuth,
+                                                                         tracking,
+                                                                         loss,
+                                                                         convertCoord,
+                                                                         year)
     print('')
-    prodAggregated = model.executeModelStep07(dfTH, dfPV, nameNuts2)
+    prodAggregated = model.s07CalculateAggregatedProduction(dfTH,
+                                                            dfPV,
+                                                            nameNuts2)
     print('')
-    nuts2Distrib = model.executeModelStep08(dfTH, nuts2TH, nuts2PV)
+    nuts2Distrib = model.s08CalculateDistributedProduction(dfTH,
+                                                           nuts2TH,
+                                                           nuts2PV)
     print('')
-    output = model.executeModelStep09(prodAggregated, nuts2Distrib, dfTH,
-                                      potDistTH, potDistPV, opexTH, opexPV)
+    output = model.s09SaveResults(prodAggregated,
+                                  nuts2Distrib,
+                                  dfTH,
+                                  potDistTH,
+                                  potDistPV,
+                                  opexTH,
+                                  opexPV)
     print('')
     return output
 
 
 # Function: Execute the Solar Energy Model process
-def executeSolarEnergyModelProcess(processPayload: dict, startTime: str, endTime: str):
-    '''
-    Function to execute the Solar Energy Model process.
-    Input parameters:
-        processPayload: dict -> The dictionary with the process input payload.
-        startTime: str -> The start datetime.
-        endTime: str -> The end datetime.
-    '''
+def executeSolarEnergyModelProcess(processPayload: dict,
+                                   startTime: str,
+                                   endTime: str) -> dict:
+    """Function to execute the Solar Energy Model process.
+
+    Args:
+        processPayload (dict): The dictionary with the process input payload::
+
+            Example: see "input.json" file in the root directory.
+
+        startTime (str): The start datetime, e.g., "2019-03-01T13:00:00".
+        endTime (str): The end datetime, e.g., "2019-03-02T13:00:00".
+    
+    Returns:
+        dict
+
+    """
 
     try:
         # Execute the Model
@@ -91,9 +132,6 @@ def executeSolarEnergyModelProcess(processPayload: dict, startTime: str, endTime
             lambda x: float(str(x).replace(',', '.')))
         resultFiltered['Pthermal'] = resultFiltered['Pthermal'].apply(
             lambda x: float(str(x).replace(',', '.')))
-        if constants.SCIENTIFIC_NOTATION:
-            resultFiltered = resultFiltered.apply(
-                lambda col: col.map(lambda x: f"{x:.2e}" if isinstance(x, (int, float)) else x))
         negativeValues = validator.validateProcessOutput(resultFiltered)
         print('Main/>  Validating the output...')
         if negativeValues:
@@ -108,14 +146,18 @@ def executeSolarEnergyModelProcess(processPayload: dict, startTime: str, endTime
 
 # Function: Main
 def main():
-    '''
-    Main function.
-    Input parameters:
-        sys.argv[0]: str -> The current file name.
-        sys.argv[1]: str -> The process input data file path.
-        sys.argv[2]: str -> The start datetime.
-        sys.argv[3]: str -> The end datetime.
-    '''
+    """Main function.
+
+    Args:
+        sys.argv[0] (str): The current file name, e.g., "solar_power_plants.py".
+        sys.argv[1] (str): The process input data file path, e.g., "input.json".
+        sys.argv[2] (str): The start datetime, e.g., "2019-03-01T13:00:00".
+        sys.argv[3] (str): The end datetime, e.g., "2019-03-02T13:00:00".
+    
+    Returns:
+        None
+
+    """
 
     try:
         # Validate the command line parameters
@@ -132,7 +174,9 @@ def main():
 
         # Execute the process
         print('Main/>  Loading the Model...')
-        executeSolarEnergyModelProcess(processPayload, sys.argv[2], sys.argv[3])
+        executeSolarEnergyModelProcess(processPayload,
+                                       sys.argv[2],
+                                       sys.argv[3])
     except Exception as exception:
         print(f'{exception}')
 

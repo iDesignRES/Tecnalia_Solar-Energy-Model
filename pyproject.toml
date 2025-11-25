@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "solar_power_plants"
-version = "0.9.3"
+version = "0.10.0"
 description = "Solar Energy Model process client"
 authors = ["Alberto Molinuevo Martin <alberto.molinuevo@tecnalia.com>"]
 license = "GPLv2"
@@ -11,6 +11,7 @@ packages = [{ include = "solar_energy_model" }]
 
 # Dependencies
 [tool.poetry.dependencies]
+furo = "^2025.9.25"
 geopandas = "^1.0.1"
 python = "^3.10"
 pandas = "^2.2"
@@ -26,4 +27,4 @@ requests = "^2.32.3"
 autopep8 = "^2.3.2"
 sphinx = "8.1.2"
 sphinx-autobuild = "2024.10.3"
-
+sphinx-copybutton = "0.5.2"

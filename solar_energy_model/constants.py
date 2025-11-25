@@ -14,5 +14,4 @@
 #
 # Copyright (c) 2025 Tecnalia Research & Innovation
 
-VERSION = 'v0.9.3'
-SCIENTIFIC_NOTATION = False
+VERSION = 'v0.10.0'
